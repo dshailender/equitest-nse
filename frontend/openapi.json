@@ -247,6 +247,227 @@
           }
         }
       }
+    },
+    "/api/v1/indicators/nifty": {
+      "get": {
+        "tags": [
+          "indicators"
+        ],
+        "summary": "Get NIFTY Benchmark Indicators",
+        "description": "Returns NIFTY benchmark index OHLCV with EMAs (default 50 and 200).",
+        "operationId": "api_get_nifty_indicators_api_v1_indicators_nifty_get",
+        "parameters": [
+          {
+            "name": "start",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional start date (YYYY-MM-DD)",
+              "title": "Start"
+            },
+            "description": "Optional start date (YYYY-MM-DD)"
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional end date (YYYY-MM-DD)",
+              "title": "End"
+            },
+            "description": "Optional end date (YYYY-MM-DD)"
+          },
+          {
+            "name": "spans",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Comma-separated list of EMA spans",
+              "examples": [
+                "50,200"
+              ],
+              "default": "50,200",
+              "title": "Spans"
+            },
+            "description": "Comma-separated list of EMA spans"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IndicatorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/indicators/{symbol}": {
+      "get": {
+        "tags": [
+          "indicators"
+        ],
+        "summary": "Get Symbol Technical Indicators",
+        "description": "Returns historical OHLCV augmented with EMAs (20, 50, 150, 200) and 52W high.",
+        "operationId": "api_get_symbol_indicators_api_v1_indicators__symbol__get",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Symbol"
+            }
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional start date (YYYY-MM-DD)",
+              "title": "Start"
+            },
+            "description": "Optional start date (YYYY-MM-DD)"
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional end date (YYYY-MM-DD)",
+              "title": "End"
+            },
+            "description": "Optional end date (YYYY-MM-DD)"
+          },
+          {
+            "name": "spans",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Comma-separated list of EMA spans",
+              "examples": [
+                "20,50,150,200"
+              ],
+              "default": "20,50,150,200",
+              "title": "Spans"
+            },
+            "description": "Comma-separated list of EMA spans"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IndicatorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/indicators/preview": {
+      "post": {
+        "tags": [
+          "indicators"
+        ],
+        "summary": "Preview Custom Indicators",
+        "description": "Calculates custom indicators dynamically with given configuration.",
+        "operationId": "api_preview_indicators_api_v1_indicators_preview_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IndicatorPreviewRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IndicatorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -348,6 +569,252 @@
         },
         "type": "object",
         "title": "HealthResponse"
+      },
+      "IndicatorConfigSchema": {
+        "properties": {
+          "spans": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Spans",
+            "description": "EMA spans to compute (e.g. [20, 50, 150, 200])",
+            "default": [
+              20,
+              50,
+              150,
+              200
+            ],
+            "examples": [
+              [
+                20,
+                50,
+                150,
+                200
+              ]
+            ]
+          },
+          "include_high_52w": {
+            "type": "boolean",
+            "title": "Include High 52W",
+            "description": "Whether to compute rolling 52-week high",
+            "default": true
+          },
+          "high_52w_lookback": {
+            "type": "integer",
+            "title": "High 52W Lookback",
+            "description": "Lookback window sessions for 52W high calculation",
+            "default": 252,
+            "examples": [
+              252
+            ]
+          }
+        },
+        "type": "object",
+        "title": "IndicatorConfigSchema"
+      },
+      "IndicatorItem": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "title": "Date",
+            "description": "Session date (YYYY-MM-DD)"
+          },
+          "open": {
+            "type": "number",
+            "title": "Open",
+            "description": "Opening price"
+          },
+          "high": {
+            "type": "number",
+            "title": "High",
+            "description": "Highest price during session"
+          },
+          "low": {
+            "type": "number",
+            "title": "Low",
+            "description": "Lowest price during session"
+          },
+          "close": {
+            "type": "number",
+            "title": "Close",
+            "description": "Unadjusted closing price"
+          },
+          "adj_close": {
+            "type": "number",
+            "title": "Adj Close",
+            "description": "Corporate-action adjusted closing price"
+          },
+          "volume": {
+            "type": "number",
+            "title": "Volume",
+            "description": "Total trading volume"
+          },
+          "ema_20": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ema 20",
+            "description": "20-day EMA"
+          },
+          "ema_50": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ema 50",
+            "description": "50-day EMA"
+          },
+          "ema_150": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ema 150",
+            "description": "150-day EMA"
+          },
+          "ema_200": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ema 200",
+            "description": "200-day EMA"
+          },
+          "high_52w": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "High 52W",
+            "description": "52-week rolling high"
+          },
+          "indicators": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object",
+            "title": "Indicators",
+            "description": "Dictionary of dynamic or custom computed indicator values"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "open",
+          "high",
+          "low",
+          "close",
+          "adj_close",
+          "volume"
+        ],
+        "title": "IndicatorItem"
+      },
+      "IndicatorPreviewRequest": {
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "title": "Symbol",
+            "description": "Symbol to compute preview indicators for",
+            "default": "RELIANCE",
+            "examples": [
+              "RELIANCE"
+            ]
+          },
+          "start": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start",
+            "description": "Optional start date (YYYY-MM-DD)",
+            "examples": [
+              "2020-01-01"
+            ]
+          },
+          "end": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End",
+            "description": "Optional end date (YYYY-MM-DD)",
+            "examples": [
+              "2023-12-31"
+            ]
+          },
+          "config": {
+            "$ref": "#/components/schemas/IndicatorConfigSchema",
+            "description": "Indicator calculation configuration"
+          }
+        },
+        "type": "object",
+        "title": "IndicatorPreviewRequest"
+      },
+      "IndicatorResponse": {
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "title": "Symbol",
+            "description": "Equity or benchmark ticker symbol"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count",
+            "description": "Number of indicator bars returned"
+          },
+          "indicators": {
+            "items": {
+              "$ref": "#/components/schemas/IndicatorItem"
+            },
+            "type": "array",
+            "title": "Indicators",
+            "description": "Chronological series of indicator-augmented OHLCV bars"
+          }
+        },
+        "type": "object",
+        "required": [
+          "symbol",
+          "count",
+          "indicators"
+        ],
+        "title": "IndicatorResponse"
       },
       "IngestRequest": {
         "properties": {

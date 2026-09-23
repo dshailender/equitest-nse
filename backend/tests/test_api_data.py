@@ -72,6 +72,6 @@ async def test_prices_no_lookahead_leak(async_client: AsyncClient):
 
     # Assert no row has date > cutoff_date
     for bar in prices:
-        assert bar["date"] <= cutoff_date, (
-            f"Look-ahead leak detected: bar date {bar['date']} > {cutoff_date}"
-        )
+        assert (
+            bar["date"] <= cutoff_date
+        ), f"Look-ahead leak detected: bar date {bar['date']} > {cutoff_date}"

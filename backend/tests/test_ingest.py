@@ -37,9 +37,9 @@ def test_ingest_idempotency(temp_db: Session):
         source=source,
     )
     assert res2["status"] == "completed"
-    assert res2["rows_ingested"] == 0, (
-        "Second ingestion run should insert 0 new rows (idempotency)"
-    )
+    assert (
+        res2["rows_ingested"] == 0
+    ), "Second ingestion run should insert 0 new rows (idempotency)"
 
     second_price_count = temp_db.exec(select(func.count(Price.date))).one()
     second_idx_count = temp_db.exec(select(func.count(IndexPrice.date))).one()
@@ -64,12 +64,12 @@ def test_corporate_action_split_adjustment():
 
     # Unadjusted close dropped ~50%
     ratio = pre_split_row["close"] / split_row["close"]
-    assert 1.8 <= ratio <= 2.2, (
-        f"Expected 2:1 price drop on unadjusted close, got ratio {ratio}"
-    )
+    assert (
+        1.8 <= ratio <= 2.2
+    ), f"Expected 2:1 price drop on unadjusted close, got ratio {ratio}"
 
     # Adjusted close ratio is close to 1 (economic continuity)
     adj_ratio = pre_split_row["adj_close"] / split_row["adj_close"]
-    assert 0.95 <= adj_ratio <= 1.05, (
-        f"Expected continuous adjusted close, got ratio {adj_ratio}"
-    )
+    assert (
+        0.95 <= adj_ratio <= 1.05
+    ), f"Expected continuous adjusted close, got ratio {adj_ratio}"

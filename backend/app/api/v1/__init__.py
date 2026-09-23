@@ -28,5 +28,7 @@ async def api_v1_health() -> HealthResponse:
 
 
 from app.api.v1.data import router as data_router  # noqa: E402
+from app.api.v1.indicators import router as indicators_router  # noqa: E402
 
 api_router.include_router(data_router)
+api_router.include_router(indicators_router)

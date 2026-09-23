@@ -45,6 +45,12 @@ export default function RootLayout({
                     Data Status
                   </a>
                   <a
+                    href="/indicators"
+                    className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 transition-colors"
+                  >
+                    Indicators
+                  </a>
+                  <a
                     href="/api-health"
                     className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 transition-colors"
                   >

@@ -51,7 +51,9 @@ def validate_ohlcv_dataframe(df: pd.DataFrame) -> None:
         if np.isinf(df[col]).any():
             raise InvariantViolationError(f"Column '{col}' contains Infinite values")
         if (df[col] <= 0).any():
-            raise InvariantViolationError(f"Column '{col}' contains non-positive values")
+            raise InvariantViolationError(
+                f"Column '{col}' contains non-positive values"
+            )
 
     # 3. High >= Low invariant
     if (df["high"] < df["low"]).any():
@@ -179,8 +181,11 @@ def ingest_market_data(
     if constituents_file.exists():
         try:
             const_df = pd.read_parquet(constituents_file)
-            if "date" in const_df.columns and "symbol" in const_df.columns and "rank" in const_df.columns:
-                const_df["date"] = pd.to_datetime(const_df["date"]).dt.strftime("%Y-%m-%d")
+            cols = {"date", "symbol", "rank"}
+            if cols.issubset(const_df.columns):
+                const_df["date"] = pd.to_datetime(const_df["date"]).dt.strftime(
+                    "%Y-%m-%d"
+                )
                 mask = (const_df["date"] >= start) & (const_df["date"] <= end)
                 filtered_const = const_df[mask]
 
@@ -203,4 +208,3 @@ def ingest_market_data(
         "rows_ingested": rows_ingested,
         "errors": errors,
     }
-

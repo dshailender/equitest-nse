@@ -49,10 +49,7 @@ def valid_ohlcv_dataframe_strategy(draw):
         for _ in range(size)
     ]
 
-    highs = [
-        max(o, c) + h
-        for o, c, h in zip(opens, closes, high_offsets, strict=True)
-    ]
+    highs = [max(o, c) + h for o, c, h in zip(opens, closes, high_offsets, strict=True)]
     lows = [
         max(0.1, min(o, c) - low_off)
         for o, c, low_off in zip(opens, closes, low_offsets, strict=True)

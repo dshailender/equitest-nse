@@ -87,3 +87,69 @@ class PricesResponse(BaseModel):
     prices: list[PriceItem] = Field(
         ..., description="Chronological series of OHLCV bars"
     )
+
+
+class IndicatorConfigSchema(BaseModel):
+    spans: list[int] = Field(
+        default=[20, 50, 150, 200],
+        description="EMA spans to compute (e.g. [20, 50, 150, 200])",
+        examples=[[20, 50, 150, 200]],
+    )
+    include_high_52w: bool = Field(
+        default=True,
+        description="Whether to compute rolling 52-week high",
+    )
+    high_52w_lookback: int = Field(
+        default=252,
+        description="Lookback window sessions for 52W high calculation",
+        examples=[252],
+    )
+
+
+class IndicatorItem(BaseModel):
+    date: str = Field(..., description="Session date (YYYY-MM-DD)")
+    open: float = Field(..., description="Opening price")
+    high: float = Field(..., description="Highest price during session")
+    low: float = Field(..., description="Lowest price during session")
+    close: float = Field(..., description="Unadjusted closing price")
+    adj_close: float = Field(..., description="Corporate-action adjusted closing price")
+    volume: float = Field(..., description="Total trading volume")
+    ema_20: float | None = Field(default=None, description="20-day EMA")
+    ema_50: float | None = Field(default=None, description="50-day EMA")
+    ema_150: float | None = Field(default=None, description="150-day EMA")
+    ema_200: float | None = Field(default=None, description="200-day EMA")
+    high_52w: float | None = Field(default=None, description="52-week rolling high")
+    indicators: dict[str, float | None] = Field(
+        default_factory=dict,
+        description="Dictionary of dynamic or custom computed indicator values",
+    )
+
+
+class IndicatorResponse(BaseModel):
+    symbol: str = Field(..., description="Equity or benchmark ticker symbol")
+    count: int = Field(..., description="Number of indicator bars returned")
+    indicators: list[IndicatorItem] = Field(
+        ..., description="Chronological series of indicator-augmented OHLCV bars"
+    )
+
+
+class IndicatorPreviewRequest(BaseModel):
+    symbol: str = Field(
+        default="RELIANCE",
+        description="Symbol to compute preview indicators for",
+        examples=["RELIANCE"],
+    )
+    start: str | None = Field(
+        default=None,
+        description="Optional start date (YYYY-MM-DD)",
+        examples=["2020-01-01"],
+    )
+    end: str | None = Field(
+        default=None,
+        description="Optional end date (YYYY-MM-DD)",
+        examples=["2023-12-31"],
+    )
+    config: IndicatorConfigSchema = Field(
+        default_factory=IndicatorConfigSchema,
+        description="Indicator calculation configuration",
+    )

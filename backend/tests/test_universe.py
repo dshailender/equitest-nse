@@ -9,12 +9,12 @@ def test_universe_with_point_in_time_fixture():
 
     for d in dates:
         tickers, survivorship_bias, details = get_universe(d)
-        assert not survivorship_bias, (
-            f"Expected no survivorship bias for fixture date {d}"
-        )
-        assert len(tickers) == 650, (
-            f"Expected exactly 650 tickers (ranks 101-750), got {len(tickers)}"
-        )
+        assert (
+            not survivorship_bias
+        ), f"Expected no survivorship bias for fixture date {d}"
+        assert (
+            len(tickers) == 650
+        ), f"Expected exactly 650 tickers (ranks 101-750), got {len(tickers)}"
         assert len(details) == 650
 
         # Ranks must strictly run from 101 to 750
@@ -25,9 +25,9 @@ def test_universe_with_point_in_time_fixture():
 
         # None of the top 100 stocks should be in the returned universe
         for item in details:
-            assert not item["symbol"].startswith("TOP_"), (
-                f"Top 100 stock found in universe: {item['symbol']}"
-            )
+            assert not item["symbol"].startswith(
+                "TOP_"
+            ), f"Top 100 stock found in universe: {item['symbol']}"
 
 
 def test_universe_fallback_survivorship_bias():

@@ -30,4 +30,3 @@ class UniverseMembership(SQLModel, table=True):
     date: str = Field(primary_key=True, index=True)  # Format: YYYY-MM-DD
     symbol: str = Field(primary_key=True, index=True)
     rank: int = Field(index=True)
-
