@@ -1,0 +1,520 @@
+"use client";
+
+import * as React from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  AlertTriangle,
+  ArrowUpDown,
+  BarChart2,
+  Calendar,
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  Database,
+  Download,
+  Info,
+  Layers,
+  LineChart as LineChartIcon,
+  RefreshCw,
+  Search,
+} from "lucide-react";
+import {
+  CartesianGrid,
+  Legend,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  CoverageItem,
+  fetchCoverage,
+  fetchPrices,
+  fetchUniverse,
+  triggerIngest,
+} from "@/lib/api";
+
+export default function DataStatusPage() {
+  const queryClient = useQueryClient();
+
+  // Ingest state
+  const [startDate, setStartDate] = React.useState("2020-01-01");
+  const [endDate, setEndDate] = React.useState("2023-12-31");
+  const [ingestStatusMessage, setIngestStatusMessage] = React.useState<string | null>(null);
+
+  // Universe state
+  const [universeDate, setUniverseDate] = React.useState("2022-01-01");
+
+  // Selected symbol for prices drilldown
+  const [selectedSymbol, setSelectedSymbol] = React.useState<string>("RELIANCE");
+
+  // Pagination & filter state for coverage
+  const [page, setPage] = React.useState(1);
+  const pageSize = 5;
+  const [searchFilter, setSearchFilter] = React.useState("");
+
+  // Queries
+  const coverageQuery = useQuery({
+    queryKey: ["coverage"],
+    queryFn: fetchCoverage,
+  });
+
+  const universeQuery = useQuery({
+    queryKey: ["universe", universeDate],
+    queryFn: () => fetchUniverse(universeDate),
+  });
+
+  const pricesQuery = useQuery({
+    queryKey: ["prices", selectedSymbol],
+    queryFn: () => fetchPrices(selectedSymbol),
+    enabled: !!selectedSymbol,
+  });
+
+  // Ingestion Mutation
+  const ingestMutation = useMutation({
+    mutationFn: () => triggerIngest(startDate, endDate),
+    onSuccess: (data) => {
+      setIngestStatusMessage(
+        `Ingested ${data.rows_ingested} rows across ${data.symbols_ingested} symbols (Job ID: ${data.job_id.slice(0, 8)}).`
+      );
+      queryClient.invalidateQueries({ queryKey: ["coverage"] });
+      queryClient.invalidateQueries({ queryKey: ["universe"] });
+      queryClient.invalidateQueries({ queryKey: ["prices", selectedSymbol] });
+    },
+    onError: (err) => {
+      setIngestStatusMessage(`Ingest failed: ${err instanceof Error ? err.message : String(err)}`);
+    },
+  });
+
+  // Filter & paginate coverage items
+  const allCoverage = React.useMemo(
+    () => coverageQuery.data?.items || [],
+    [coverageQuery.data]
+  );
+  const filteredCoverage = allCoverage.filter((item) =>
+    item.symbol.toLowerCase().includes(searchFilter.toLowerCase())
+  );
+  const totalPages = Math.max(1, Math.ceil(filteredCoverage.length / pageSize));
+  const paginatedCoverage = filteredCoverage.slice((page - 1) * pageSize, page * pageSize);
+
+  // Auto-select first symbol if none selected
+  React.useEffect(() => {
+    if (!selectedSymbol && allCoverage.length > 0) {
+      setSelectedSymbol(allCoverage[0].symbol);
+    }
+  }, [allCoverage, selectedSymbol]);
+
+  return (
+    <div className="space-y-8">
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+          Data Pipeline & Market Universe
+        </h1>
+        <p className="text-sm text-slate-500 mt-1">
+          Ingest OHLCV data, inspect point-in-time universe constituents (NSE 101–750), and verify corporate action adjustments.
+        </p>
+      </div>
+
+      {/* Ingestion Trigger Card */}
+      <Card className="border-slate-200 dark:border-slate-800 shadow-sm">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Database className="w-5 h-5 text-blue-600" />
+              <CardTitle className="text-lg">Ingest Market Data</CardTitle>
+            </div>
+            <Badge variant="outline" className="text-xs">
+              Idempotent Engine
+            </Badge>
+          </div>
+          <CardDescription className="text-xs">
+            Trigger ingestion for equities, benchmark index (^NSEI), and constituent history. Existing dates will not be duplicated.
+          </CardDescription>
+        </CardHeader>
+
+        <CardContent className="space-y-4">
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex items-center space-x-2">
+              <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                Start:
+              </label>
+              <input
+                type="date"
+                data-testid="ingest-start"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="px-2.5 py-1.5 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-mono"
+              />
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                End:
+              </label>
+              <input
+                type="date"
+                data-testid="ingest-end"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="px-2.5 py-1.5 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-mono"
+              />
+            </div>
+
+            <Button
+              data-testid="ingest-button"
+              size="sm"
+              disabled={ingestMutation.isPending}
+              onClick={() => ingestMutation.mutate()}
+              className="ml-auto text-xs"
+            >
+              {ingestMutation.isPending ? (
+                <>
+                  <RefreshCw className="w-3.5 h-3.5 mr-1.5 animate-spin" /> Ingesting Data...
+                </>
+              ) : (
+                <>
+                  <Download className="w-3.5 h-3.5 mr-1.5" /> Start Ingestion
+                </>
+              )}
+            </Button>
+          </div>
+
+          {ingestStatusMessage && (
+            <div
+              data-testid="ingest-status-banner"
+              className={`p-3 rounded-lg text-xs flex items-center space-x-2 ${
+                ingestMutation.isError
+                  ? "bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-400 border border-red-200"
+                  : "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200"
+              }`}
+            >
+              {ingestMutation.isError ? (
+                <AlertTriangle className="w-4 h-4 shrink-0" />
+              ) : (
+                <CheckCircle2 className="w-4 h-4 shrink-0" />
+              )}
+              <span>{ingestStatusMessage}</span>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Coverage Table Card */}
+        <Card className="border-slate-200 dark:border-slate-800 shadow-sm flex flex-col">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <BarChart2 className="w-5 h-5 text-indigo-600" />
+                <CardTitle className="text-lg">Stored Data Coverage</CardTitle>
+              </div>
+              <Badge variant="outline" className="text-xs">
+                {allCoverage.length} Symbols
+              </Badge>
+            </div>
+            <CardDescription className="text-xs">
+              Sessions stored in database. Click any row to inspect price series.
+            </CardDescription>
+          </CardHeader>
+
+          <CardContent className="space-y-4 flex-1">
+            <div className="relative">
+              <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Search symbol..."
+                value={searchFilter}
+                onChange={(e) => {
+                  setSearchFilter(e.target.value);
+                  setPage(1);
+                }}
+                className="w-full pl-8 pr-3 py-1.5 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs"
+              />
+            </div>
+
+            <div className="border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden">
+              <table className="w-full text-xs text-left">
+                <thead className="bg-slate-100 dark:bg-slate-800/60 font-semibold text-slate-600 dark:text-slate-300 border-b border-slate-200 dark:border-slate-800">
+                  <tr>
+                    <th className="py-2.5 px-3">Symbol</th>
+                    <th className="py-2.5 px-3">Start Date</th>
+                    <th className="py-2.5 px-3">End Date</th>
+                    <th className="py-2.5 px-3 text-right">Sessions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/40">
+                  {coverageQuery.isLoading ? (
+                    <tr>
+                      <td colSpan={4} className="py-8 text-center text-slate-500">
+                        <RefreshCw className="w-4 h-4 animate-spin mx-auto mb-1 text-blue-600" />
+                        Loading coverage data...
+                      </td>
+                    </tr>
+                  ) : paginatedCoverage.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="py-8 text-center text-slate-500">
+                        No coverage found. Run ingestion to populate.
+                      </td>
+                    </tr>
+                  ) : (
+                    paginatedCoverage.map((item) => (
+                      <tr
+                        key={item.symbol}
+                        data-testid={`coverage-row-${item.symbol}`}
+                        onClick={() => setSelectedSymbol(item.symbol)}
+                        className={`cursor-pointer transition-colors hover:bg-slate-50 dark:hover:bg-slate-900 ${
+                          selectedSymbol === item.symbol
+                            ? "bg-blue-50/80 dark:bg-blue-950/40 font-medium"
+                            : ""
+                        }`}
+                      >
+                        <td className="py-2 px-3 font-mono font-semibold text-blue-600 dark:text-blue-400">
+                          {item.symbol}
+                        </td>
+                        <td className="py-2 px-3 font-mono text-slate-600 dark:text-slate-400">
+                          {item.first_date || "—"}
+                        </td>
+                        <td className="py-2 px-3 font-mono text-slate-600 dark:text-slate-400">
+                          {item.last_date || "—"}
+                        </td>
+                        <td className="py-2 px-3 font-mono text-right font-semibold">
+                          {item.rows}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+
+          <CardFooter className="flex items-center justify-between border-t border-slate-100 dark:border-slate-800 pt-3">
+            <span className="text-xs text-slate-500">
+              Page {page} of {totalPages}
+            </span>
+            <div className="flex items-center space-x-1">
+              <Button
+                variant="outline"
+                size="sm"
+                data-testid="coverage-prev"
+                disabled={page <= 1}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                className="h-7 px-2 text-xs"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                data-testid="coverage-next"
+                disabled={page >= totalPages}
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                className="h-7 px-2 text-xs"
+              >
+                <ChevronRight className="w-3.5 h-3.5" />
+              </Button>
+            </div>
+          </CardFooter>
+        </Card>
+
+        {/* Universe Viewer Card */}
+        <Card className="border-slate-200 dark:border-slate-800 shadow-sm flex flex-col">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Layers className="w-5 h-5 text-emerald-600" />
+                <CardTitle className="text-lg">Universe Explorer</CardTitle>
+              </div>
+              <Badge variant="outline" className="text-xs">
+                NSE 101–750
+              </Badge>
+            </div>
+            <CardDescription className="text-xs">
+              Resolve constituent membership ranked 101 to 750 by market cap for any date.
+            </CardDescription>
+          </CardHeader>
+
+          <CardContent className="space-y-4 flex-1">
+            <div className="flex items-center space-x-3">
+              <Calendar className="w-4 h-4 text-slate-400" />
+              <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                Evaluation Date:
+              </label>
+              <input
+                type="date"
+                data-testid="universe-date-input"
+                value={universeDate}
+                onChange={(e) => setUniverseDate(e.target.value)}
+                className="px-2.5 py-1.5 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-mono"
+              />
+            </div>
+
+            {universeQuery.data && (
+              <div className="space-y-3">
+                {/* Bias Indicator */}
+                {universeQuery.data.survivorship_bias ? (
+                  <div
+                    data-testid="universe-bias-badge"
+                    className="p-3 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900 text-amber-800 dark:text-amber-300 text-xs flex items-center space-x-2"
+                  >
+                    <AlertTriangle className="w-4 h-4 shrink-0" />
+                    <span>
+                      <strong>⚠️ Survivorship Bias Detected:</strong> Point-in-time constituent file unavailable for {universeDate}. Falling back to current list.
+                    </span>
+                  </div>
+                ) : (
+                  <div
+                    data-testid="universe-clean-badge"
+                    className="p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900 text-emerald-800 dark:text-emerald-300 text-xs flex items-center space-x-2"
+                  >
+                    <CheckCircle2 className="w-4 h-4 shrink-0" />
+                    <span>
+                      <strong>Point-in-Time Validated:</strong> Exact historical constituents loaded without survivorship bias.
+                    </span>
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between text-xs text-slate-500">
+                  <span>Constituents Count: <strong>{universeQuery.data.count}</strong></span>
+                  <span>Effective Date: <code className="font-mono">{universeQuery.data.date}</code></span>
+                </div>
+
+                <div
+                  data-testid="universe-tickers"
+                  className="max-h-60 overflow-y-auto p-3 rounded-md bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex flex-wrap gap-1.5"
+                >
+                  {universeQuery.data.tickers.map((sym, idx) => (
+                    <span
+                      key={sym}
+                      onClick={() => setSelectedSymbol(sym)}
+                      className="px-2 py-0.5 rounded text-xs font-mono bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 cursor-pointer transition-colors"
+                      title={`Rank ${101 + idx}`}
+                    >
+                      {sym}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </CardContent>
+
+          <CardFooter className="border-t border-slate-100 dark:border-slate-800 pt-3 text-xs text-slate-400">
+            Strategy trade universe exclusively selects stocks from this active list.
+          </CardFooter>
+        </Card>
+      </div>
+
+      {/* Prices Drilldown Section (Recharts Line Chart) */}
+      <Card className="border-slate-200 dark:border-slate-800 shadow-sm" data-testid="prices-drilldown-card">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <LineChartIcon className="w-5 h-5 text-blue-600" />
+              <CardTitle className="text-lg">
+                Price Series Drilldown: <span className="text-blue-600">{selectedSymbol}</span>
+              </CardTitle>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Badge variant="outline" className="text-xs">
+                Close vs. Adj Close
+              </Badge>
+              {pricesQuery.data && (
+                <Badge variant="secondary" className="text-xs">
+                  {pricesQuery.data.count} Bars
+                </Badge>
+              )}
+            </div>
+          </div>
+          <CardDescription className="text-xs">
+            Visual inspection of corporate-action adjustments. Divergences demonstrate splits, bonuses, or dividend adjustments.
+          </CardDescription>
+        </CardHeader>
+
+        <CardContent>
+          {pricesQuery.isLoading ? (
+            <div className="py-20 flex flex-col items-center justify-center space-y-2 text-slate-500">
+              <RefreshCw className="w-6 h-6 animate-spin text-blue-600" />
+              <p className="text-xs">Loading price series for {selectedSymbol}...</p>
+            </div>
+          ) : pricesQuery.isError ? (
+            <div className="py-12 text-center text-xs text-red-500">
+              No prices available for {selectedSymbol}. Ensure data has been ingested.
+            </div>
+          ) : pricesQuery.data && pricesQuery.data.prices.length > 0 ? (
+            <div data-testid="prices-chart" className="w-full h-80 pt-4">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart
+                  data={pricesQuery.data.prices}
+                  margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
+                  <XAxis
+                    dataKey="date"
+                    tick={{ fontSize: 10 }}
+                    tickFormatter={(val) => val.slice(0, 7)}
+                    minTickGap={40}
+                  />
+                  <YAxis
+                    domain={["auto", "auto"]}
+                    tick={{ fontSize: 10 }}
+                    tickFormatter={(val) => `₹${val}`}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "rgba(15, 23, 42, 0.9)",
+                      borderRadius: "0.5rem",
+                      borderColor: "#334155",
+                      fontSize: "12px",
+                      color: "#f8fafc",
+                    }}
+                    formatter={(val: number) => [`₹${val.toFixed(2)}`, ""]}
+                  />
+                  <Legend wrapperStyle={{ fontSize: "12px", paddingTop: "10px" }} />
+                  <Line
+                    type="monotone"
+                    dataKey="close"
+                    name="Unadjusted Close"
+                    stroke="#94a3b8"
+                    strokeWidth={1.5}
+                    dot={false}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="adj_close"
+                    name="Adjusted Close"
+                    stroke="#2563eb"
+                    strokeWidth={2}
+                    dot={false}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          ) : (
+            <div className="py-12 text-center text-xs text-slate-400">
+              No data available. Click Ingest above.
+            </div>
+          )}
+        </CardContent>
+
+        <CardFooter className="border-t border-slate-100 dark:border-slate-800 pt-3 text-xs text-slate-500 flex justify-between">
+          <span>All moving average indicators in Phase 2 are calculated on Adjusted Close.</span>
+          <span>Dates strictly enforced $\le D$ (No Look-Ahead)</span>
+        </CardFooter>
+      </Card>
+    </div>
+  );
+}

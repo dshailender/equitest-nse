@@ -1,0 +1,102 @@
+# Product Requirements Document (PRD)
+**Project:** Quantitative Backtesting Framework for Indian Equities  
+**Document Owner:** Senior Financial Research Analyst / Product Owner  
+**Target Audience:** Quantitative Development and Data Engineering Teams  
+
+## 1. Overview
+This document outlines the requirements for building a robust, parameter-driven backtesting framework for Indian equities. The initial implementation focuses on a specific trend-following strategy using Exponential Moving Averages (EMAs) and market regime filters, simulated over 5, 10, and 15-year periods. The platform must be scalable, heavily parameterized for scenario analysis, and free from common backtesting biases (survivorship, look-ahead).
+
+## 2. Strategy Summary (The "Source of Truth")
+*   **Trading Universe:** NSE 750 excluding the top 100 (i.e., NSE rank 101 to 750).
+*   **Capital & Risk:** Starting corpus of ₹5,00,000. Maximum risk per trade is 2% of the corpus (₹10,000 initially). 
+*   **Market Regime Filter:** Take trades only if the NIFTY index is trading above both its 50-day and 200-day EMAs.
+*   **Stock Trend Filter:** EMA 20 > EMA 50 > EMA 150 > EMA 200.
+*   **Price Action Filter:** Stock price must be > 0.85 × 52-week high (corrected from original 15% phrasing).
+*   **Entry Rule:** Buy when the price breaks above the 20-day EMA.
+*   **Stop Loss (SL):** 7% from the entry price. Position sizing must be derived from the 2% account risk and the 7% SL.
+*   **Exit Rule (Profit Booking):** Sell when the price closes below the 20-day EMA.
+*   **Simulation Periods:** Last 5, 10, and 15 years.
+*   **Core Output:** Total capital growth, number of trades, average profit, average loss, win percentage.
+
+## 3. Detailed Phase-Wise Requirements
+
+### Phase 0: Discovery, Definitions, Assumptions
+| Req ID | Priority | Requirement | Logic / Rule | Inputs | Output | Acceptance Criteria | Dependencies | Notes / Ambiguity |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| REQ-0.1 | High | Bias Prevention | Prevent look-ahead and survivorship bias. | Historical Index constituents | Clean EOD Data | Signals generated on T, execution on T+1 open. Historical constituents reflect actual past data. | Historical constituent data | Critical for credible testing. |
+| REQ-0.2 | High | Corporate Actions | Data must be adjusted for splits, bonuses, and dividends. | Raw EOD Data | Adjusted EOD Data | EMAs and 52W High must match standard charting platforms (e.g., TradingView) for historical dates. | Adjusted data vendor | Unadjusted data will trigger false signals. |
+| REQ-0.3 | Med | Frictions / Costs | Include transaction costs & slippage. | Standard broker/exchange rates | Net P&L per trade | Deduct 0.1% (configurable) per side for brokerage, STT, and slippage. | Config module | Assume a standard discount broker cost structure. |
+
+### Phase 1: Data Ingestion and Universe Construction
+| Req ID | Priority | Requirement | Logic / Rule | Inputs | Output | Acceptance Criteria | Dependencies | Notes / Ambiguity |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| REQ-1.1 | High | Universe Selection | NSE 101 to 750 | Rank by market cap or NSE index definition (Nifty Midcap + Smallcap). | NSE Index Data | Daily list of valid tickers | Engine correctly filters out NSE 100 stocks every day in the simulation. | REQ-0.1 | Must dynamically update over 15 years. |
+| REQ-1.2 | High | Base Data Ingestion | OHLCV daily data | EOD Data feed | Clean OHLCV series | 15+ years of data available with <0.01% missing values. | Data source API/CSV | Interpolate missing volume if necessary. |
+| REQ-1.3 | High | Nifty Benchmark Data | OHLCV for NIFTY 50 | Nifty daily data | Nifty OHLCV series | Accurate tracking of Nifty for market regime filter. | Data source | - |
+
+### Phase 2: Indicator and Signal Engine
+| Req ID | Priority | Requirement | Logic / Rule | Inputs | Output | Acceptance Criteria | Dependencies | Notes / Ambiguity |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| REQ-2.1 | High | Stock EMAs | Calculate 20, 50, 150, 200 EMAs | Adj Close Price | EMA arrays | Values match standard charting libraries (e.g., TA-Lib). | REQ-1.2 | - |
+| REQ-2.2 | High | Nifty EMAs | Calculate 50, 200 EMAs for Nifty | Nifty Close Price | Nifty EMA arrays | Values match standard charting libraries. | REQ-1.3 | - |
+| REQ-2.3 | High | 52-Week High | Rolling 252 trading days max high | Adj High Price | 52W High array | Correctly identifies the max high of the previous 252 sessions. | REQ-1.2 | Use 252 trading days for 52 weeks. |
+
+### Phase 3: Entry, Exit, and Trade Rules
+| Req ID | Priority | Requirement | Logic / Rule | Inputs | Output | Acceptance Criteria | Dependencies | Notes / Ambiguity |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| REQ-3.1 | High | Market Regime Filter | Nifty Close > Nifty 50 EMA AND Nifty Close > Nifty 200 EMA | Nifty Close, Nifty EMAs | Boolean (True/False) | System takes 0 trades when this condition is False. | REQ-2.2 | Evaluated on T for entry on T+1. |
+| REQ-3.2 | High | Trend Filter | Stock EMA 20 > 50 > 150 > 200 | Stock EMAs | Boolean (True/False) | Signal only valid if all 4 EMAs are stacked correctly. | REQ-2.1 | Evaluated on T. |
+| REQ-3.3 | High | Price Filter | Close > (0.85 * 52W High) | Close, 52W High | Boolean (True/False) | Signal invalid if price is >15% away from 52W high. | REQ-2.3 | Note correction from WhatsApp chat. |
+| REQ-3.4 | High | Entry Trigger | Price breaks above EMA 20. | Close, Low, High, EMA 20 | Entry Signal | Detect crossover: Close(T) > EMA20(T) AND Close(T-1) < EMA20(T-1). | REQ-2.1 | Assume standard EOD crossover logic. |
+| REQ-3.5 | High | Exit Trigger (Profit) | Close below EMA 20. | Close, EMA 20 | Exit Signal | Triggered when Close(T) < EMA20(T). Execution on T+1 open. | REQ-2.1 | - |
+
+### Phase 4: Risk, Position Sizing, and Stop Loss
+| Req ID | Priority | Requirement | Logic / Rule | Inputs | Output | Acceptance Criteria | Dependencies | Notes / Ambiguity |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| REQ-4.1 | High | Stop Loss Calculation | SL = Entry Price * (1 - 0.07) | Entry Price | SL Price | System triggers exit if Low(T) <= SL Price. | REQ-3.4 | See Open Questions for gap down risk. |
+| REQ-4.2 | High | Dynamic Risk | Risk = 2% of Current Corpus | Current Capital | Risk Amount (₹) | Initial risk = ₹10k. Adjusts dynamically as capital grows/shrinks. | REQ-5.1 | - |
+| REQ-4.3 | High | Position Sizing | Qty = Risk Amount / (Entry Price * 0.07). Cap allocation = Qty * Entry Price. | Risk Amount, SL distance, Entry Price | Share Qty | Qty ensures exactly 2% corpus risk if stopped out exactly at 7%. | REQ-4.1, 4.2 | Must floor the quantity to nearest whole integer. |
+
+### Phase 5: Backtest Simulation Engine
+| Req ID | Priority | Requirement | Logic / Rule | Inputs | Output | Acceptance Criteria | Dependencies | Notes / Ambiguity |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| REQ-5.1 | High | Capital Tracking | Start at ₹5,00,000. Add/subtract realized P&L. | Starting Cap, Trade P&L | Daily Equity Curve | Accurately compounds capital. Prevents trading if capital < margin required. | REQ-4.3 | - |
+| REQ-5.2 | High | Simulation Periods | Support 5, 10, 15 years limits. | Start/End Dates | Filtered Results | Engine can isolate and run tests for exact date ranges seamlessly. | Phase 1 | - |
+| REQ-5.3 | Med | Capital Constraint | Cannot exceed 100% exposure. | Open Positions, Capital | Trade Rejection | If total allocated capital > current corpus, skip new entry signals. | REQ-4.3, 5.1 | Requires ranking if multiple signals occur on same day. |
+
+### Phase 6: Parameter and Scenario Testing
+| Req ID | Priority | Requirement | Logic / Rule | Inputs | Output | Acceptance Criteria | Dependencies | Notes / Ambiguity |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| REQ-6.1 | High | Parametrization | Variables must be configurable (EMAs, Risk %, SL %, Universe limits). | Config JSON/UI | Dynamic Engine Execution | Changing max risk from 2% to 3% does not require code rewrite. | All Phases | Core request: "factors change kar k output dekh sakte hain" |
+
+### Phase 7: Reporting and Analytics
+| Req ID | Priority | Requirement | Logic / Rule | Inputs | Output | Acceptance Criteria | Dependencies | Notes / Ambiguity |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| REQ-7.1 | High | Core Metrics | Calculate standard KPIs. | Trade Log, Equity Curve | Final Report | Outputs: Total Return, No. of Trades, Avg Profit, Avg Loss, Win Rate (%). | Phase 5 | - |
+| REQ-7.2 | Med | Advanced Metrics | Max Drawdown, Sharpe, CAGR. | Equity Curve | Advanced Report | Calculates accurate risk-adjusted returns and drawdowns. | REQ-7.1 | Highly recommended for quantitative analysis. |
+| REQ-7.3 | Low | Exportability | Export to CSV/Excel. | Final Report | .csv / .xlsx file | All trade logs and equity curve data can be downloaded. | - | - |
+
+### Phase 8: Validation, Acceptance, and Handoff
+| Req ID | Priority | Requirement | Logic / Rule | Inputs | Output | Acceptance Criteria | Dependencies | Notes / Ambiguity |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| REQ-8.1 | High | Manual Verification | Cross-verify 5 random trades against charts. | Trade Log | Verification Sign-off | Dates, prices, and signals exactly match TradingView/Broker charts. | Phase 7 | - |
+| REQ-8.2 | High | Code Documentation | Inline comments, README for setup. | Source Code | Git Repo | Dev team can deploy and run the backtest locally within 30 mins. | - | - |
+
+---
+
+## 4. Open Questions & Required Assumptions
+The development team must proceed with the **Default Assumptions** listed below unless overridden by the Product Owner during Sprint Planning.
+
+1. **Trade Execution Price & Look-ahead Bias:**
+   * *Ambiguity:* The rule says "Buy when price breaks above EMA 20". Is this an intraday break or an End-of-Day (EOD) close? 
+   * *Default Assumption:* To prevent look-ahead bias with EOD data, signals are generated if `Close(T)` crosses above `EMA20(T)`. The trade is executed at the **Open price on T+1**.
+2. **Stop Loss Execution & Gap Down Risk:**
+   * *Ambiguity:* What happens if a stock opens below the 7% stop loss on the next day (Gap down)? 
+   * *Default Assumption:* The system will exit at the Open price of that day, resulting in a loss > 7% and a risk realization > 2%. The engine must simulate realistic market gaps.
+3. **Signal Clashing / Capital Allocation:**
+   * *Ambiguity:* Since risking 2% at a 7% SL requires allocating ~28.5% of total capital per trade, the system can hold a maximum of 3-4 concurrent trades. What if 10 stocks give a signal on the same day?
+   * *Default Assumption:* Sort daily signals by highest momentum (e.g., Distance of Close from EMA20) or randomize selection. *Product Owner needs to finalize ranking criteria for tied signals.*
+4. **Historical Universe (Survivorship Bias):**
+   * *Ambiguity:* How do we accurately define NSE 101-750 for 15 years ago?
+   * *Default Assumption:* The data vendor must provide historical point-in-time constituent lists. If unavailable, use the current NSE 750 list as a fallback, but flag the results as containing survivorship bias.
+```eof

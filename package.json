@@ -1,0 +1,13 @@
+{
+  "name": "equitest-nse",
+  "version": "0.1.0",
+  "private": true,
+  "description": "EquiTest NSE - Quantitative Backtesting Platform",
+  "scripts": {
+    "run-local": "./run-local",
+    "dev": "./run-local",
+    "test": "./bin/make test",
+    "lint": "./bin/make lint"
+  }
+}
+

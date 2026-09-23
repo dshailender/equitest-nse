@@ -1,0 +1,133 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  backend-lint-and-test:
+    name: Backend Lint & Pytest
+    runs-on: ubuntu-latest
+    env:
+      DATA_SOURCE: CSV
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install backend dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e "./backend[dev]"
+
+      - name: Generate Parquet Fixtures
+        run: |
+          python backend/app/data/generate_fixtures.py
+
+      - name: Lint with Ruff and Black
+        run: |
+          ruff check backend
+          black --check backend
+
+      - name: Run Backend Tests with Coverage
+        run: |
+          pytest backend/tests
+
+  frontend-lint-and-test:
+    name: Frontend Lint & Vitest
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package.json
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Lint and Typecheck Frontend
+        working-directory: frontend
+        run: npm run lint
+
+      - name: Run Frontend Vitest Tests
+        working-directory: frontend
+        run: npm run test
+
+  e2e-test:
+    name: End-to-End Playwright Tests
+    runs-on: ubuntu-latest
+    needs: [backend-lint-and-test, frontend-lint-and-test]
+    env:
+      DATA_SOURCE: CSV
+      NODE_PATH: ../frontend/node_modules
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e "./backend"
+
+      - name: Generate Parquet Fixtures
+        run: |
+          python backend/app/data/generate_fixtures.py
+
+      - name: Install frontend
+        working-directory: frontend
+        run: npm ci
+
+      - name: Install Playwright Browsers
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+
+      - name: Start Backend
+        run: |
+          DATA_SOURCE=CSV nohup uvicorn app.main:app --app-dir backend --host 127.0.0.1 --port 8000 > backend.log 2>&1 &
+          sleep 2
+          curl -f http://127.0.0.1:8000/health
+
+      - name: Build and Start Frontend
+        working-directory: frontend
+        run: |
+          npm run build
+          nohup npm run start > ../frontend.log 2>&1 &
+          sleep 3
+          curl -f http://127.0.0.1:3000
+
+      - name: Run Playwright Tests
+        working-directory: frontend
+        run: npx playwright test
+
+      - name: Upload Logs on Failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: service-logs
+          path: |
+            backend.log
+            frontend.log
+            frontend/playwright-report/

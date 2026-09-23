@@ -1,0 +1,597 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "EquiTest NSE Backtesting API",
+    "description": "Quantitative backtesting framework backend for Indian equities",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "Service Health Check",
+        "description": "Returns service operational status and version",
+        "operationId": "root_health_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/health": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "API v1 Health Check",
+        "description": "Returns the current operational status and version of the API.",
+        "operationId": "api_v1_health_api_v1_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/data/ingest": {
+      "post": {
+        "tags": [
+          "data"
+        ],
+        "summary": "Ingest Market Data",
+        "description": "Ingests historical OHLCV data for equities and universe.",
+        "operationId": "api_ingest_data_api_v1_data_ingest_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IngestRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IngestResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/data/coverage": {
+      "get": {
+        "tags": [
+          "data"
+        ],
+        "summary": "Get Data Coverage",
+        "description": "Returns stored date ranges and session counts for symbols.",
+        "operationId": "api_get_coverage_api_v1_data_coverage_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoverageResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/universe": {
+      "get": {
+        "tags": [
+          "data"
+        ],
+        "summary": "Get Universe Constituents",
+        "description": "Returns tickers ranked 101 to 750 with survivorship bias flag.",
+        "operationId": "api_get_universe_api_v1_universe_get",
+        "parameters": [
+          {
+            "name": "date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Target date in YYYY-MM-DD format. Defaults to UTC today.",
+              "examples": [
+                "2023-01-01"
+              ],
+              "title": "Date"
+            },
+            "description": "Target date in YYYY-MM-DD format. Defaults to UTC today."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UniverseResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/prices/{symbol}": {
+      "get": {
+        "tags": [
+          "data"
+        ],
+        "summary": "Get Symbol Prices",
+        "description": "Returns historical OHLCV prices for symbol, filtered chronologically.",
+        "operationId": "api_get_prices_api_v1_prices__symbol__get",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Symbol"
+            }
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional start date (YYYY-MM-DD)",
+              "title": "Start"
+            },
+            "description": "Optional start date (YYYY-MM-DD)"
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional end date (YYYY-MM-DD)",
+              "title": "End"
+            },
+            "description": "Optional end date (YYYY-MM-DD)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PricesResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CoverageItem": {
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "title": "Symbol",
+            "description": "Equity or index ticker symbol"
+          },
+          "first_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Date",
+            "description": "Earliest available trading session"
+          },
+          "last_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Date",
+            "description": "Latest available trading session"
+          },
+          "rows": {
+            "type": "integer",
+            "title": "Rows",
+            "description": "Total number of stored trading sessions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "symbol",
+          "rows"
+        ],
+        "title": "CoverageItem"
+      },
+      "CoverageResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CoverageItem"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "List of symbol coverage summaries"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "CoverageResponse"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "HealthResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Operational status of the service",
+            "default": "ok",
+            "examples": [
+              "ok"
+            ]
+          },
+          "version": {
+            "type": "string",
+            "title": "Version",
+            "description": "Semantic application version",
+            "default": "0.1.0",
+            "examples": [
+              "0.1.0"
+            ]
+          }
+        },
+        "type": "object",
+        "title": "HealthResponse"
+      },
+      "IngestRequest": {
+        "properties": {
+          "start": {
+            "type": "string",
+            "title": "Start",
+            "description": "Start date for data ingestion in YYYY-MM-DD format",
+            "examples": [
+              "2020-01-01"
+            ]
+          },
+          "end": {
+            "type": "string",
+            "title": "End",
+            "description": "End date for data ingestion in YYYY-MM-DD format",
+            "examples": [
+              "2024-01-01"
+            ]
+          },
+          "symbols": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Symbols",
+            "description": "Optional list of ticker symbols. Defaults to active universe.",
+            "examples": [
+              [
+                "RELIANCE",
+                "HDFCBANK",
+                "INFY"
+              ]
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "start",
+          "end"
+        ],
+        "title": "IngestRequest"
+      },
+      "IngestResponse": {
+        "properties": {
+          "job_id": {
+            "type": "string",
+            "title": "Job Id",
+            "description": "Unique ingestion job execution ID"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Job execution status (completed, partial, failed)"
+          },
+          "symbols_ingested": {
+            "type": "integer",
+            "title": "Symbols Ingested",
+            "description": "Number of symbols successfully processed"
+          },
+          "rows_ingested": {
+            "type": "integer",
+            "title": "Rows Ingested",
+            "description": "Total new price rows inserted into database"
+          },
+          "errors": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Errors",
+            "description": "List of non-fatal ingestion warnings or errors",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "job_id",
+          "status",
+          "symbols_ingested",
+          "rows_ingested"
+        ],
+        "title": "IngestResponse"
+      },
+      "PriceItem": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "title": "Date",
+            "description": "Session date (YYYY-MM-DD)"
+          },
+          "open": {
+            "type": "number",
+            "title": "Open",
+            "description": "Opening price"
+          },
+          "high": {
+            "type": "number",
+            "title": "High",
+            "description": "Highest price during session"
+          },
+          "low": {
+            "type": "number",
+            "title": "Low",
+            "description": "Lowest price during session"
+          },
+          "close": {
+            "type": "number",
+            "title": "Close",
+            "description": "Unadjusted closing price"
+          },
+          "adj_close": {
+            "type": "number",
+            "title": "Adj Close",
+            "description": "Corporate-action adjusted closing price"
+          },
+          "volume": {
+            "type": "number",
+            "title": "Volume",
+            "description": "Total trading volume"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "open",
+          "high",
+          "low",
+          "close",
+          "adj_close",
+          "volume"
+        ],
+        "title": "PriceItem"
+      },
+      "PricesResponse": {
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "title": "Symbol",
+            "description": "Equity ticker symbol"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count",
+            "description": "Number of sessions returned"
+          },
+          "prices": {
+            "items": {
+              "$ref": "#/components/schemas/PriceItem"
+            },
+            "type": "array",
+            "title": "Prices",
+            "description": "Chronological series of OHLCV bars"
+          }
+        },
+        "type": "object",
+        "required": [
+          "symbol",
+          "count",
+          "prices"
+        ],
+        "title": "PricesResponse"
+      },
+      "UniverseResponse": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "title": "Date",
+            "description": "Target date for universe constituent evaluation"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count",
+            "description": "Total number of constituent tickers (ranks 101 to 750)"
+          },
+          "tickers": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Tickers",
+            "description": "List of ticker symbols belonging to the universe"
+          },
+          "survivorship_bias": {
+            "type": "boolean",
+            "title": "Survivorship Bias",
+            "description": "True if fallback current list was used due to missing point-in-time constituent records"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "count",
+          "tickers",
+          "survivorship_bias"
+        ],
+        "title": "UniverseResponse"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}
