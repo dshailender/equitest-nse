@@ -216,5 +216,5 @@ def test_api_report_not_completed(tmp_path):
 def test_api_report_export_invalid_format(executed_backtest_run_id):
     """Asserts 422 on unsupported export format."""
     client = TestClient(app)
-    resp = client.get(f"/api/v1/reports/{executed_backtest_run_id}/export?format=pdf")
+    resp = client.get(f"/api/v1/reports/{executed_backtest_run_id}/export?format=docx")
     assert resp.status_code == 422

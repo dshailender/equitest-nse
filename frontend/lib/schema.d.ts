@@ -493,9 +493,89 @@ export interface paths {
         };
         /**
          * Export Backtest Report Bundle
-         * @description Exports trade ledger and metrics bundle as CSV, XLSX, or ZIP (REQ-7.3).
+         * @description Exports trade ledger and metrics bundle as CSV, XLSX, ZIP, or PDF (REQ-7.3, REQ-9.1, REQ-9.4).
          */
         get: operations["api_export_report_api_v1_reports__run_id__export_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reports/{run_id}/export/pdf/async": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Force Asynchronous PDF Generation
+         * @description Forces async background PDF generation regardless of trade count (REQ-9.4).
+         */
+        post: operations["api_export_pdf_async_api_v1_reports__run_id__export_pdf_async_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reports/jobs/{job_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Asynchronous PDF Job Status
+         * @description Returns lifecycle status and metadata for an async PDF generation job (REQ-9.4).
+         */
+        get: operations["api_get_pdf_job_status_api_v1_reports_jobs__job_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reports/jobs/{job_id}/download": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Download Generated PDF From Async Job
+         * @description Streams the generated PDF report when status is 'ready' (REQ-9.4).
+         */
+        get: operations["api_download_pdf_job_api_v1_reports_jobs__job_id__download_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reports/{run_id}/preview.png": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Preview PDF First Page as PNG
+         * @description Renders the first page of the PDF report as PNG for pre-download preview.
+         */
+        get: operations["api_get_pdf_preview_api_v1_reports__run_id__preview_png_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1376,6 +1456,62 @@ export interface components {
              * @description Full year compounded return
              */
             total: number;
+        };
+        /**
+         * PdfJobCreateResponse
+         * @description Response returned when initiating an asynchronous PDF generation job.
+         *
+         *     Covers REQ-9.4.
+         */
+        PdfJobCreateResponse: {
+            /**
+             * Job Id
+             * @description Unique background PDF generation job ID
+             */
+            job_id: string;
+            /**
+             * Status
+             * @description Initial job status
+             * @default pending
+             */
+            status: string;
+            /**
+             * Message
+             * @description Informational status message
+             * @default PDF generation job accepted and processing in background.
+             */
+            message: string;
+        };
+        /**
+         * PdfJobResponse
+         * @description Status record of an asynchronous PDF generation background job (REQ-9.4).
+         */
+        PdfJobResponse: {
+            /**
+             * Job Id
+             * @description Unique background PDF generation job ID
+             */
+            job_id: string;
+            /**
+             * Status
+             * @description Job status: 'pending', 'ready', or 'failed'
+             */
+            status: string;
+            /**
+             * File Path
+             * @description Absolute file path to ready PDF on server
+             */
+            file_path?: string | null;
+            /**
+             * Error
+             * @description Error message if generation failed
+             */
+            error?: string | null;
+            /**
+             * Created At
+             * @description Job creation ISO timestamp
+             */
+            created_at: string;
         };
         /**
          * PerformanceMetrics
@@ -2805,9 +2941,133 @@ export interface operations {
     api_export_report_api_v1_reports__run_id__export_get: {
         parameters: {
             query?: {
-                /** @description Export format: 'csv' (trade ledger), 'xlsx' (Excel workbook), or 'zip' (all CSVs) */
+                /** @description Export format: 'csv' (trade ledger), 'xlsx' (Excel workbook), 'zip' (all CSVs), or 'pdf' (print-ready PDF) */
                 format?: string;
             };
+            header?: never;
+            path: {
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    api_export_pdf_async_api_v1_reports__run_id__export_pdf_async_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PdfJobCreateResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    api_get_pdf_job_status_api_v1_reports_jobs__job_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PdfJobResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    api_download_pdf_job_api_v1_reports_jobs__job_id__download_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    api_get_pdf_preview_api_v1_reports__run_id__preview_png_get: {
+        parameters: {
+            query?: never;
             header?: never;
             path: {
                 run_id: string;

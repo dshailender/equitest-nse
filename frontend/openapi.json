@@ -1121,7 +1121,7 @@
           "reports"
         ],
         "summary": "Export Backtest Report Bundle",
-        "description": "Exports trade ledger and metrics bundle as CSV, XLSX, or ZIP (REQ-7.3).",
+        "description": "Exports trade ledger and metrics bundle as CSV, XLSX, ZIP, or PDF (REQ-7.3, REQ-9.1, REQ-9.4).",
         "operationId": "api_export_report_api_v1_reports__run_id__export_get",
         "parameters": [
           {
@@ -1139,12 +1139,180 @@
             "required": false,
             "schema": {
               "type": "string",
-              "pattern": "^(csv|xlsx|zip)$",
-              "description": "Export format: 'csv' (trade ledger), 'xlsx' (Excel workbook), or 'zip' (all CSVs)",
+              "pattern": "^(csv|xlsx|zip|pdf)$",
+              "description": "Export format: 'csv' (trade ledger), 'xlsx' (Excel workbook), 'zip' (all CSVs), or 'pdf' (print-ready PDF)",
               "default": "csv",
               "title": "Format"
             },
-            "description": "Export format: 'csv' (trade ledger), 'xlsx' (Excel workbook), or 'zip' (all CSVs)"
+            "description": "Export format: 'csv' (trade ledger), 'xlsx' (Excel workbook), 'zip' (all CSVs), or 'pdf' (print-ready PDF)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/reports/{run_id}/export/pdf/async": {
+      "post": {
+        "tags": [
+          "reports"
+        ],
+        "summary": "Force Asynchronous PDF Generation",
+        "description": "Forces async background PDF generation regardless of trade count (REQ-9.4).",
+        "operationId": "api_export_pdf_async_api_v1_reports__run_id__export_pdf_async_post",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PdfJobCreateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/reports/jobs/{job_id}": {
+      "get": {
+        "tags": [
+          "reports"
+        ],
+        "summary": "Get Asynchronous PDF Job Status",
+        "description": "Returns lifecycle status and metadata for an async PDF generation job (REQ-9.4).",
+        "operationId": "api_get_pdf_job_status_api_v1_reports_jobs__job_id__get",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PdfJobResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/reports/jobs/{job_id}/download": {
+      "get": {
+        "tags": [
+          "reports"
+        ],
+        "summary": "Download Generated PDF From Async Job",
+        "description": "Streams the generated PDF report when status is 'ready' (REQ-9.4).",
+        "operationId": "api_download_pdf_job_api_v1_reports_jobs__job_id__download_get",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/reports/{run_id}/preview.png": {
+      "get": {
+        "tags": [
+          "reports"
+        ],
+        "summary": "Preview PDF First Page as PNG",
+        "description": "Renders the first page of the PDF report as PNG for pre-download preview.",
+        "operationId": "api_get_pdf_preview_api_v1_reports__run_id__preview_png_get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
           }
         ],
         "responses": {
@@ -2732,6 +2900,84 @@
           "total"
         ],
         "title": "MonthlyReturnRow"
+      },
+      "PdfJobCreateResponse": {
+        "properties": {
+          "job_id": {
+            "type": "string",
+            "title": "Job Id",
+            "description": "Unique background PDF generation job ID"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Initial job status",
+            "default": "pending"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "Informational status message",
+            "default": "PDF generation job accepted and processing in background."
+          }
+        },
+        "type": "object",
+        "required": [
+          "job_id"
+        ],
+        "title": "PdfJobCreateResponse",
+        "description": "Response returned when initiating an asynchronous PDF generation job.\n\nCovers REQ-9.4."
+      },
+      "PdfJobResponse": {
+        "properties": {
+          "job_id": {
+            "type": "string",
+            "title": "Job Id",
+            "description": "Unique background PDF generation job ID"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Job status: 'pending', 'ready', or 'failed'"
+          },
+          "file_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File Path",
+            "description": "Absolute file path to ready PDF on server"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error",
+            "description": "Error message if generation failed"
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At",
+            "description": "Job creation ISO timestamp"
+          }
+        },
+        "type": "object",
+        "required": [
+          "job_id",
+          "status",
+          "created_at"
+        ],
+        "title": "PdfJobResponse",
+        "description": "Status record of an asynchronous PDF generation background job (REQ-9.4)."
       },
       "PerformanceMetrics": {
         "properties": {

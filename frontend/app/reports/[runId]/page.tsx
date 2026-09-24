@@ -24,6 +24,7 @@ import {
   type ReportSummaryResponse,
 } from "@/lib/api";
 import { AuditPanel } from "@/components/AuditPanel";
+import { ExportButton } from "@/components/ExportButton";
 
 
 const MONTH_COLS = [
@@ -232,6 +233,7 @@ export default function ReportDetailPage({
 
         {/* Export Toolbar */}
         <div className="flex items-center space-x-2">
+          <ExportButton format="pdf" runId={summary.run_id} />
           <button
             onClick={() => handleDownload("csv")}
             data-testid="btn-export-csv"

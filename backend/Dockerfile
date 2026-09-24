@@ -31,9 +31,19 @@ ENV GIT_SHA=${GIT_SHA}
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
+    libpango-1.0-0 \
+    libpangoft2-1.0-0 \
+    libcairo2 \
+    libgdk-pixbuf-2.0-0 \
+    libffi-dev \
+    shared-mime-info \
+    fonts-dejavu-core \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /opt/venv /opt/venv
+
+# Smoke test PDF generation in container build
+RUN python -c "from weasyprint import HTML; pdf = HTML(string='<h1>Smoke Test</h1>').write_pdf(); assert pdf.startswith(b'%PDF'), 'PDF generation smoke test failed'"
 
 # Create unprivileged application user
 RUN groupadd -g 1001 appgroup && \

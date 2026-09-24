@@ -749,3 +749,31 @@ class BacktestAuditResponse(BaseModel):
         ..., description="Runtime and library dependencies versions"
     )
     created_at: str | None = Field(default=None, description="Execution ISO timestamp")
+
+
+class PdfJobResponse(BaseModel):
+    """Status record of an asynchronous PDF generation background job (REQ-9.4)."""
+
+    job_id: str = Field(..., description="Unique background PDF generation job ID")
+    status: str = Field(..., description="Job status: 'pending', 'ready', or 'failed'")
+    file_path: str | None = Field(
+        default=None, description="Absolute file path to ready PDF on server"
+    )
+    error: str | None = Field(
+        default=None, description="Error message if generation failed"
+    )
+    created_at: str = Field(..., description="Job creation ISO timestamp")
+
+
+class PdfJobCreateResponse(BaseModel):
+    """Response returned when initiating an asynchronous PDF generation job.
+
+    Covers REQ-9.4.
+    """
+
+    job_id: str = Field(..., description="Unique background PDF generation job ID")
+    status: str = Field(default="pending", description="Initial job status")
+    message: str = Field(
+        default="PDF generation job accepted and processing in background.",
+        description="Informational status message",
+    )

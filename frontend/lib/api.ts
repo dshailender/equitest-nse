@@ -981,9 +981,39 @@ export async function fetchReportMonthly(
  */
 export function getReportExportUrl(
   runId: string,
-  format: "csv" | "xlsx" | "zip" = "csv"
+  format: "csv" | "xlsx" | "zip" | "pdf" = "csv"
 ): string {
   return `${API_BASE_URL}/api/v1/reports/${encodeURIComponent(runId)}/export?format=${format}`;
+}
+
+// --- PDF Async Job Schemas & Methods (REQ-9.4) ---
+export const PdfJobResponseSchema = z.object({
+  job_id: z.string(),
+  status: z.enum(["pending", "ready", "failed"]),
+  file_path: z.string().nullable().optional(),
+  error: z.string().nullable().optional(),
+  created_at: z.string(),
+});
+export type PdfJobResponse = z.infer<typeof PdfJobResponseSchema>;
+
+export async function fetchPdfJobStatus(jobId: string): Promise<PdfJobResponse> {
+  const url = `${API_BASE_URL}/api/v1/reports/jobs/${encodeURIComponent(jobId)}`;
+  const response = await fetch(url, {
+    headers: { Accept: "application/json" },
+    cache: "no-store",
+  });
+  if (!response.ok) {
+    throw new ApiError(
+      response.status,
+      `PDF job status fetch failed with status: ${response.status}`
+    );
+  }
+  const json = await response.json();
+  return PdfJobResponseSchema.parse(json);
+}
+
+export function getPdfJobDownloadUrl(jobId: string): string {
+  return `${API_BASE_URL}/api/v1/reports/jobs/${encodeURIComponent(jobId)}/download`;
 }
 
 // --- Validation Cross-Check Schemas & Methods (REQ-8.1) ---
