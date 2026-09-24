@@ -1,8 +1,8 @@
 """Monthly returns aggregation matrix for EquiTest NSE (REQ-7.2)."""
 
 from typing import Any
-import pandas as pd
 
+import pandas as pd
 
 MONTH_KEYS = [
     "jan",
@@ -21,7 +21,7 @@ MONTH_KEYS = [
 
 
 def compute_monthly_returns(equity_curve: pd.DataFrame) -> list[dict[str, Any]]:
-    """Aggregates daily mark-to-market equity curve into a Month x Year compounded returns matrix.
+    """Aggregates daily equity curve into a Month x Year compounded matrix.
 
     Args:
         equity_curve: DataFrame containing at least 'date' and 'equity' columns.

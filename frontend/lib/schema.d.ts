@@ -424,6 +424,66 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/reports/{run_id}/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Backtest Run Performance Summary
+         * @description Returns comprehensive core and advanced performance metrics (REQ-7.1).
+         */
+        get: operations["api_get_report_summary_api_v1_reports__run_id__summary_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reports/{run_id}/monthly": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Monthly Returns Matrix
+         * @description Returns Month x Year compounded returns matrix (REQ-7.2).
+         */
+        get: operations["api_get_report_monthly_api_v1_reports__run_id__monthly_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reports/{run_id}/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export Backtest Report Bundle
+         * @description Exports trade ledger and metrics bundle as CSV, XLSX, or ZIP (REQ-7.3).
+         */
+        get: operations["api_export_report_api_v1_reports__run_id__export_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1091,6 +1151,180 @@ export interface components {
              */
             errors: string[];
         };
+        /** MonthlyReturnRow */
+        MonthlyReturnRow: {
+            /**
+             * Year
+             * @description Calendar year
+             */
+            year: number;
+            /**
+             * Jan
+             * @description January compounded return
+             */
+            jan?: number | null;
+            /**
+             * Feb
+             * @description February compounded return
+             */
+            feb?: number | null;
+            /**
+             * Mar
+             * @description March compounded return
+             */
+            mar?: number | null;
+            /**
+             * Apr
+             * @description April compounded return
+             */
+            apr?: number | null;
+            /**
+             * May
+             * @description May compounded return
+             */
+            may?: number | null;
+            /**
+             * Jun
+             * @description June compounded return
+             */
+            jun?: number | null;
+            /**
+             * Jul
+             * @description July compounded return
+             */
+            jul?: number | null;
+            /**
+             * Aug
+             * @description August compounded return
+             */
+            aug?: number | null;
+            /**
+             * Sep
+             * @description September compounded return
+             */
+            sep?: number | null;
+            /**
+             * Oct
+             * @description October compounded return
+             */
+            oct?: number | null;
+            /**
+             * Nov
+             * @description November compounded return
+             */
+            nov?: number | null;
+            /**
+             * Dec
+             * @description December compounded return
+             */
+            dec?: number | null;
+            /**
+             * Total
+             * @description Full year compounded return
+             */
+            total: number;
+        };
+        /**
+         * PerformanceMetrics
+         * @description Container holding core and advanced quantitative strategy performance metrics.
+         */
+        PerformanceMetrics: {
+            /**
+             * Total Trades
+             * @description Total completed round-trip trades
+             */
+            total_trades: number;
+            /**
+             * Win Trades
+             * @description Number of profitable trades (PnL > 0)
+             */
+            win_trades: number;
+            /**
+             * Loss Trades
+             * @description Number of losing or scratch trades (PnL <= 0)
+             */
+            loss_trades: number;
+            /**
+             * Win Rate
+             * @description Fraction of winning trades (0.0 to 1.0, 4 decimal places)
+             */
+            win_rate: number;
+            /**
+             * Avg Profit
+             * @description Average profit of winning trades in INR (2 decimal places)
+             */
+            avg_profit: number;
+            /**
+             * Avg Loss
+             * @description Average loss of losing trades in INR (2 decimal places)
+             */
+            avg_loss: number;
+            /**
+             * Total Return Pct
+             * @description Total percentage return (4 decimal places)
+             */
+            total_return_pct: number;
+            /**
+             * Initial Capital
+             * @description Initial starting corpus in INR (2 decimal places)
+             */
+            initial_capital: number;
+            /**
+             * Final Capital
+             * @description Ending portfolio equity in INR (2 decimal places)
+             */
+            final_capital: number;
+            /**
+             * Net Profit
+             * @description Net portfolio monetary gain/loss in INR (2 decimal places)
+             */
+            net_profit: number;
+            /**
+             * Cagr
+             * @description Compound Annual Growth Rate (4 decimal places)
+             */
+            cagr: number;
+            /**
+             * Max Drawdown Pct
+             * @description Maximum peak-to-trough percentage drawdown (4 decimal places)
+             */
+            max_drawdown_pct: number;
+            /**
+             * Max Drawdown Amount
+             * @description Maximum peak-to-trough monetary drawdown in INR (2 decimal places)
+             */
+            max_drawdown_amount: number;
+            /**
+             * Sharpe Ratio
+             * @description Annualized Sharpe Ratio with rf=0 (4 decimal places)
+             */
+            sharpe_ratio: number;
+            /**
+             * Sortino Ratio
+             * @description Annualized Sortino Ratio with MAR=0 (4 decimal places)
+             */
+            sortino_ratio: number;
+            /**
+             * Calmar Ratio
+             * @description Calmar Ratio: CAGR / Max Drawdown (4 decimal places)
+             */
+            calmar_ratio: number;
+            /**
+             * Profit Factor
+             * @description Gross Profits / Gross Losses (4 decimal places)
+             */
+            profit_factor: number;
+            /**
+             * Expectancy
+             * @description Average monetary expectancy per trade in INR (2 decimal places)
+             */
+            expectancy: number;
+            /**
+             * Avg Days Held
+             * @description Average holding duration in days (1 decimal place)
+             */
+            avg_days_held: number;
+        };
         /** PriceItem */
         PriceItem: {
             /**
@@ -1146,6 +1380,46 @@ export interface components {
              * @description Chronological series of OHLCV bars
              */
             prices: components["schemas"]["PriceItem"][];
+        };
+        /** ReportMonthlyResponse */
+        ReportMonthlyResponse: {
+            /**
+             * Run Id
+             * @description Unique backtest run identifier
+             */
+            run_id: string;
+            /**
+             * Years
+             * @description Month x year returns matrix
+             */
+            years: components["schemas"]["MonthlyReturnRow"][];
+        };
+        /** ReportSummaryResponse */
+        ReportSummaryResponse: {
+            /**
+             * Run Id
+             * @description Unique backtest run identifier
+             */
+            run_id: string;
+            /**
+             * Status
+             * @description Execution status
+             */
+            status: string;
+            /**
+             * Created At
+             * @description ISO 8601 creation timestamp
+             */
+            created_at: string;
+            /**
+             * Config
+             * @description Strategy parameters
+             */
+            config?: {
+                [key: string]: unknown;
+            };
+            /** @description Calculated core and advanced KPIs */
+            metrics: components["schemas"]["PerformanceMetrics"];
         };
         /** RiskConfigResponse */
         RiskConfigResponse: {
@@ -2269,6 +2543,102 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BacktestEquityResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    api_get_report_summary_api_v1_reports__run_id__summary_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportSummaryResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    api_get_report_monthly_api_v1_reports__run_id__monthly_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportMonthlyResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    api_export_report_api_v1_reports__run_id__export_get: {
+        parameters: {
+            query?: {
+                /** @description Export format: 'csv' (trade ledger), 'xlsx' (Excel workbook), or 'zip' (all CSVs) */
+                format?: string;
+            };
+            header?: never;
+            path: {
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */

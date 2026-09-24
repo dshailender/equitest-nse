@@ -5,6 +5,7 @@ import re
 import xml.sax.saxutils as saxutils
 import zipfile
 from typing import Any
+
 import pandas as pd
 
 from app.reports.metrics import PerformanceMetrics
@@ -69,7 +70,11 @@ def generate_summary_csv(metrics: PerformanceMetrics) -> str:
         ("net_profit", metrics.net_profit, "Net profit (INR)"),
         ("cagr", metrics.cagr, "Compound Annual Growth Rate"),
         ("max_drawdown_pct", metrics.max_drawdown_pct, "Maximum percentage drawdown"),
-        ("max_drawdown_amount", metrics.max_drawdown_amount, "Maximum monetary drawdown (INR)"),
+        (
+            "max_drawdown_amount",
+            metrics.max_drawdown_amount,
+            "Maximum monetary drawdown (INR)",
+        ),
         ("sharpe_ratio", metrics.sharpe_ratio, "Annualized Sharpe ratio (rf=0)"),
         ("sortino_ratio", metrics.sortino_ratio, "Annualized Sortino ratio (MAR=0)"),
         ("calmar_ratio", metrics.calmar_ratio, "Calmar ratio: CAGR / Max Drawdown"),
@@ -78,13 +83,28 @@ def generate_summary_csv(metrics: PerformanceMetrics) -> str:
         ("avg_days_held", metrics.avg_days_held, "Average holding duration in days"),
     ]
     for key, val, desc in data:
-        lines.append(f"{key},{val},\"{desc}\"")
+        lines.append(f'{key},{val},"{desc}"')
     return "\n".join(lines) + "\n"
 
 
 def generate_monthly_csv(monthly_matrix: list[dict[str, Any]]) -> str:
     """Generates CSV string of month x year returns matrix."""
-    cols = ["year", "jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec", "total"]
+    cols = [
+        "year",
+        "jan",
+        "feb",
+        "mar",
+        "apr",
+        "may",
+        "jun",
+        "jul",
+        "aug",
+        "sep",
+        "oct",
+        "nov",
+        "dec",
+        "total",
+    ]
     lines = [",".join(cols)]
     for row in monthly_matrix:
         row_vals = []
@@ -106,8 +126,12 @@ def generate_report_zip(
     with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
         zf.writestr("summary.csv", generate_summary_csv(metrics).encode("utf-8"))
         zf.writestr("trades.csv", generate_trades_csv(trades).encode("utf-8"))
-        zf.writestr("equity_curve.csv", generate_equity_csv(equity_curve).encode("utf-8"))
-        zf.writestr("monthly_returns.csv", generate_monthly_csv(monthly_matrix).encode("utf-8"))
+        zf.writestr(
+            "equity_curve.csv", generate_equity_csv(equity_curve).encode("utf-8")
+        )
+        zf.writestr(
+            "monthly_returns.csv", generate_monthly_csv(monthly_matrix).encode("utf-8")
+        )
     return buf.getvalue()
 
 
@@ -126,7 +150,7 @@ def _rows_to_worksheet_xml(rows: list[list[Any]]) -> str:
     xml_parts = [
         '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>',
         '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">',
-        '<sheetData>',
+        "<sheetData>",
     ]
     for r_idx, row in enumerate(rows, start=1):
         cell_parts = []
@@ -137,10 +161,14 @@ def _rows_to_worksheet_xml(rows: list[list[Any]]) -> str:
             if isinstance(val, (int, float)):
                 cell_parts.append(f'<c r="{cell_ref}"><v>{val}</v></c>')
             elif isinstance(val, bool):
-                cell_parts.append(f'<c r="{cell_ref}" t="b"><v>{1 if val else 0}</v></c>')
+                cell_parts.append(
+                    f'<c r="{cell_ref}" t="b"><v>{1 if val else 0}</v></c>'
+                )
             else:
                 escaped = saxutils.escape(str(val))
-                cell_parts.append(f'<c r="{cell_ref}" t="inlineStr"><is><t>{escaped}</t></is></c>')
+                cell_parts.append(
+                    f'<c r="{cell_ref}" t="inlineStr"><is><t>{escaped}</t></is></c>'
+                )
         if cell_parts:
             xml_parts.append(f'<row r="{r_idx}">{"".join(cell_parts)}</row>')
     xml_parts.extend(["</sheetData>", "</worksheet>"])
@@ -169,7 +197,11 @@ def generate_report_xlsx(
         ("Net Profit (INR)", metrics.net_profit, "Net monetary gain/loss"),
         ("CAGR", metrics.cagr, "Compound Annual Growth Rate"),
         ("Max Drawdown (%)", metrics.max_drawdown_pct, "Maximum percentage drawdown"),
-        ("Max Drawdown Amount (INR)", metrics.max_drawdown_amount, "Maximum monetary drawdown"),
+        (
+            "Max Drawdown Amount (INR)",
+            metrics.max_drawdown_amount,
+            "Maximum monetary drawdown",
+        ),
         ("Sharpe Ratio (rf=0)", metrics.sharpe_ratio, "Annualized Sharpe ratio"),
         ("Sortino Ratio (MAR=0)", metrics.sortino_ratio, "Annualized Sortino ratio"),
         ("Calmar Ratio", metrics.calmar_ratio, "Calmar ratio: CAGR / Max Drawdown"),
@@ -187,7 +219,21 @@ def generate_report_xlsx(
         for _, tr in trades.iterrows():
             trades_rows.append([tr[col] for col in trades_cols])
     else:
-        trades_rows.append(["symbol", "entry_date", "entry_price", "qty", "exit_date", "exit_price", "pnl", "pnl_pct", "exit_reason", "days_held", "costs"])
+        trades_rows.append(
+            [
+                "symbol",
+                "entry_date",
+                "entry_price",
+                "qty",
+                "exit_date",
+                "exit_price",
+                "pnl",
+                "pnl_pct",
+                "exit_reason",
+                "days_held",
+                "costs",
+            ]
+        )
 
     # Sheet 3: Equity Curve
     equity_rows: list[list[Any]] = []
@@ -197,11 +243,52 @@ def generate_report_xlsx(
         for _, eq in equity_curve.iterrows():
             equity_rows.append([eq[col] for col in eq_cols])
     else:
-        equity_rows.append(["date", "equity", "cash", "positions_value", "open_positions", "daily_return", "drawdown", "drawdown_pct"])
+        equity_rows.append(
+            [
+                "date",
+                "equity",
+                "cash",
+                "positions_value",
+                "open_positions",
+                "daily_return",
+                "drawdown",
+                "drawdown_pct",
+            ]
+        )
 
     # Sheet 4: Monthly Returns
-    monthly_cols = ["Year", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec", "Total (YTD)"]
-    raw_keys = ["year", "jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec", "total"]
+    monthly_cols = [
+        "Year",
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
+        "Total (YTD)",
+    ]
+    raw_keys = [
+        "year",
+        "jan",
+        "feb",
+        "mar",
+        "apr",
+        "may",
+        "jun",
+        "jul",
+        "aug",
+        "sep",
+        "oct",
+        "nov",
+        "dec",
+        "total",
+    ]
     monthly_rows: list[list[Any]] = [monthly_cols]
     for row in monthly_matrix:
         monthly_rows.append([row.get(k) for k in raw_keys])
@@ -216,48 +303,75 @@ def generate_report_xlsx(
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
         # 1. [Content_Types].xml
+        rel_ct = "application/vnd.openxmlformats-package.relationships+xml"
+        sheet_ct = (
+            "application/vnd.openxmlformats-officedocument.spreadsheetml"
+            ".worksheet+xml"
+        )
+        wb_ct = (
+            "application/vnd.openxmlformats-officedocument.spreadsheetml"
+            ".sheet.main+xml"
+        )
         ct_xml = [
             '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>',
             '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">',
-            '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>',
+            f'<Default Extension="rels" ContentType="{rel_ct}"/>',
             '<Default Extension="xml" ContentType="application/xml"/>',
-            '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>',
+            f'<Override PartName="/xl/workbook.xml" ContentType="{wb_ct}"/>',
         ]
         for i in range(1, len(sheets) + 1):
-            ct_xml.append(f'<Override PartName="/xl/worksheets/sheet{i}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>')
+            ct_xml.append(
+                f'<Override PartName="/xl/worksheets/sheet{i}.xml" '
+                f'ContentType="{sheet_ct}"/>'
+            )
         ct_xml.append("</Types>")
         zf.writestr("[Content_Types].xml", "".join(ct_xml).encode("utf-8"))
 
         # 2. _rels/.rels
+        doc_rel_type = (
+            "http://schemas.openxmlformats.org/officeDocument/2006/"
+            "relationships/officeDocument"
+        )
         rels_xml = (
             '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
             '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
-            '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>'
-            '</Relationships>'
+            f'<Relationship Id="rId1" Type="{doc_rel_type}" Target="xl/workbook.xml"/>'
+            "</Relationships>"
         )
         zf.writestr("_rels/.rels", rels_xml.encode("utf-8"))
 
         # 3. xl/_rels/workbook.xml.rels
+        ws_rel_type = (
+            "http://schemas.openxmlformats.org/officeDocument/2006/"
+            "relationships/worksheet"
+        )
         wb_rels_parts = [
             '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>',
             '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">',
         ]
         for i in range(1, len(sheets) + 1):
             wb_rels_parts.append(
-                f'<Relationship Id="rId{i}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet{i}.xml"/>'
+                f'<Relationship Id="rId{i}" Type="{ws_rel_type}" '
+                f'Target="worksheets/sheet{i}.xml"/>'
             )
         wb_rels_parts.append("</Relationships>")
-        zf.writestr("xl/_rels/workbook.xml.rels", "".join(wb_rels_parts).encode("utf-8"))
+        zf.writestr(
+            "xl/_rels/workbook.xml.rels", "".join(wb_rels_parts).encode("utf-8")
+        )
 
         # 4. xl/workbook.xml
+        wb_ns = "http://schemas.openxmlformats.org/spreadsheetml/2006/main"
+        wb_r_ns = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
         wb_xml_parts = [
             '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>',
-            '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">',
-            '<sheets>',
+            f'<workbook xmlns="{wb_ns}" xmlns:r="{wb_r_ns}">',
+            "<sheets>",
         ]
         for i, (name, _) in enumerate(sheets, start=1):
-            safe_name = re.sub(r'[\:\\\/\?\*\[\]]', "_", name)[:31]
-            wb_xml_parts.append(f'<sheet name="{safe_name}" sheetId="{i}" r:id="rId{i}"/>')
+            safe_name = re.sub(r"[\:\\\/\?\*\[\]]", "_", name)[:31]
+            wb_xml_parts.append(
+                f'<sheet name="{safe_name}" sheetId="{i}" r:id="rId{i}"/>'
+            )
         wb_xml_parts.extend(["</sheets>", "</workbook>"])
         zf.writestr("xl/workbook.xml", "".join(wb_xml_parts).encode("utf-8"))
 

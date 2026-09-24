@@ -578,6 +578,122 @@ export const handlers = [
     ]);
   }),
 
+  // Reports - Summary (REQ-7.1)
+  http.get("*/api/v1/reports/:run_id/summary", ({ params }) => {
+    return HttpResponse.json({
+      run_id: params.run_id,
+      status: "completed",
+      created_at: "2026-09-24T12:00:00Z",
+      config: { capital: 500000.0, sl_pct: 0.07, risk_pct: 0.02 },
+      metrics: {
+        total_trades: 2,
+        win_trades: 0,
+        loss_trades: 2,
+        win_rate: 0.0,
+        avg_profit: 0.0,
+        avg_loss: -8646.40,
+        total_return_pct: -0.0346,
+        initial_capital: 500000.0,
+        final_capital: 482707.2,
+        net_profit: -17292.80,
+        cagr: -0.0183,
+        max_drawdown_pct: 0.0383,
+        max_drawdown_amount: 19208.32,
+        sharpe_ratio: -0.5854,
+        sortino_ratio: -0.5859,
+        calmar_ratio: -0.4270,
+        profit_factor: 0.0,
+        expectancy: -8646.40,
+        avg_days_held: 68.0,
+      },
+    });
+  }),
+
+  // Reports - Monthly Matrix (REQ-7.2)
+  http.get("*/api/v1/reports/:run_id/monthly", ({ params }) => {
+    return HttpResponse.json({
+      run_id: params.run_id,
+      years: [
+        {
+          year: 2020,
+          jan: null,
+          feb: null,
+          mar: null,
+          apr: null,
+          may: null,
+          jun: 0.0,
+          jul: 0.0,
+          aug: 0.0,
+          sep: 0.0,
+          oct: 0.0,
+          nov: 0.0,
+          dec: 0.0,
+          total: 0.0,
+        },
+        {
+          year: 2021,
+          jan: 0.0,
+          feb: 0.0,
+          mar: 0.0,
+          apr: 0.0,
+          may: 0.0006,
+          jun: 0.0014,
+          jul: 0.0014,
+          aug: -0.0340,
+          sep: 0.0,
+          oct: 0.0,
+          nov: 0.0014,
+          dec: 0.0012,
+          total: -0.0282,
+        },
+        {
+          year: 2022,
+          jan: 0.0011,
+          feb: -0.0077,
+          mar: 0.0,
+          apr: 0.0,
+          may: null,
+          jun: null,
+          jul: null,
+          aug: null,
+          sep: null,
+          oct: null,
+          nov: null,
+          dec: null,
+          total: -0.0066,
+        },
+      ],
+    });
+  }),
+
+  // Reports - Export (REQ-7.3)
+  http.get("*/api/v1/reports/:run_id/export", ({ request, params }) => {
+    const url = new URL(request.url);
+    const fmt = url.searchParams.get("format") || "csv";
+    if (fmt === "csv") {
+      const csv = "symbol,entry_date,entry_price,qty,exit_date,exit_price,pnl,pnl_pct,exit_reason,days_held,costs\nALPHA,2021-05-25,217.83,656,2021-08-10,194.42,-15356.96,-0.1075,gap,55,268.96\nALPHA,2021-11-02,211.83,654,2022-02-23,208.87,-1935.84,-0.014,exit_signal,81,274.68\n";
+      return new HttpResponse(csv, {
+        headers: {
+          "Content-Type": "text/csv; charset=utf-8",
+          "Content-Disposition": `attachment; filename="${params.run_id}_trades.csv"`,
+        },
+      });
+    } else if (fmt === "xlsx") {
+      return new HttpResponse(new Uint8Array([0x50, 0x4b, 0x03, 0x04]), {
+        headers: {
+          "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "Content-Disposition": `attachment; filename="${params.run_id}_report.xlsx"`,
+        },
+      });
+    } else {
+      return new HttpResponse(new Uint8Array([0x50, 0x4b, 0x03, 0x04]), {
+        headers: {
+          "Content-Type": "application/zip",
+          "Content-Disposition": `attachment; filename="${params.run_id}_report.zip"`,
+        },
+      });
+    }
+  }),
 ];
 
 export const server = setupServer(...handlers);

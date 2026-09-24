@@ -75,13 +75,17 @@ export default function RootLayout({
                     Sweep
                   </a>
                   <a
+                    href="/reports/test-run-123"
+                    className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 transition-colors"
+                  >
+                    Reports
+                  </a>
+                  <a
                     href="/api-health"
                     className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 transition-colors"
                   >
                     API Health
                   </a>
-
-
                 </nav>
               </div>
             </header>

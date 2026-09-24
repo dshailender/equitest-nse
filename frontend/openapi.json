@@ -985,6 +985,146 @@
           }
         }
       }
+    },
+    "/api/v1/reports/{run_id}/summary": {
+      "get": {
+        "tags": [
+          "reports"
+        ],
+        "summary": "Get Backtest Run Performance Summary",
+        "description": "Returns comprehensive core and advanced performance metrics (REQ-7.1).",
+        "operationId": "api_get_report_summary_api_v1_reports__run_id__summary_get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportSummaryResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/reports/{run_id}/monthly": {
+      "get": {
+        "tags": [
+          "reports"
+        ],
+        "summary": "Get Monthly Returns Matrix",
+        "description": "Returns Month x Year compounded returns matrix (REQ-7.2).",
+        "operationId": "api_get_report_monthly_api_v1_reports__run_id__monthly_get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportMonthlyResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/reports/{run_id}/export": {
+      "get": {
+        "tags": [
+          "reports"
+        ],
+        "summary": "Export Backtest Report Bundle",
+        "description": "Exports trade ledger and metrics bundle as CSV, XLSX, or ZIP (REQ-7.3).",
+        "operationId": "api_export_report_api_v1_reports__run_id__export_get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^(csv|xlsx|zip)$",
+              "description": "Export format: 'csv' (trade ledger), 'xlsx' (Excel workbook), or 'zip' (all CSVs)",
+              "default": "csv",
+              "title": "Format"
+            },
+            "description": "Export format: 'csv' (trade ledger), 'xlsx' (Excel workbook), or 'zip' (all CSVs)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -2134,6 +2274,293 @@
         ],
         "title": "IngestResponse"
       },
+      "MonthlyReturnRow": {
+        "properties": {
+          "year": {
+            "type": "integer",
+            "title": "Year",
+            "description": "Calendar year"
+          },
+          "jan": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Jan",
+            "description": "January compounded return"
+          },
+          "feb": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Feb",
+            "description": "February compounded return"
+          },
+          "mar": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mar",
+            "description": "March compounded return"
+          },
+          "apr": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Apr",
+            "description": "April compounded return"
+          },
+          "may": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "May",
+            "description": "May compounded return"
+          },
+          "jun": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Jun",
+            "description": "June compounded return"
+          },
+          "jul": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Jul",
+            "description": "July compounded return"
+          },
+          "aug": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Aug",
+            "description": "August compounded return"
+          },
+          "sep": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sep",
+            "description": "September compounded return"
+          },
+          "oct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Oct",
+            "description": "October compounded return"
+          },
+          "nov": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nov",
+            "description": "November compounded return"
+          },
+          "dec": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dec",
+            "description": "December compounded return"
+          },
+          "total": {
+            "type": "number",
+            "title": "Total",
+            "description": "Full year compounded return"
+          }
+        },
+        "type": "object",
+        "required": [
+          "year",
+          "total"
+        ],
+        "title": "MonthlyReturnRow"
+      },
+      "PerformanceMetrics": {
+        "properties": {
+          "total_trades": {
+            "type": "integer",
+            "title": "Total Trades",
+            "description": "Total completed round-trip trades"
+          },
+          "win_trades": {
+            "type": "integer",
+            "title": "Win Trades",
+            "description": "Number of profitable trades (PnL > 0)"
+          },
+          "loss_trades": {
+            "type": "integer",
+            "title": "Loss Trades",
+            "description": "Number of losing or scratch trades (PnL <= 0)"
+          },
+          "win_rate": {
+            "type": "number",
+            "title": "Win Rate",
+            "description": "Fraction of winning trades (0.0 to 1.0, 4 decimal places)"
+          },
+          "avg_profit": {
+            "type": "number",
+            "title": "Avg Profit",
+            "description": "Average profit of winning trades in INR (2 decimal places)"
+          },
+          "avg_loss": {
+            "type": "number",
+            "title": "Avg Loss",
+            "description": "Average loss of losing trades in INR (2 decimal places)"
+          },
+          "total_return_pct": {
+            "type": "number",
+            "title": "Total Return Pct",
+            "description": "Total percentage return (4 decimal places)"
+          },
+          "initial_capital": {
+            "type": "number",
+            "title": "Initial Capital",
+            "description": "Initial starting corpus in INR (2 decimal places)"
+          },
+          "final_capital": {
+            "type": "number",
+            "title": "Final Capital",
+            "description": "Ending portfolio equity in INR (2 decimal places)"
+          },
+          "net_profit": {
+            "type": "number",
+            "title": "Net Profit",
+            "description": "Net portfolio monetary gain/loss in INR (2 decimal places)"
+          },
+          "cagr": {
+            "type": "number",
+            "title": "Cagr",
+            "description": "Compound Annual Growth Rate (4 decimal places)"
+          },
+          "max_drawdown_pct": {
+            "type": "number",
+            "title": "Max Drawdown Pct",
+            "description": "Maximum peak-to-trough percentage drawdown (4 decimal places)"
+          },
+          "max_drawdown_amount": {
+            "type": "number",
+            "title": "Max Drawdown Amount",
+            "description": "Maximum peak-to-trough monetary drawdown in INR (2 decimal places)"
+          },
+          "sharpe_ratio": {
+            "type": "number",
+            "title": "Sharpe Ratio",
+            "description": "Annualized Sharpe Ratio with rf=0 (4 decimal places)"
+          },
+          "sortino_ratio": {
+            "type": "number",
+            "title": "Sortino Ratio",
+            "description": "Annualized Sortino Ratio with MAR=0 (4 decimal places)"
+          },
+          "calmar_ratio": {
+            "type": "number",
+            "title": "Calmar Ratio",
+            "description": "Calmar Ratio: CAGR / Max Drawdown (4 decimal places)"
+          },
+          "profit_factor": {
+            "type": "number",
+            "title": "Profit Factor",
+            "description": "Gross Profits / Gross Losses (4 decimal places)"
+          },
+          "expectancy": {
+            "type": "number",
+            "title": "Expectancy",
+            "description": "Average monetary expectancy per trade in INR (2 decimal places)"
+          },
+          "avg_days_held": {
+            "type": "number",
+            "title": "Avg Days Held",
+            "description": "Average holding duration in days (1 decimal place)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_trades",
+          "win_trades",
+          "loss_trades",
+          "win_rate",
+          "avg_profit",
+          "avg_loss",
+          "total_return_pct",
+          "initial_capital",
+          "final_capital",
+          "net_profit",
+          "cagr",
+          "max_drawdown_pct",
+          "max_drawdown_amount",
+          "sharpe_ratio",
+          "sortino_ratio",
+          "calmar_ratio",
+          "profit_factor",
+          "expectancy",
+          "avg_days_held"
+        ],
+        "title": "PerformanceMetrics",
+        "description": "Container holding core and advanced quantitative strategy performance metrics."
+      },
       "PriceItem": {
         "properties": {
           "date": {
@@ -2212,6 +2639,66 @@
           "prices"
         ],
         "title": "PricesResponse"
+      },
+      "ReportMonthlyResponse": {
+        "properties": {
+          "run_id": {
+            "type": "string",
+            "title": "Run Id",
+            "description": "Unique backtest run identifier"
+          },
+          "years": {
+            "items": {
+              "$ref": "#/components/schemas/MonthlyReturnRow"
+            },
+            "type": "array",
+            "title": "Years",
+            "description": "Month x year returns matrix"
+          }
+        },
+        "type": "object",
+        "required": [
+          "run_id",
+          "years"
+        ],
+        "title": "ReportMonthlyResponse"
+      },
+      "ReportSummaryResponse": {
+        "properties": {
+          "run_id": {
+            "type": "string",
+            "title": "Run Id",
+            "description": "Unique backtest run identifier"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Execution status"
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At",
+            "description": "ISO 8601 creation timestamp"
+          },
+          "config": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Config",
+            "description": "Strategy parameters"
+          },
+          "metrics": {
+            "$ref": "#/components/schemas/PerformanceMetrics",
+            "description": "Calculated core and advanced KPIs"
+          }
+        },
+        "type": "object",
+        "required": [
+          "run_id",
+          "status",
+          "created_at",
+          "metrics"
+        ],
+        "title": "ReportSummaryResponse"
       },
       "RiskConfigResponse": {
         "properties": {

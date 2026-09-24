@@ -680,7 +680,9 @@ class MonthlyReturnRow(BaseModel):
 
 class ReportMonthlyResponse(BaseModel):
     run_id: str = Field(..., description="Unique backtest run identifier")
-    years: list[MonthlyReturnRow] = Field(..., description="Month x year returns matrix")
+    years: list[MonthlyReturnRow] = Field(
+        ..., description="Month x year returns matrix"
+    )
 
 
 from app.reports.metrics import PerformanceMetrics  # noqa: E402
@@ -696,4 +698,3 @@ class ReportSummaryResponse(BaseModel):
     metrics: PerformanceMetrics = Field(
         ..., description="Calculated core and advanced KPIs"
     )
-

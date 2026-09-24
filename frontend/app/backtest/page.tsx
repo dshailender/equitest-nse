@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import {
   Area,
   AreaChart,
@@ -461,9 +462,20 @@ export default function BacktestPage() {
 
               {/* Equity Curve Chart */}
               <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm">
-                <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-4">
-                  Portfolio Equity Curve (Mark-to-Market)
-                </h3>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                    Portfolio Equity Curve (Mark-to-Market)
+                  </h3>
+                  {activeRunId && (
+                    <Link
+                      href={`/reports/${activeRunId}`}
+                      data-testid="btn-view-report"
+                      className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center space-x-1"
+                    >
+                      <span>View Detailed Report & Analytics →</span>
+                    </Link>
+                  )}
+                </div>
                 <div
                   data-testid="equity-chart-container"
                   className="h-64 w-full"

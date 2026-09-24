@@ -1,14 +1,18 @@
-"""Unit tests and empyrical cross-validation for Reporting Performance Metrics (REQ-7.1)."""
+"""Unit tests and empyrical cross-validation for Performance Metrics.
+
+Covers REQ-7.1.
+"""
 
 from decimal import Decimal
 from pathlib import Path
+
 import empyrical
 import numpy as np
 import pandas as pd
 import pytest
 
 from app.engine.backtest import Backtest
-from app.reports.metrics import PerformanceMetrics, calculate_metrics
+from app.reports.metrics import calculate_metrics
 from app.strategy.config import StrategyConfig
 
 TINY_DIR = (
@@ -62,13 +66,15 @@ def test_golden_metrics_on_phase5_fixture(tiny_universe_backtest_result):
 
 
 def test_cross_check_against_empyrical(tiny_universe_backtest_result):
-    """Cross-validates Sharpe, Sortino, and Max Drawdown against empyrical within 1e-6."""
+    """Cross-validates Sharpe, Sortino, and MaxDD against empyrical within 1e-6."""
     res = tiny_universe_backtest_result
     returns = res.equity_curve["equity"].pct_change().fillna(0.0)
 
     # 1. empyrical calculations
     emp_sharpe = float(empyrical.sharpe_ratio(returns, risk_free=0.0, period="daily"))
-    emp_sortino = float(empyrical.sortino_ratio(returns, required_return=0.0, period="daily"))
+    emp_sortino = float(
+        empyrical.sortino_ratio(returns, required_return=0.0, period="daily")
+    )
     emp_mdd = float(empyrical.max_drawdown(returns))
 
     # 2. calculate_metrics calculations
@@ -99,15 +105,19 @@ def test_cross_check_against_empyrical(tiny_universe_backtest_result):
 
 def test_metrics_all_winners_scenario():
     """Asserts metrics computation when all trades are profitable."""
-    trades = pd.DataFrame([
-        {"symbol": "AAA", "pnl": 10000.0, "days_held": 20},
-        {"symbol": "BBB", "pnl": 20000.0, "days_held": 30},
-    ])
-    equity_curve = pd.DataFrame([
-        {"date": "2023-01-01", "equity": 500000.0},
-        {"date": "2023-02-01", "equity": 510000.0},
-        {"date": "2023-03-01", "equity": 530000.0},
-    ])
+    trades = pd.DataFrame(
+        [
+            {"symbol": "AAA", "pnl": 10000.0, "days_held": 20},
+            {"symbol": "BBB", "pnl": 20000.0, "days_held": 30},
+        ]
+    )
+    equity_curve = pd.DataFrame(
+        [
+            {"date": "2023-01-01", "equity": 500000.0},
+            {"date": "2023-02-01", "equity": 510000.0},
+            {"date": "2023-03-01", "equity": 530000.0},
+        ]
+    )
     metrics = calculate_metrics(trades, equity_curve, initial_capital=500000.0)
 
     assert metrics.total_trades == 2
@@ -140,14 +150,18 @@ def test_metrics_empty_inputs_graceful():
 
 
 def test_metrics_decimal_serialization():
-    """Asserts to_decimal_dict converts all metrics into Decimal types with exact precision."""
-    trades = pd.DataFrame([
-        {"symbol": "XYZ", "pnl": -5000.0, "days_held": 15},
-    ])
-    equity_curve = pd.DataFrame([
-        {"date": "2023-01-01", "equity": 500000.0},
-        {"date": "2023-01-15", "equity": 495000.0},
-    ])
+    """Asserts to_decimal_dict converts all metrics into Decimal types."""
+    trades = pd.DataFrame(
+        [
+            {"symbol": "XYZ", "pnl": -5000.0, "days_held": 15},
+        ]
+    )
+    equity_curve = pd.DataFrame(
+        [
+            {"date": "2023-01-01", "equity": 500000.0},
+            {"date": "2023-01-15", "equity": 495000.0},
+        ]
+    )
     metrics = calculate_metrics(trades, equity_curve, initial_capital=500000.0)
     dec_dict = metrics.to_decimal_dict()
 

@@ -1,9 +1,14 @@
-"""Integration and export tests for Reports API endpoints (REQ-7.1, REQ-7.2, REQ-7.3)."""
+"""Integration and export tests for Reports API endpoints.
+
+Covers REQ-7.1, REQ-7.2, REQ-7.3.
+"""
 
 import io
 import json
-from pathlib import Path
+import uuid
 import zipfile
+from pathlib import Path
+
 import pandas as pd
 import pytest
 from fastapi.testclient import TestClient
@@ -111,7 +116,10 @@ def test_api_report_export_csv(executed_backtest_run_id):
     resp = client.get(f"/api/v1/reports/{executed_backtest_run_id}/export?format=csv")
     assert resp.status_code == 200
     assert resp.headers["content-type"].startswith("text/csv")
-    assert f'filename="{executed_backtest_run_id}_trades.csv"' in resp.headers["content-disposition"]
+    assert (
+        f'filename="{executed_backtest_run_id}_trades.csv"'
+        in resp.headers["content-disposition"]
+    )
 
     lines = resp.text.strip().split("\n")
     # 1 header line + 2 executed trade rows
@@ -127,7 +135,10 @@ def test_api_report_export_zip(executed_backtest_run_id):
     resp = client.get(f"/api/v1/reports/{executed_backtest_run_id}/export?format=zip")
     assert resp.status_code == 200
     assert resp.headers["content-type"] == "application/zip"
-    assert f'filename="{executed_backtest_run_id}_report.zip"' in resp.headers["content-disposition"]
+    assert (
+        f'filename="{executed_backtest_run_id}_report.zip"'
+        in resp.headers["content-disposition"]
+    )
 
     with zipfile.ZipFile(io.BytesIO(resp.content), "r") as zf:
         names = zf.namelist()
@@ -146,8 +157,14 @@ def test_api_report_export_xlsx(executed_backtest_run_id):
     client = TestClient(app)
     resp = client.get(f"/api/v1/reports/{executed_backtest_run_id}/export?format=xlsx")
     assert resp.status_code == 200
-    assert resp.headers["content-type"] == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    assert f'filename="{executed_backtest_run_id}_report.xlsx"' in resp.headers["content-disposition"]
+    assert (
+        resp.headers["content-type"]
+        == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    assert (
+        f'filename="{executed_backtest_run_id}_report.xlsx"'
+        in resp.headers["content-disposition"]
+    )
 
     # Verify OpenXML OPC container structure
     with zipfile.ZipFile(io.BytesIO(resp.content), "r") as zf:
@@ -172,21 +189,28 @@ def test_api_report_not_found():
 
 def test_api_report_not_completed(tmp_path):
     """Asserts 400 when run is still pending or missing result blob."""
-    run_id = "test_pending_run"
-    with Session(engine) as session:
-        run_rec = BacktestRun(
-            id=run_id,
-            created_at="2026-09-24T12:00:00Z",
-            status="running",
-            initial_capital=500000.0,
-        )
-        session.add(run_rec)
-        session.commit()
+    run_id = f"test_pending_run_{uuid.uuid4().hex[:8]}"
+    try:
+        with Session(engine) as session:
+            run_rec = BacktestRun(
+                id=run_id,
+                created_at="2026-09-24T12:00:00Z",
+                status="running",
+                initial_capital=500000.0,
+            )
+            session.add(run_rec)
+            session.commit()
 
-    client = TestClient(app)
-    resp = client.get(f"/api/v1/reports/{run_id}/summary")
-    assert resp.status_code == 400
-    assert "has not completed" in resp.json()["detail"]
+        client = TestClient(app)
+        resp = client.get(f"/api/v1/reports/{run_id}/summary")
+        assert resp.status_code == 400
+        assert "has not completed" in resp.json()["detail"]
+    finally:
+        with Session(engine) as session:
+            run_rec = session.get(BacktestRun, run_id)
+            if run_rec:
+                session.delete(run_rec)
+                session.commit()
 
 
 def test_api_report_export_invalid_format(executed_backtest_run_id):

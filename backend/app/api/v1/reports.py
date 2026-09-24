@@ -69,7 +69,9 @@ def _load_run_and_result(
     "/{run_id}/summary",
     response_model=ReportSummaryResponse,
     summary="Get Backtest Run Performance Summary",
-    description="Returns comprehensive core and advanced performance metrics (REQ-7.1).",
+    description=(
+        "Returns comprehensive core and advanced performance metrics (REQ-7.1)."
+    ),
 )
 def api_get_report_summary(
     run_id: str,
@@ -118,14 +120,19 @@ def api_get_report_monthly(
 @router.get(
     "/{run_id}/export",
     summary="Export Backtest Report Bundle",
-    description="Exports trade ledger and metrics bundle as CSV, XLSX, or ZIP (REQ-7.3).",
+    description=(
+        "Exports trade ledger and metrics bundle as CSV, XLSX, or ZIP (REQ-7.3)."
+    ),
 )
 def api_export_report(
     run_id: str,
     session: Annotated[Session, Depends(get_session)],
     format: str = Query(
         "csv",
-        description="Export format: 'csv' (trade ledger), 'xlsx' (Excel workbook), or 'zip' (all CSVs)",
+        description=(
+            "Export format: 'csv' (trade ledger), 'xlsx' (Excel workbook), "
+            "or 'zip' (all CSVs)"
+        ),
         pattern="^(csv|xlsx|zip)$",
     ),
 ) -> Response:

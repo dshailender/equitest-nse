@@ -1,7 +1,7 @@
 """Performance metrics computation engine for EquiTest NSE (REQ-7.1)."""
 
-from decimal import Decimal, ROUND_HALF_UP
-from typing import Any
+from decimal import ROUND_HALF_UP, Decimal
+
 import numpy as np
 import pandas as pd
 from pydantic import BaseModel, Field
@@ -13,28 +13,70 @@ class PerformanceMetrics(BaseModel):
     # Core Metrics (PRD §7.1)
     total_trades: int = Field(..., description="Total completed round-trip trades")
     win_trades: int = Field(..., description="Number of profitable trades (PnL > 0)")
-    loss_trades: int = Field(..., description="Number of losing or scratch trades (PnL <= 0)")
-    win_rate: float = Field(..., description="Fraction of winning trades (0.0 to 1.0, 4 decimal places)")
-    avg_profit: float = Field(..., description="Average profit of winning trades in INR (2 decimal places)")
-    avg_loss: float = Field(..., description="Average loss of losing trades in INR (2 decimal places)")
-    total_return_pct: float = Field(..., description="Total percentage return (4 decimal places)")
-    initial_capital: float = Field(..., description="Initial starting corpus in INR (2 decimal places)")
-    final_capital: float = Field(..., description="Ending portfolio equity in INR (2 decimal places)")
-    net_profit: float = Field(..., description="Net portfolio monetary gain/loss in INR (2 decimal places)")
+    loss_trades: int = Field(
+        ..., description="Number of losing or scratch trades (PnL <= 0)"
+    )
+    win_rate: float = Field(
+        ..., description="Fraction of winning trades (0.0 to 1.0, 4 decimal places)"
+    )
+    avg_profit: float = Field(
+        ..., description="Average profit of winning trades in INR (2 decimal places)"
+    )
+    avg_loss: float = Field(
+        ..., description="Average loss of losing trades in INR (2 decimal places)"
+    )
+    total_return_pct: float = Field(
+        ..., description="Total percentage return (4 decimal places)"
+    )
+    initial_capital: float = Field(
+        ..., description="Initial starting corpus in INR (2 decimal places)"
+    )
+    final_capital: float = Field(
+        ..., description="Ending portfolio equity in INR (2 decimal places)"
+    )
+    net_profit: float = Field(
+        ..., description="Net portfolio monetary gain/loss in INR (2 decimal places)"
+    )
 
     # Advanced Risk & Return Metrics (PRD §7.2)
-    cagr: float = Field(..., description="Compound Annual Growth Rate (4 decimal places)")
-    max_drawdown_pct: float = Field(..., description="Maximum peak-to-trough percentage drawdown (4 decimal places)")
-    max_drawdown_amount: float = Field(..., description="Maximum peak-to-trough monetary drawdown in INR (2 decimal places)")
-    sharpe_ratio: float = Field(..., description="Annualized Sharpe Ratio with rf=0 (4 decimal places)")
-    sortino_ratio: float = Field(..., description="Annualized Sortino Ratio with MAR=0 (4 decimal places)")
-    calmar_ratio: float = Field(..., description="Calmar Ratio: CAGR / Max Drawdown (4 decimal places)")
-    profit_factor: float = Field(..., description="Gross Profits / Gross Losses (4 decimal places)")
-    expectancy: float = Field(..., description="Average monetary expectancy per trade in INR (2 decimal places)")
-    avg_days_held: float = Field(..., description="Average holding duration in days (1 decimal place)")
+    cagr: float = Field(
+        ..., description="Compound Annual Growth Rate (4 decimal places)"
+    )
+    max_drawdown_pct: float = Field(
+        ..., description="Maximum peak-to-trough percentage drawdown (4 decimal places)"
+    )
+    max_drawdown_amount: float = Field(
+        ...,
+        description=(
+            "Maximum peak-to-trough monetary drawdown in INR (2 decimal places)"
+        ),
+    )
+    sharpe_ratio: float = Field(
+        ..., description="Annualized Sharpe Ratio with rf=0 (4 decimal places)"
+    )
+    sortino_ratio: float = Field(
+        ..., description="Annualized Sortino Ratio with MAR=0 (4 decimal places)"
+    )
+    calmar_ratio: float = Field(
+        ..., description="Calmar Ratio: CAGR / Max Drawdown (4 decimal places)"
+    )
+    profit_factor: float = Field(
+        ..., description="Gross Profits / Gross Losses (4 decimal places)"
+    )
+    expectancy: float = Field(
+        ...,
+        description="Average monetary expectancy per trade in INR (2 decimal places)",
+    )
+    avg_days_held: float = Field(
+        ..., description="Average holding duration in days (1 decimal place)"
+    )
 
     def to_decimal_dict(self) -> dict[str, Decimal]:
-        """Returns dictionary of metrics converted to Python Decimal with documented precision."""
+        """Returns dictionary of metrics converted to Python Decimal.
+
+        Precision matches documented specifications.
+        """
+
         def _to_dec(val: float | int, places: int) -> Decimal:
             d = Decimal(str(val))
             quant = Decimal("10") ** -places
@@ -74,7 +116,8 @@ def calculate_metrics(
         trades: DataFrame of closed round-trip trades with columns:
             'symbol', 'entry_date', 'exit_date', 'pnl', 'pnl_pct', 'days_held', etc.
         equity_curve: DataFrame of daily portfolio equity with columns:
-            'date', 'equity', 'cash', 'positions_value', 'daily_return', 'drawdown', 'drawdown_pct'.
+            'date', 'equity', 'cash', 'positions_value', 'daily_return',
+            'drawdown', 'drawdown_pct'.
         initial_capital: Starting account corpus in INR.
 
     Returns:
@@ -163,7 +206,11 @@ def calculate_metrics(
         max_drawdown_pct = 0.0
 
     # 5. Risk-adjusted metrics (Sharpe, Sortino, Calmar)
-    if not equity_curve.empty and "equity" in equity_curve.columns and len(equity_curve) >= 2:
+    if (
+        not equity_curve.empty
+        and "equity" in equity_curve.columns
+        and len(equity_curve) >= 2
+    ):
         # Use simple daily returns from equity curve
         returns = equity_curve["equity"].astype(float).pct_change().fillna(0.0)
 
@@ -177,7 +224,8 @@ def calculate_metrics(
             sharpe_ratio = 0.0
 
         # Annualized Sortino ratio (MAR=0, annualization=252)
-        # empyrical convention: downside deviation using all bars with positive returns clipped to 0
+        # empyrical convention: downside deviation using all bars with
+        # positive returns clipped to 0
         downside = np.clip(returns, -np.inf, 0.0)
         downside_dev = np.sqrt(np.mean(downside**2))
         if downside_dev > 0:

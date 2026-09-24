@@ -872,6 +872,121 @@ export async function compareBacktestRuns(
   return BacktestCompareResponseSchema.parse(json);
 }
 
+// --- Report & Analytics Schemas (REQ-7.1, REQ-7.2, REQ-7.3) ---
+
+export const PerformanceMetricsSchema = z.object({
+  total_trades: z.number(),
+  win_trades: z.number(),
+  loss_trades: z.number(),
+  win_rate: z.number(),
+  avg_profit: z.number(),
+  avg_loss: z.number(),
+  total_return_pct: z.number(),
+  initial_capital: z.number(),
+  final_capital: z.number(),
+  net_profit: z.number(),
+  cagr: z.number(),
+  max_drawdown_pct: z.number(),
+  max_drawdown_amount: z.number(),
+  sharpe_ratio: z.number(),
+  sortino_ratio: z.number(),
+  calmar_ratio: z.number(),
+  profit_factor: z.number(),
+  expectancy: z.number(),
+  avg_days_held: z.number(),
+});
+export type PerformanceMetrics = z.infer<typeof PerformanceMetricsSchema>;
+
+export const ReportSummaryResponseSchema = z.object({
+  run_id: z.string(),
+  status: z.string(),
+  created_at: z.string(),
+  config: z.record(z.unknown()).default({}),
+  metrics: PerformanceMetricsSchema,
+});
+export type ReportSummaryResponse = z.infer<typeof ReportSummaryResponseSchema>;
+
+export const MonthlyReturnRowSchema = z.object({
+  year: z.number(),
+  jan: z.number().nullable().optional(),
+  feb: z.number().nullable().optional(),
+  mar: z.number().nullable().optional(),
+  apr: z.number().nullable().optional(),
+  may: z.number().nullable().optional(),
+  jun: z.number().nullable().optional(),
+  jul: z.number().nullable().optional(),
+  aug: z.number().nullable().optional(),
+  sep: z.number().nullable().optional(),
+  oct: z.number().nullable().optional(),
+  nov: z.number().nullable().optional(),
+  dec: z.number().nullable().optional(),
+  total: z.number(),
+});
+export type MonthlyReturnRow = z.infer<typeof MonthlyReturnRowSchema>;
+
+export const ReportMonthlyResponseSchema = z.object({
+  run_id: z.string(),
+  years: z.array(MonthlyReturnRowSchema),
+});
+export type ReportMonthlyResponse = z.infer<typeof ReportMonthlyResponseSchema>;
+
+/**
+ * Fetches core and advanced performance summary metrics for a backtest run (REQ-7.1)
+ */
+export async function fetchReportSummary(
+  runId: string
+): Promise<ReportSummaryResponse> {
+  const url = `${API_BASE_URL}/api/v1/reports/${encodeURIComponent(runId)}/summary`;
+  const response = await fetch(url, {
+    headers: { Accept: "application/json" },
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new ApiError(
+      response.status,
+      `Report summary fetch failed with status: ${response.status}`
+    );
+  }
+
+  const json = await response.json();
+  return ReportSummaryResponseSchema.parse(json);
+}
+
+/**
+ * Fetches Month x Year compounded returns matrix for a backtest run (REQ-7.2)
+ */
+export async function fetchReportMonthly(
+  runId: string
+): Promise<ReportMonthlyResponse> {
+  const url = `${API_BASE_URL}/api/v1/reports/${encodeURIComponent(runId)}/monthly`;
+  const response = await fetch(url, {
+    headers: { Accept: "application/json" },
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new ApiError(
+      response.status,
+      `Report monthly fetch failed with status: ${response.status}`
+    );
+  }
+
+  const json = await response.json();
+  return ReportMonthlyResponseSchema.parse(json);
+}
+
+/**
+ * Returns absolute download URL for a backtest report export format (REQ-7.3)
+ */
+export function getReportExportUrl(
+  runId: string,
+  format: "csv" | "xlsx" | "zip" = "csv"
+): string {
+  return `${API_BASE_URL}/api/v1/reports/${encodeURIComponent(runId)}/export?format=${format}`;
+}
+
+
 
 
 
