@@ -1,0 +1,59 @@
+version: "3.8"
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        GIT_SHA: "${GIT_SHA:-45391fbd9b001161b500a4c5e92a22170daee4b9}"
+    container_name: equitest-backend-prod
+    ports:
+      - "8000:8000"
+    environment:
+      - APP_ENV=production
+      - DATA_SOURCE=CSV
+      - DATABASE_URL=sqlite:////app/data/prod.db
+      - LOG_LEVEL=INFO
+    volumes:
+      - ./data/fixtures:/app/data/fixtures:ro
+      - backtest_data:/app/data/backtests
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    networks:
+      - equitest-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: equitest-frontend-prod
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - equitest-network
+
+volumes:
+  backtest_data:
+    driver: local
+
+networks:
+  equitest-network:
+    driver: bridge
