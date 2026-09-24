@@ -164,9 +164,7 @@ class Backtest:
                     "high": float(row.high),
                     "low": float(row.low),
                     "close": float(row.close),
-                    "adj_close": float(
-                        getattr(row, "adj_close", row.close)
-                    ),
+                    "adj_close": float(getattr(row, "adj_close", row.close)),
                     "volume": float(row.volume),
                     "ema_20": float(getattr(row, "ema_20", 0.0) or 0.0),
                     "entry": bool(getattr(row, "entry", False)),
@@ -203,9 +201,7 @@ class Backtest:
             else:
                 # If first session, find prior date from sorted_all_dates if available
                 cur_pos = sorted_all_dates.index(current_date)
-                prev_date = (
-                    sorted_all_dates[cur_pos - 1] if cur_pos > 0 else None
-                )
+                prev_date = sorted_all_dates[cur_pos - 1] if cur_pos > 0 else None
 
             # --- STEP 1: Evaluate Exits First at Session T Open ---
             for sym, pos in list(open_positions.items()):
@@ -296,9 +292,7 @@ class Backtest:
                         candidates.append(sym)
 
                 # Prioritize candidates via pluggable Ranker
-                ranked_candidates = self.ranker.rank(
-                    candidates, prev_date, signals
-                )
+                ranked_candidates = self.ranker.rank(candidates, prev_date, signals)
 
                 for sym in ranked_candidates:
                     curr_sym_bar = date_bars.get(current_date, {}).get(sym)
@@ -333,9 +327,7 @@ class Backtest:
 
                     # Capital allocation constraint check
                     if (
-                        not can_allocate(
-                            corpus, open_positions_value, req_capital
-                        )
+                        not can_allocate(corpus, open_positions_value, req_capital)
                         or req_capital > free_capital
                         or req_capital > cash
                     ):
@@ -378,9 +370,7 @@ class Backtest:
                         "buy_costs": buy_cost,
                     }
                     open_positions_value += req_capital
-                    free_capital = max(
-                        0.0, round(corpus - open_positions_value, 2)
-                    )
+                    free_capital = max(0.0, round(corpus - open_positions_value, 2))
 
             # --- STEP 4: Mark-to-Market Equity Curve Using T Close ---
             mtm_positions_val: float = 0.0
@@ -398,19 +388,11 @@ class Backtest:
                 peak_equity = current_equity
 
             drawdown = round(peak_equity - current_equity, 2)
-            drawdown_pct = (
-                round(drawdown / peak_equity, 4) if peak_equity > 0 else 0.0
-            )
+            drawdown_pct = round(drawdown / peak_equity, 4) if peak_equity > 0 else 0.0
 
-            prev_eq = (
-                equity_records[-1]["equity"]
-                if equity_records
-                else initial_corpus
-            )
+            prev_eq = equity_records[-1]["equity"] if equity_records else initial_corpus
             daily_ret = (
-                round((current_equity - prev_eq) / prev_eq, 4)
-                if prev_eq > 0
-                else 0.0
+                round((current_equity - prev_eq) / prev_eq, 4) if prev_eq > 0 else 0.0
             )
 
             equity_records.append(

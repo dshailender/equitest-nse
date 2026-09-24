@@ -77,9 +77,7 @@ def test_default_ranker_momentum_sorting():
     }
 
     ranker = DefaultRanker()
-    ranked = ranker.rank(
-        ["SYM_LOW", "SYM_HIGH", "SYM_MED"], eval_date, signals
-    )
+    ranked = ranker.rank(["SYM_LOW", "SYM_HIGH", "SYM_MED"], eval_date, signals)
 
     assert ranked == ["SYM_HIGH", "SYM_MED", "SYM_LOW"]
 
@@ -111,13 +109,10 @@ def test_custom_pluggable_ranker():
     }
 
     config = StrategyConfig(corpus=500000.0, risk_pct=0.02, stop_loss_pct=0.07)
-    engine = Backtest(
-        config=config, prices=prices, nifty=nifty, ranker=ReverseRanker()
-    )
+    engine = Backtest(config=config, prices=prices, nifty=nifty, ranker=ReverseRanker())
     result = engine.run(start="2021-05-20", end="2021-05-30")
 
     opened_symbols = {p["symbol"] for p in result.open_positions}
     assert opened_symbols == {"D_SYM", "C_SYM", "B_SYM"}
     assert len(result.rejections) == 1
     assert result.rejections[0]["symbol"] == "A_SYM"
-

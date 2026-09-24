@@ -86,20 +86,14 @@ class BacktestResult:
     @property
     def max_drawdown(self) -> float:
         """Maximum peak-to-trough monetary drawdown."""
-        if (
-            self.equity_curve.empty
-            or "drawdown" not in self.equity_curve.columns
-        ):
+        if self.equity_curve.empty or "drawdown" not in self.equity_curve.columns:
             return 0.0
         return round(float(self.equity_curve["drawdown"].max()), 2)
 
     @property
     def max_drawdown_pct(self) -> float:
         """Maximum peak-to-trough percentage drawdown."""
-        if (
-            self.equity_curve.empty
-            or "drawdown_pct" not in self.equity_curve.columns
-        ):
+        if self.equity_curve.empty or "drawdown_pct" not in self.equity_curve.columns:
             return 0.0
         return round(float(self.equity_curve["drawdown_pct"].max()), 4)
 
@@ -156,7 +150,7 @@ class BacktestResult:
     def load(cls, file_path: str | Path) -> "BacktestResult":
         """Loads BacktestResult from JSON file on disk."""
         target = Path(file_path)
-        with open(target, "r", encoding="utf-8") as f:
+        with open(target, encoding="utf-8") as f:
             data = json.load(f)
 
         trades_df = pd.DataFrame(data.get("trades", []))
@@ -173,4 +167,3 @@ class BacktestResult:
             open_positions=data.get("open_positions", []),
             initial_capital=init_cap,
         )
-
