@@ -510,8 +510,10 @@ export async function fetchRiskConfig(): Promise<RiskConfigResponse> {
 // --- Backtest Schemas ---
 export const BacktestConfigSchema = z.object({
   corpus: z.number().default(500000.0),
+  capital: z.number().optional().nullable(),
   risk_pct: z.number().default(0.02),
   stop_loss_pct: z.number().default(0.07),
+  sl_pct: z.number().optional().nullable(),
   lot_size: z.number().default(1),
   cost_bps: z.number().default(10.0),
   ema_spans: z.array(z.number()).default([20, 50, 150, 200]),
@@ -519,13 +521,16 @@ export const BacktestConfigSchema = z.object({
   high_52w_factor: z.number().default(0.85),
   high_52w_lookback: z.number().default(252),
   allow_crossover_equal: z.boolean().default(false),
+  ranking_rule: z.string().default("momentum"),
+  universe_start_rank: z.number().default(101),
+  universe_end_rank: z.number().default(750),
 });
 export type BacktestConfig = z.infer<typeof BacktestConfigSchema>;
 
 export const BacktestRunRequestSchema = z.object({
   start: z.string().optional().nullable(),
   end: z.string().optional().nullable(),
-  config: BacktestConfigSchema.optional().nullable(),
+  config: BacktestConfigSchema.partial().optional().nullable(),
   symbols: z.array(z.string()).optional().nullable(),
 });
 export type BacktestRunRequest = z.infer<typeof BacktestRunRequestSchema>;
@@ -545,15 +550,90 @@ export const BacktestStatusResponseSchema = z.object({
   created_at: z.string(),
   start_date: z.string().optional().nullable(),
   end_date: z.string().optional().nullable(),
+  config_version: z.string().default("1.0"),
+  sweep_id: z.string().optional().nullable(),
   initial_capital: z.number(),
   final_capital: z.number().optional().nullable(),
   total_return_pct: z.number().optional().nullable(),
+  cagr: z.number().optional().nullable(),
   total_trades: z.number().optional().nullable(),
   win_rate: z.number().optional().nullable(),
+  max_drawdown_pct: z.number().optional().nullable(),
   error_message: z.string().optional().nullable(),
 });
 export type BacktestStatusResponse = z.infer<
   typeof BacktestStatusResponseSchema
+>;
+
+export const SweepRunRequestSchema = z.object({
+  base_config: BacktestConfigSchema.partial().optional().nullable(),
+  param_grid: z.record(z.array(z.any())),
+  start: z.string().optional().nullable(),
+  end: z.string().optional().nullable(),
+  symbols: z.array(z.string()).optional().nullable(),
+});
+export type SweepRunRequest = z.infer<typeof SweepRunRequestSchema>;
+
+export const SweepRunCreateResponseSchema = z.object({
+  sweep_id: z.string(),
+  total_runs: z.number(),
+  run_ids: z.array(z.string()),
+  status: z.string(),
+  message: z.string(),
+});
+export type SweepRunCreateResponse = z.infer<
+  typeof SweepRunCreateResponseSchema
+>;
+
+export const SweepRunItemSchema = z.object({
+  run_id: z.string(),
+  status: z.string(),
+  params: z.record(z.any()),
+  initial_capital: z.number(),
+  final_capital: z.number().optional().nullable(),
+  total_return_pct: z.number().optional().nullable(),
+  cagr: z.number().optional().nullable(),
+  total_trades: z.number().optional().nullable(),
+  win_rate: z.number().optional().nullable(),
+  max_drawdown_pct: z.number().optional().nullable(),
+  error_message: z.string().optional().nullable(),
+});
+export type SweepRunItem = z.infer<typeof SweepRunItemSchema>;
+
+export const SweepStatusResponseSchema = z.object({
+  sweep_id: z.string(),
+  status: z.string(),
+  created_at: z.string(),
+  param_grid: z.record(z.array(z.any())),
+  total_runs: z.number(),
+  completed_runs: z.number(),
+  runs: z.array(SweepRunItemSchema),
+});
+export type SweepStatusResponse = z.infer<typeof SweepStatusResponseSchema>;
+
+export const CompareMetricItemSchema = z.object({
+  run_id: z.string(),
+  status: z.string(),
+  config: z.record(z.any()),
+  initial_capital: z.number(),
+  final_capital: z.number().optional().nullable(),
+  total_return_pct: z.number().optional().nullable(),
+  cagr: z.number().optional().nullable(),
+  total_trades: z.number().optional().nullable(),
+  win_rate: z.number().optional().nullable(),
+  max_drawdown_pct: z.number().optional().nullable(),
+  avg_profit: z.number().optional().nullable(),
+  avg_loss: z.number().optional().nullable(),
+});
+export type CompareMetricItem = z.infer<typeof CompareMetricItemSchema>;
+
+export const BacktestCompareResponseSchema = z.object({
+  run_ids: z.array(z.string()),
+  runs: z.record(CompareMetricItemSchema),
+  equity_curves: z.record(z.array(z.lazy(() => EquityPointSchema))),
+});
+export type BacktestCompareResponse = z.infer<
+  typeof BacktestCompareResponseSchema
 >;
 
 export const TradeItemSchema = z.object({
@@ -717,6 +797,81 @@ export async function fetchBacktestRuns(): Promise<BacktestStatusResponse[]> {
   const json = await response.json();
   return z.array(BacktestStatusResponseSchema).parse(json);
 }
+
+/**
+ * Triggers a parameter grid sweep asynchronously (REQ-6.2)
+ */
+export async function runSweep(
+  req: SweepRunRequest
+): Promise<SweepRunCreateResponse> {
+  const url = `${API_BASE_URL}/api/v1/backtest/sweep`;
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify(req),
+  });
+
+  if (!response.ok) {
+    throw new ApiError(
+      response.status,
+      `Sweep run trigger failed with status: ${response.status}`
+    );
+  }
+
+  const json = await response.json();
+  return SweepRunCreateResponseSchema.parse(json);
+}
+
+/**
+ * Fetches status and child run metrics for a parameter sweep (REQ-6.2)
+ */
+export async function fetchSweepStatus(
+  sweepId: string
+): Promise<SweepStatusResponse> {
+  const url = `${API_BASE_URL}/api/v1/backtest/sweep/${encodeURIComponent(sweepId)}`;
+  const response = await fetch(url, {
+    headers: { Accept: "application/json" },
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new ApiError(
+      response.status,
+      `Sweep status fetch failed with status: ${response.status}`
+    );
+  }
+
+  const json = await response.json();
+  return SweepStatusResponseSchema.parse(json);
+}
+
+/**
+ * Compares multiple backtest runs and retrieves aligned metrics and overlaid curves (REQ-6.3)
+ */
+export async function compareBacktestRuns(
+  runIds: string[]
+): Promise<BacktestCompareResponse> {
+  const params = new URLSearchParams({ run_ids: runIds.join(",") });
+  const url = `${API_BASE_URL}/api/v1/backtest/compare?${params.toString()}`;
+  const response = await fetch(url, {
+    headers: { Accept: "application/json" },
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new ApiError(
+      response.status,
+      `Backtest compare fetch failed with status: ${response.status}`
+    );
+  }
+
+  const json = await response.json();
+  return BacktestCompareResponseSchema.parse(json);
+}
+
 
 
 

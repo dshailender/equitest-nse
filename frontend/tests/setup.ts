@@ -330,6 +330,142 @@ export const handlers = [
     );
   }),
 
+  // Backtest - Trigger Sweep
+  http.post("*/api/v1/backtest/sweep", () => {
+    return HttpResponse.json(
+      {
+        sweep_id: "test-sweep-123",
+        total_runs: 4,
+        run_ids: ["run-1", "run-2", "run-3", "run-4"],
+        status: "pending",
+        message: "Parameter sweep execution queued successfully",
+      },
+      { status: 202 }
+    );
+  }),
+
+  // Backtest - Sweep Status
+  http.get("*/api/v1/backtest/sweep/:sweep_id", ({ params }) => {
+    return HttpResponse.json({
+      sweep_id: params.sweep_id,
+      status: "completed",
+      created_at: "2026-09-24T12:00:00Z",
+      param_grid: { sl_pct: [0.05, 0.07], risk_pct: [0.01, 0.02] },
+      total_runs: 4,
+      completed_runs: 4,
+      runs: [
+        {
+          run_id: "run-1",
+          status: "completed",
+          params: { sl_pct: 0.05, risk_pct: 0.01 },
+          initial_capital: 500000.0,
+          final_capital: 512000.0,
+          total_return_pct: 0.024,
+          cagr: 0.012,
+          total_trades: 4,
+          win_rate: 0.5,
+          max_drawdown_pct: 0.02,
+          error_message: null,
+        },
+        {
+          run_id: "run-2",
+          status: "completed",
+          params: { sl_pct: 0.05, risk_pct: 0.02 },
+          initial_capital: 500000.0,
+          final_capital: 525000.0,
+          total_return_pct: 0.05,
+          cagr: 0.025,
+          total_trades: 4,
+          win_rate: 0.5,
+          max_drawdown_pct: 0.035,
+          error_message: null,
+        },
+        {
+          run_id: "run-3",
+          status: "completed",
+          params: { sl_pct: 0.07, risk_pct: 0.01 },
+          initial_capital: 500000.0,
+          final_capital: 495000.0,
+          total_return_pct: -0.01,
+          cagr: -0.005,
+          total_trades: 2,
+          win_rate: 0.0,
+          max_drawdown_pct: 0.02,
+          error_message: null,
+        },
+        {
+          run_id: "run-4",
+          status: "completed",
+          params: { sl_pct: 0.07, risk_pct: 0.02 },
+          initial_capital: 500000.0,
+          final_capital: 482707.2,
+          total_return_pct: -0.0346,
+          cagr: -0.0175,
+          total_trades: 2,
+          win_rate: 0.0,
+          max_drawdown_pct: 0.0383,
+          error_message: null,
+        },
+      ],
+    });
+  }),
+
+  // Backtest - Compare
+  http.get("*/api/v1/backtest/compare", ({ request }) => {
+    const url = new URL(request.url);
+    const runIdsParam = url.searchParams.get("run_ids") || "run-1,run-2";
+    const runIds = runIdsParam.split(",").map((s) => s.trim());
+
+    const runsMap: Record<string, unknown> = {};
+    const curvesMap: Record<string, unknown[]> = {};
+
+    runIds.forEach((id, idx) => {
+      const finalCap = idx === 0 ? 512000.0 : 482707.2;
+      runsMap[id] = {
+        run_id: id,
+        status: "completed",
+        config: { sl_pct: 0.05 + idx * 0.02, risk_pct: 0.01 + idx * 0.01 },
+        initial_capital: 500000.0,
+        final_capital: finalCap,
+        total_return_pct: idx === 0 ? 0.024 : -0.0346,
+        cagr: idx === 0 ? 0.012 : -0.0175,
+        total_trades: idx === 0 ? 4 : 2,
+        win_rate: idx === 0 ? 0.5 : 0.0,
+        max_drawdown_pct: idx === 0 ? 0.02 : 0.0383,
+        avg_profit: 2000.0,
+        avg_loss: -1000.0,
+      };
+      curvesMap[id] = [
+        {
+          date: "2020-06-01",
+          equity: 500000.0,
+          cash: 500000.0,
+          positions_value: 0.0,
+          open_positions: 0,
+          daily_return: 0.0,
+          drawdown: 0.0,
+          drawdown_pct: 0.0,
+        },
+        {
+          date: "2022-04-29",
+          equity: finalCap,
+          cash: finalCap,
+          positions_value: 0.0,
+          open_positions: 0,
+          daily_return: 0.0,
+          drawdown: 5000.0,
+          drawdown_pct: 0.01,
+        },
+      ];
+    });
+
+    return HttpResponse.json({
+      run_ids: runIds,
+      runs: runsMap,
+      equity_curves: curvesMap,
+    });
+  }),
+
   // Backtest - Status
   http.get("*/api/v1/backtest/:run_id", ({ params }) => {
     return HttpResponse.json({
@@ -441,9 +577,8 @@ export const handlers = [
       },
     ]);
   }),
+
 ];
-
-
 
 export const server = setupServer(...handlers);
 

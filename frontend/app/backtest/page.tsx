@@ -149,6 +149,9 @@ export default function BacktestPage() {
       high_52w_factor: 0.85,
       high_52w_lookback: 252,
       allow_crossover_equal: false,
+      ranking_rule: "momentum",
+      universe_start_rank: 101,
+      universe_end_rank: 750,
     };
 
     try {

@@ -284,6 +284,66 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/backtest/sweep": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Trigger Parameter Sweep
+         * @description Generates permutation child runs across parameter grid and launches simulation (REQ-6.2).
+         */
+        post: operations["api_run_sweep_api_v1_backtest_sweep_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/backtest/sweep/{sweep_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Parameter Sweep Status
+         * @description Returns lifecycle status and summary metrics for all child runs in a sweep (REQ-6.2).
+         */
+        get: operations["api_get_sweep_status_api_v1_backtest_sweep__sweep_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/backtest/compare": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Compare Multiple Backtest Runs
+         * @description Returns aligned metrics table and overlaid equity curves for given run IDs (REQ-6.3).
+         */
+        get: operations["api_compare_backtest_runs_api_v1_backtest_compare_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/backtest": {
         parameters: {
             query?: never;
@@ -368,15 +428,42 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** BacktestCompareResponse */
+        BacktestCompareResponse: {
+            /**
+             * Run Ids
+             * @description List of compared run IDs
+             */
+            run_ids: string[];
+            /**
+             * Runs
+             * @description Summary metrics dictionary keyed by run_id
+             */
+            runs: {
+                [key: string]: components["schemas"]["CompareMetricItem"];
+            };
+            /**
+             * Equity Curves
+             * @description Overlaid equity curves keyed by run_id
+             */
+            equity_curves?: {
+                [key: string]: components["schemas"]["EquityPoint"][];
+            };
+        };
         /** BacktestConfigSchema */
         BacktestConfigSchema: {
             /**
              * Corpus
-             * @description Starting portfolio corpus in INR
+             * @description Starting portfolio corpus/capital in INR
              * @default 500000
              * @example 500000
              */
             corpus: number;
+            /**
+             * Capital
+             * @description Starting portfolio capital in INR (alias for corpus)
+             */
+            capital?: number | null;
             /**
              * Risk Pct
              * @description Risk percentage per trade (default 0.02 = 2%)
@@ -391,6 +478,11 @@ export interface components {
              * @example 0.07
              */
             stop_loss_pct: number;
+            /**
+             * Sl Pct
+             * @description Stop loss percentage distance (alias for stop_loss_pct)
+             */
+            sl_pct?: number | null;
             /**
              * Lot Size
              * @description Minimum share lot multiple
@@ -455,6 +547,27 @@ export interface components {
              * @default false
              */
             allow_crossover_equal: boolean;
+            /**
+             * Ranking Rule
+             * @description Candidate prioritization rule under capital constraints (momentum, alphabetical, 52w_proximity)
+             * @default momentum
+             * @example momentum
+             */
+            ranking_rule: string;
+            /**
+             * Universe Start Rank
+             * @description Starting universe rank (inclusive)
+             * @default 101
+             * @example 101
+             */
+            universe_start_rank: number;
+            /**
+             * Universe End Rank
+             * @description Ending universe rank (inclusive)
+             * @default 750
+             * @example 750
+             */
+            universe_end_rank: number;
         };
         /** BacktestEquityResponse */
         BacktestEquityResponse: {
@@ -549,6 +662,17 @@ export interface components {
              */
             end_date?: string | null;
             /**
+             * Config Version
+             * @description Configuration schema version
+             * @default 1.0
+             */
+            config_version: string;
+            /**
+             * Sweep Id
+             * @description Parent parameter sweep ID if applicable
+             */
+            sweep_id?: string | null;
+            /**
              * Initial Capital
              * @description Starting capital in INR
              */
@@ -564,6 +688,11 @@ export interface components {
              */
             total_return_pct?: number | null;
             /**
+             * Cagr
+             * @description Compound Annual Growth Rate
+             */
+            cagr?: number | null;
+            /**
              * Total Trades
              * @description Total closed round-trip trades
              */
@@ -573,6 +702,11 @@ export interface components {
              * @description Fraction of winning trades
              */
             win_rate?: number | null;
+            /**
+             * Max Drawdown Pct
+             * @description Maximum percentage drawdown
+             */
+            max_drawdown_pct?: number | null;
             /**
              * Error Message
              * @description Error explanation if failed
@@ -596,6 +730,71 @@ export interface components {
              * @description Chronological trade ledger
              */
             trades: components["schemas"]["TradeItem"][];
+        };
+        /** CompareMetricItem */
+        CompareMetricItem: {
+            /**
+             * Run Id
+             * @description Run identifier
+             */
+            run_id: string;
+            /**
+             * Status
+             * @description Run status
+             */
+            status: string;
+            /**
+             * Config
+             * @description Configuration parameters
+             */
+            config?: {
+                [key: string]: unknown;
+            };
+            /**
+             * Initial Capital
+             * @description Starting capital
+             */
+            initial_capital: number;
+            /**
+             * Final Capital
+             * @description Ending capital
+             */
+            final_capital?: number | null;
+            /**
+             * Total Return Pct
+             * @description Total return percentage
+             */
+            total_return_pct?: number | null;
+            /**
+             * Cagr
+             * @description Compound Annual Growth Rate
+             */
+            cagr?: number | null;
+            /**
+             * Total Trades
+             * @description Total trades count
+             */
+            total_trades?: number | null;
+            /**
+             * Win Rate
+             * @description Win rate
+             */
+            win_rate?: number | null;
+            /**
+             * Max Drawdown Pct
+             * @description Max percentage drawdown
+             */
+            max_drawdown_pct?: number | null;
+            /**
+             * Avg Profit
+             * @description Average profit on winning trades
+             */
+            avg_profit?: number | null;
+            /**
+             * Avg Loss
+             * @description Average loss on losing trades
+             */
+            avg_loss?: number | null;
         };
         /** CoverageItem */
         CoverageItem: {
@@ -1174,6 +1373,182 @@ export interface components {
              */
             signals: components["schemas"]["SignalItem"][];
         };
+        /** SweepRunCreateResponse */
+        SweepRunCreateResponse: {
+            /**
+             * Sweep Id
+             * @description Unique parameter sweep identifier
+             */
+            sweep_id: string;
+            /**
+             * Total Runs
+             * @description Total permutation child runs generated
+             */
+            total_runs: number;
+            /**
+             * Run Ids
+             * @description List of generated child run IDs
+             */
+            run_ids: string[];
+            /**
+             * Status
+             * @description Initial lifecycle status
+             * @default pending
+             */
+            status: string;
+            /**
+             * Message
+             * @description Informational status message
+             * @default Parameter sweep execution queued successfully
+             */
+            message: string;
+        };
+        /** SweepRunItem */
+        SweepRunItem: {
+            /**
+             * Run Id
+             * @description Child run ID
+             */
+            run_id: string;
+            /**
+             * Status
+             * @description Child run lifecycle status
+             */
+            status: string;
+            /**
+             * Params
+             * @description Parameter values for this specific run
+             */
+            params?: {
+                [key: string]: unknown;
+            };
+            /**
+             * Initial Capital
+             * @description Starting capital
+             */
+            initial_capital: number;
+            /**
+             * Final Capital
+             * @description Ending capital
+             */
+            final_capital?: number | null;
+            /**
+             * Total Return Pct
+             * @description Total return percentage
+             */
+            total_return_pct?: number | null;
+            /**
+             * Total Trades
+             * @description Total trades count
+             */
+            total_trades?: number | null;
+            /**
+             * Win Rate
+             * @description Win rate
+             */
+            win_rate?: number | null;
+            /**
+             * Max Drawdown Pct
+             * @description Maximum drawdown percentage
+             */
+            max_drawdown_pct?: number | null;
+            /**
+             * Cagr
+             * @description Compound Annual Growth Rate
+             */
+            cagr?: number | null;
+            /**
+             * Error Message
+             * @description Error message if failed
+             */
+            error_message?: string | null;
+        };
+        /** SweepRunRequest */
+        SweepRunRequest: {
+            /** @description Optional base strategy configuration template */
+            base_config?: components["schemas"]["BacktestConfigSchema"] | null;
+            /**
+             * Param Grid
+             * @description Map of parameter names to lists of candidate values to sweep
+             * @example {
+             *       "risk_pct": [
+             *         0.01,
+             *         0.02,
+             *         0.03
+             *       ],
+             *       "sl_pct": [
+             *         0.05,
+             *         0.06,
+             *         0.07
+             *       ]
+             *     }
+             */
+            param_grid: {
+                [key: string]: unknown[];
+            };
+            /**
+             * Start
+             * @description Optional backtest start date (YYYY-MM-DD)
+             * @example 2020-06-01
+             */
+            start?: string | null;
+            /**
+             * End
+             * @description Optional backtest end date (YYYY-MM-DD)
+             * @example 2022-04-29
+             */
+            end?: string | null;
+            /**
+             * Symbols
+             * @description Optional subset of symbols (defaults to universe)
+             * @example [
+             *       "ALPHA",
+             *       "BETA",
+             *       "GAMMA"
+             *     ]
+             */
+            symbols?: string[] | null;
+        };
+        /** SweepStatusResponse */
+        SweepStatusResponse: {
+            /**
+             * Sweep Id
+             * @description Unique sweep identifier
+             */
+            sweep_id: string;
+            /**
+             * Status
+             * @description Overall sweep status (pending, running, completed, partial, failed)
+             */
+            status: string;
+            /**
+             * Created At
+             * @description Creation ISO timestamp
+             */
+            created_at: string;
+            /**
+             * Param Grid
+             * @description Parameters swept
+             */
+            param_grid?: {
+                [key: string]: unknown[];
+            };
+            /**
+             * Total Runs
+             * @description Total permutation runs
+             */
+            total_runs: number;
+            /**
+             * Completed Runs
+             * @description Number of completed runs so far
+             */
+            completed_runs: number;
+            /**
+             * Runs
+             * @description Summary metrics for each child run
+             */
+            runs: components["schemas"]["SweepRunItem"][];
+        };
         /** TradeItem */
         TradeItem: {
             /**
@@ -1686,6 +2061,101 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BacktestRunCreateResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    api_run_sweep_api_v1_backtest_sweep_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SweepRunRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SweepRunCreateResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    api_get_sweep_status_api_v1_backtest_sweep__sweep_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sweep_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SweepStatusResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    api_compare_backtest_runs_api_v1_backtest_compare_get: {
+        parameters: {
+            query: {
+                run_ids: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BacktestCompareResponse"];
                 };
             };
             /** @description Validation Error */

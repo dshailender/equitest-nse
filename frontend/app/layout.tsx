@@ -64,9 +64,15 @@ export default function RootLayout({
                   </a>
                   <a
                     href="/backtest"
-                    className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 transition-colors font-semibold text-blue-600 dark:text-blue-400"
+                    className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 transition-colors"
                   >
                     Backtest
+                  </a>
+                  <a
+                    href="/sweep"
+                    className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 transition-colors"
+                  >
+                    Sweep
                   </a>
                   <a
                     href="/api-health"
