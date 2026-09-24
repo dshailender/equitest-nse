@@ -80,4 +80,3 @@ def test_apply_costs_validation():
 
     with pytest.raises(ValueError, match="Invalid order side"):
         apply_costs(100.0, "hold")
-

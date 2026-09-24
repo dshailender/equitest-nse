@@ -30,9 +30,6 @@ def apply_costs(price: float, side: str, cost_bps: float = 10.0) -> float:
     elif side_clean in ("sell", "short"):
         adjusted = price * (1.0 - cost_bps / 10000.0)
     else:
-        raise ValueError(
-            f"Invalid order side '{side}'. Must be 'buy' or 'sell'"
-        )
+        raise ValueError(f"Invalid order side '{side}'. Must be 'buy' or 'sell'")
 
     return round(adjusted, 2)
-
