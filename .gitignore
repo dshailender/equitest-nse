@@ -54,9 +54,10 @@ playwright-report/
 blob-report/
 playwright/.cache/
 
-# Database
+# Database & Data Blobs
 *.db
 *.sqlite3
+data/backtests/*.json
 
 # OS / Editor
 .DS_Store

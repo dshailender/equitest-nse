@@ -63,11 +63,18 @@ export default function RootLayout({
                     Risk
                   </a>
                   <a
+                    href="/backtest"
+                    className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 transition-colors font-semibold text-blue-600 dark:text-blue-400"
+                  >
+                    Backtest
+                  </a>
+                  <a
                     href="/api-health"
                     className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 transition-colors"
                   >
                     API Health
                   </a>
+
 
                 </nav>
               </div>

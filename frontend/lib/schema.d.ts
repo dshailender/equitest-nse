@@ -264,10 +264,339 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/backtest/run": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Trigger Backtest Run
+         * @description Asynchronously launches simulation in background task (REQ-5.4).
+         */
+        post: operations["api_run_backtest_api_v1_backtest_run_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/backtest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Backtest Runs
+         * @description Returns chronological history of all executed backtests.
+         */
+        get: operations["api_list_backtest_runs_api_v1_backtest_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/backtest/{run_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Backtest Run Status
+         * @description Returns execution status and summary metrics for a given run ID.
+         */
+        get: operations["api_get_backtest_status_api_v1_backtest__run_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/backtest/{run_id}/trades": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Backtest Trade Ledger
+         * @description Returns list of executed round-trip trades with PnL and exit reasons.
+         */
+        get: operations["api_get_backtest_trades_api_v1_backtest__run_id__trades_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/backtest/{run_id}/equity": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Backtest Equity Curve
+         * @description Returns daily time-series of equity, cash, and drawdowns.
+         */
+        get: operations["api_get_backtest_equity_api_v1_backtest__run_id__equity_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** BacktestConfigSchema */
+        BacktestConfigSchema: {
+            /**
+             * Corpus
+             * @description Starting portfolio corpus in INR
+             * @default 500000
+             * @example 500000
+             */
+            corpus: number;
+            /**
+             * Risk Pct
+             * @description Risk percentage per trade (default 0.02 = 2%)
+             * @default 0.02
+             * @example 0.02
+             */
+            risk_pct: number;
+            /**
+             * Stop Loss Pct
+             * @description Stop loss percentage distance (default 0.07 = 7%)
+             * @default 0.07
+             * @example 0.07
+             */
+            stop_loss_pct: number;
+            /**
+             * Lot Size
+             * @description Minimum share lot multiple
+             * @default 1
+             * @example 1
+             */
+            lot_size: number;
+            /**
+             * Cost Bps
+             * @description Transaction friction and slippage costs in basis points
+             * @default 10
+             * @example 10
+             */
+            cost_bps: number;
+            /**
+             * Ema Spans
+             * @description Trend EMA spans
+             * @default [
+             *       20,
+             *       50,
+             *       150,
+             *       200
+             *     ]
+             * @example [
+             *       20,
+             *       50,
+             *       150,
+             *       200
+             *     ]
+             */
+            ema_spans: number[];
+            /**
+             * Regime Spans
+             * @description NIFTY regime EMA spans
+             * @default [
+             *       50,
+             *       200
+             *     ]
+             * @example [
+             *       50,
+             *       200
+             *     ]
+             */
+            regime_spans: number[];
+            /**
+             * High 52W Factor
+             * @description Proximity threshold to 52-week high
+             * @default 0.85
+             * @example 0.85
+             */
+            high_52w_factor: number;
+            /**
+             * High 52W Lookback
+             * @description Lookback window sessions for 52W high
+             * @default 252
+             * @example 252
+             */
+            high_52w_lookback: number;
+            /**
+             * Allow Crossover Equal
+             * @description Whether equality on bar T-1 satisfies crossover condition
+             * @default false
+             */
+            allow_crossover_equal: boolean;
+        };
+        /** BacktestEquityResponse */
+        BacktestEquityResponse: {
+            /**
+             * Run Id
+             * @description Unique backtest run identifier
+             */
+            run_id: string;
+            /**
+             * Count
+             * @description Number of equity curve data points
+             */
+            count: number;
+            /**
+             * Equity Curve
+             * @description Chronological daily mark-to-market equity curve
+             */
+            equity_curve: components["schemas"]["EquityPoint"][];
+        };
+        /** BacktestRunCreateResponse */
+        BacktestRunCreateResponse: {
+            /**
+             * Run Id
+             * @description Unique backtest run identifier
+             */
+            run_id: string;
+            /**
+             * Status
+             * @description Initial lifecycle status (pending, running)
+             * @default pending
+             */
+            status: string;
+            /**
+             * Message
+             * @description Informational status message
+             * @default Backtest execution queued
+             */
+            message: string;
+        };
+        /** BacktestRunRequest */
+        BacktestRunRequest: {
+            /**
+             * Start
+             * @description Optional backtest start date (YYYY-MM-DD)
+             * @example 2020-06-01
+             */
+            start?: string | null;
+            /**
+             * End
+             * @description Optional backtest end date (YYYY-MM-DD)
+             * @example 2022-04-29
+             */
+            end?: string | null;
+            /** @description Optional strategy parameter overrides */
+            config?: components["schemas"]["BacktestConfigSchema"] | null;
+            /**
+             * Symbols
+             * @description Optional subset of symbols (defaults to universe)
+             * @example [
+             *       "ALPHA",
+             *       "BETA",
+             *       "GAMMA"
+             *     ]
+             */
+            symbols?: string[] | null;
+        };
+        /** BacktestStatusResponse */
+        BacktestStatusResponse: {
+            /**
+             * Run Id
+             * @description Unique backtest run identifier
+             */
+            run_id: string;
+            /**
+             * Status
+             * @description Current lifecycle status (pending, running, completed, failed)
+             */
+            status: string;
+            /**
+             * Created At
+             * @description Creation ISO timestamp
+             */
+            created_at: string;
+            /**
+             * Start Date
+             * @description Start date
+             */
+            start_date?: string | null;
+            /**
+             * End Date
+             * @description End date
+             */
+            end_date?: string | null;
+            /**
+             * Initial Capital
+             * @description Starting capital in INR
+             */
+            initial_capital: number;
+            /**
+             * Final Capital
+             * @description Ending capital in INR
+             */
+            final_capital?: number | null;
+            /**
+             * Total Return Pct
+             * @description Total portfolio return percentage
+             */
+            total_return_pct?: number | null;
+            /**
+             * Total Trades
+             * @description Total closed round-trip trades
+             */
+            total_trades?: number | null;
+            /**
+             * Win Rate
+             * @description Fraction of winning trades
+             */
+            win_rate?: number | null;
+            /**
+             * Error Message
+             * @description Error explanation if failed
+             */
+            error_message?: string | null;
+        };
+        /** BacktestTradesResponse */
+        BacktestTradesResponse: {
+            /**
+             * Run Id
+             * @description Unique backtest run identifier
+             */
+            run_id: string;
+            /**
+             * Count
+             * @description Total number of closed trades
+             */
+            count: number;
+            /**
+             * Trades
+             * @description Chronological trade ledger
+             */
+            trades: components["schemas"]["TradeItem"][];
+        };
         /** CoverageItem */
         CoverageItem: {
             /**
@@ -298,6 +627,49 @@ export interface components {
              * @description List of symbol coverage summaries
              */
             items: components["schemas"]["CoverageItem"][];
+        };
+        /** EquityPoint */
+        EquityPoint: {
+            /**
+             * Date
+             * @description Session date (YYYY-MM-DD)
+             */
+            date: string;
+            /**
+             * Equity
+             * @description Total mark-to-market equity
+             */
+            equity: number;
+            /**
+             * Cash
+             * @description Available cash balance
+             */
+            cash: number;
+            /**
+             * Positions Value
+             * @description Open positions market value
+             */
+            positions_value: number;
+            /**
+             * Open Positions
+             * @description Number of currently held positions
+             */
+            open_positions: number;
+            /**
+             * Daily Return
+             * @description Day-over-day return fraction
+             */
+            daily_return: number;
+            /**
+             * Drawdown
+             * @description Drawdown from equity peak in INR
+             */
+            drawdown: number;
+            /**
+             * Drawdown Pct
+             * @description Drawdown percentage from peak
+             */
+            drawdown_pct: number;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -802,6 +1174,64 @@ export interface components {
              */
             signals: components["schemas"]["SignalItem"][];
         };
+        /** TradeItem */
+        TradeItem: {
+            /**
+             * Symbol
+             * @description Equity ticker symbol
+             */
+            symbol: string;
+            /**
+             * Entry Date
+             * @description Entry date (YYYY-MM-DD)
+             */
+            entry_date: string;
+            /**
+             * Entry Price
+             * @description Execution buy price with slippage
+             */
+            entry_price: number;
+            /**
+             * Qty
+             * @description Executed share quantity
+             */
+            qty: number;
+            /**
+             * Exit Date
+             * @description Exit date (YYYY-MM-DD)
+             */
+            exit_date: string;
+            /**
+             * Exit Price
+             * @description Execution sell price with slippage
+             */
+            exit_price: number;
+            /**
+             * Pnl
+             * @description Net realized profit/loss in INR
+             */
+            pnl: number;
+            /**
+             * Pnl Pct
+             * @description Net realized return percentage
+             */
+            pnl_pct: number;
+            /**
+             * Exit Reason
+             * @description Exit reason: stop_loss, gap, exit_signal
+             */
+            exit_reason: string;
+            /**
+             * Days Held
+             * @description Trading sessions held
+             */
+            days_held: number;
+            /**
+             * Costs
+             * @description Total friction costs in INR
+             */
+            costs: number;
+        };
         /** UniverseResponse */
         UniverseResponse: {
             /**
@@ -1232,6 +1662,152 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RiskConfigResponse"];
+                };
+            };
+        };
+    };
+    api_run_backtest_api_v1_backtest_run_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BacktestRunRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BacktestRunCreateResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    api_list_backtest_runs_api_v1_backtest_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BacktestStatusResponse"][];
+                };
+            };
+        };
+    };
+    api_get_backtest_status_api_v1_backtest__run_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BacktestStatusResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    api_get_backtest_trades_api_v1_backtest__run_id__trades_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BacktestTradesResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    api_get_backtest_equity_api_v1_backtest__run_id__equity_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BacktestEquityResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

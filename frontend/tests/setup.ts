@@ -3,7 +3,19 @@ import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import { afterAll, afterEach, beforeAll } from "vitest";
 
+// Mock ResizeObserver for Recharts in jsdom
+if (typeof window !== "undefined" && !window.ResizeObserver) {
+  const MockResizeObserver = class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  };
+  (window as unknown as { ResizeObserver: unknown }).ResizeObserver = MockResizeObserver;
+  (global as unknown as { ResizeObserver: unknown }).ResizeObserver = MockResizeObserver;
+}
+
 // Mock fixtures
+
 export const mockCoverageItems = [
   { symbol: "RELIANCE", first_date: "2020-01-01", last_date: "2023-12-31", rows: 1000 },
   { symbol: "HDFCBANK", first_date: "2020-01-01", last_date: "2023-12-31", rows: 1000 },
@@ -305,7 +317,132 @@ export const handlers = [
       risk_amount: riskAmt,
     });
   }),
+
+  // Backtest - Run Trigger
+  http.post("*/api/v1/backtest/run", () => {
+    return HttpResponse.json(
+      {
+        run_id: "test-run-123",
+        status: "pending",
+        message: "Backtest execution queued successfully",
+      },
+      { status: 202 }
+    );
+  }),
+
+  // Backtest - Status
+  http.get("*/api/v1/backtest/:run_id", ({ params }) => {
+    return HttpResponse.json({
+      run_id: params.run_id,
+      status: "completed",
+      created_at: "2026-09-24T12:00:00Z",
+      start_date: "2020-06-01",
+      end_date: "2022-04-29",
+      initial_capital: 500000.0,
+      final_capital: 482707.2,
+      total_return_pct: -0.0346,
+      total_trades: 2,
+      win_rate: 0.0,
+      error_message: null,
+    });
+  }),
+
+  // Backtest - Trades
+  http.get("*/api/v1/backtest/:run_id/trades", ({ params }) => {
+    return HttpResponse.json({
+      run_id: params.run_id,
+      count: 2,
+      trades: [
+        {
+          symbol: "ALPHA",
+          entry_date: "2021-05-25",
+          entry_price: 217.83,
+          qty: 656,
+          exit_date: "2021-08-10",
+          exit_price: 194.42,
+          pnl: -15356.96,
+          pnl_pct: -0.1075,
+          exit_reason: "gap",
+          days_held: 55,
+          costs: 268.96,
+        },
+        {
+          symbol: "ALPHA",
+          entry_date: "2021-11-02",
+          entry_price: 211.83,
+          qty: 654,
+          exit_date: "2022-02-23",
+          exit_price: 208.87,
+          pnl: -1935.84,
+          pnl_pct: -0.014,
+          exit_reason: "exit_signal",
+          days_held: 81,
+          costs: 274.68,
+        },
+      ],
+    });
+  }),
+
+  // Backtest - Equity Curve
+  http.get("*/api/v1/backtest/:run_id/equity", ({ params }) => {
+    return HttpResponse.json({
+      run_id: params.run_id,
+      count: 3,
+      equity_curve: [
+        {
+          date: "2020-06-01",
+          equity: 500000.0,
+          cash: 500000.0,
+          positions_value: 0.0,
+          open_positions: 0,
+          daily_return: 0.0,
+          drawdown: 0.0,
+          drawdown_pct: 0.0,
+        },
+        {
+          date: "2021-05-25",
+          equity: 499800.0,
+          cash: 357100.0,
+          positions_value: 142700.0,
+          open_positions: 1,
+          daily_return: -0.0004,
+          drawdown: 200.0,
+          drawdown_pct: 0.0004,
+        },
+        {
+          date: "2022-04-29",
+          equity: 482707.2,
+          cash: 482707.2,
+          positions_value: 0.0,
+          open_positions: 0,
+          daily_return: 0.0,
+          drawdown: 19208.32,
+          drawdown_pct: 0.0383,
+        },
+      ],
+    });
+  }),
+
+  // Backtest - List Runs
+  http.get("*/api/v1/backtest", () => {
+    return HttpResponse.json([
+      {
+        run_id: "test-run-123",
+        status: "completed",
+        created_at: "2026-09-24T12:00:00Z",
+        start_date: "2020-06-01",
+        end_date: "2022-04-29",
+        initial_capital: 500000.0,
+        final_capital: 482707.2,
+        total_return_pct: -0.0346,
+        total_trades: 2,
+        win_rate: 0.0,
+        error_message: null,
+      },
+    ]);
+  }),
 ];
+
 
 
 export const server = setupServer(...handlers);

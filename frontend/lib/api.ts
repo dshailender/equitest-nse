@@ -507,5 +507,217 @@ export async function fetchRiskConfig(): Promise<RiskConfigResponse> {
   return RiskConfigResponseSchema.parse(json);
 }
 
+// --- Backtest Schemas ---
+export const BacktestConfigSchema = z.object({
+  corpus: z.number().default(500000.0),
+  risk_pct: z.number().default(0.02),
+  stop_loss_pct: z.number().default(0.07),
+  lot_size: z.number().default(1),
+  cost_bps: z.number().default(10.0),
+  ema_spans: z.array(z.number()).default([20, 50, 150, 200]),
+  regime_spans: z.array(z.number()).default([50, 200]),
+  high_52w_factor: z.number().default(0.85),
+  high_52w_lookback: z.number().default(252),
+  allow_crossover_equal: z.boolean().default(false),
+});
+export type BacktestConfig = z.infer<typeof BacktestConfigSchema>;
+
+export const BacktestRunRequestSchema = z.object({
+  start: z.string().optional().nullable(),
+  end: z.string().optional().nullable(),
+  config: BacktestConfigSchema.optional().nullable(),
+  symbols: z.array(z.string()).optional().nullable(),
+});
+export type BacktestRunRequest = z.infer<typeof BacktestRunRequestSchema>;
+
+export const BacktestRunCreateResponseSchema = z.object({
+  run_id: z.string(),
+  status: z.string(),
+  message: z.string(),
+});
+export type BacktestRunCreateResponse = z.infer<
+  typeof BacktestRunCreateResponseSchema
+>;
+
+export const BacktestStatusResponseSchema = z.object({
+  run_id: z.string(),
+  status: z.string(),
+  created_at: z.string(),
+  start_date: z.string().optional().nullable(),
+  end_date: z.string().optional().nullable(),
+  initial_capital: z.number(),
+  final_capital: z.number().optional().nullable(),
+  total_return_pct: z.number().optional().nullable(),
+  total_trades: z.number().optional().nullable(),
+  win_rate: z.number().optional().nullable(),
+  error_message: z.string().optional().nullable(),
+});
+export type BacktestStatusResponse = z.infer<
+  typeof BacktestStatusResponseSchema
+>;
+
+export const TradeItemSchema = z.object({
+  symbol: z.string(),
+  entry_date: z.string(),
+  entry_price: z.number(),
+  qty: z.number(),
+  exit_date: z.string(),
+  exit_price: z.number(),
+  pnl: z.number(),
+  pnl_pct: z.number(),
+  exit_reason: z.string(),
+  days_held: z.number(),
+  costs: z.number(),
+});
+export type TradeItem = z.infer<typeof TradeItemSchema>;
+
+export const BacktestTradesResponseSchema = z.object({
+  run_id: z.string(),
+  count: z.number(),
+  trades: z.array(TradeItemSchema),
+});
+export type BacktestTradesResponse = z.infer<
+  typeof BacktestTradesResponseSchema
+>;
+
+export const EquityPointSchema = z.object({
+  date: z.string(),
+  equity: z.number(),
+  cash: z.number(),
+  positions_value: z.number(),
+  open_positions: z.number(),
+  daily_return: z.number(),
+  drawdown: z.number(),
+  drawdown_pct: z.number(),
+});
+export type EquityPoint = z.infer<typeof EquityPointSchema>;
+
+export const BacktestEquityResponseSchema = z.object({
+  run_id: z.string(),
+  count: z.number(),
+  equity_curve: z.array(EquityPointSchema),
+});
+export type BacktestEquityResponse = z.infer<
+  typeof BacktestEquityResponseSchema
+>;
+
+/**
+ * Triggers a backtest execution run asynchronously
+ */
+export async function runBacktest(
+  req: BacktestRunRequest
+): Promise<BacktestRunCreateResponse> {
+  const url = `${API_BASE_URL}/api/v1/backtest/run`;
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify(req),
+  });
+
+  if (!response.ok) {
+    throw new ApiError(
+      response.status,
+      `Backtest run trigger failed with status: ${response.status}`
+    );
+  }
+
+  const json = await response.json();
+  return BacktestRunCreateResponseSchema.parse(json);
+}
+
+/**
+ * Fetches status and summary KPIs for a backtest run
+ */
+export async function fetchBacktestStatus(
+  runId: string
+): Promise<BacktestStatusResponse> {
+  const url = `${API_BASE_URL}/api/v1/backtest/${encodeURIComponent(runId)}`;
+  const response = await fetch(url, {
+    headers: { Accept: "application/json" },
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new ApiError(
+      response.status,
+      `Backtest status fetch failed with status: ${response.status}`
+    );
+  }
+
+  const json = await response.json();
+  return BacktestStatusResponseSchema.parse(json);
+}
+
+/**
+ * Fetches trade ledger for a completed backtest run
+ */
+export async function fetchBacktestTrades(
+  runId: string
+): Promise<BacktestTradesResponse> {
+  const url = `${API_BASE_URL}/api/v1/backtest/${encodeURIComponent(runId)}/trades`;
+  const response = await fetch(url, {
+    headers: { Accept: "application/json" },
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new ApiError(
+      response.status,
+      `Backtest trades fetch failed with status: ${response.status}`
+    );
+  }
+
+  const json = await response.json();
+  return BacktestTradesResponseSchema.parse(json);
+}
+
+/**
+ * Fetches equity curve time series for a completed backtest run
+ */
+export async function fetchBacktestEquity(
+  runId: string
+): Promise<BacktestEquityResponse> {
+  const url = `${API_BASE_URL}/api/v1/backtest/${encodeURIComponent(runId)}/equity`;
+  const response = await fetch(url, {
+    headers: { Accept: "application/json" },
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new ApiError(
+      response.status,
+      `Backtest equity fetch failed with status: ${response.status}`
+    );
+  }
+
+  const json = await response.json();
+  return BacktestEquityResponseSchema.parse(json);
+}
+
+/**
+ * Fetches list of all previous backtest runs
+ */
+export async function fetchBacktestRuns(): Promise<BacktestStatusResponse[]> {
+  const url = `${API_BASE_URL}/api/v1/backtest`;
+  const response = await fetch(url, {
+    headers: { Accept: "application/json" },
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new ApiError(
+      response.status,
+      `Backtest runs list fetch failed with status: ${response.status}`
+    );
+  }
+
+  const json = await response.json();
+  return z.array(BacktestStatusResponseSchema).parse(json);
+}
+
+
 
 

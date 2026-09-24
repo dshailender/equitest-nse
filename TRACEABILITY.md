@@ -11,7 +11,7 @@ This document tracks requirement implementation, validation status, and associat
 | **Phase 2** | Technical Indicator Computation & Preview Engine | ✅ Completed |
 | **Phase 3** | Entry, Exit, and Signal Rules | ✅ Completed |
 | **Phase 4** | Risk, Position Sizing, and Stop Loss | ✅ Completed |
-| **Phase 5** | Backtest Simulation Engine | ⏳ Pending |
+| **Phase 5** | Backtest Simulation Engine | ✅ Completed |
 | **Phase 6** | Parameter and Scenario Testing | ⏳ Pending |
 | **Phase 7** | Reporting and Analytics | ⏳ Pending |
 | **Phase 8** | Validation, Acceptance, and Handoff | ⏳ Pending |
@@ -58,6 +58,14 @@ This document tracks requirement implementation, validation status, and associat
 | **REQ-4.3** | Position Sizing & Exposure Allocation Constraints | `backend/app/risk/position.py::position_size`, `capital_required`, `can_allocate` | `backend/tests/test_risk_position.py` (Unit tests + Hypothesis property test: `qty*entry*sl_pct <= risk_amount`) | ✅ Verified |
 | **REQ-4.4** | Risk REST API & Interactive Sizing Dashboard | `backend/app/api/v1/risk.py`, `frontend/app/risk/page.tsx`, `frontend/lib/api.ts` | `backend/tests/test_api_risk.py`, `frontend/tests/risk.test.tsx`, `e2e/risk.spec.ts` | ✅ Verified |
 
+### Phase 5: Backtest Simulation Engine
+| Req ID | Requirement | Implementation Artifacts | Test & Verification Evidence | Status |
+| :--- | :--- | :--- | :--- | :--- |
+| **REQ-5.1** | Simulation Engine State Machine & BacktestResult | `backend/app/engine/result.py`, `backend/app/engine/backtest.py` | `backend/tests/test_engine_core.py` (Deterministic golden test on tiny universe, final capital ₹482,707.20 to the paisa, idempotency verified) | ✅ Verified |
+| **REQ-5.2** | Next-Day Open Execution & Period Limits | `backend/app/engine/backtest.py` | `backend/tests/test_engine_execution.py` (Session T open execution with slippage, date range filtering, strict cutoff D truncation guard) | ✅ Verified |
+| **REQ-5.3** | Capital Constraints, Ranking Rule & Rejections | `backend/app/engine/backtest.py::DefaultRanker`, `docs/ASSUMPTIONS.md` | `backend/tests/test_engine_constraints.py` (Concurrent position rejection logging, momentum sorting rule, pluggable Ranker protocol) | ✅ Verified |
+| **REQ-5.4** | Persistence, REST API & Backtest Dashboard | `backend/app/api/v1/backtest.py`, `backend/app/db/models.py`, `frontend/app/backtest/page.tsx`, `frontend/lib/api.ts` | `backend/tests/test_api_backtest.py`, `frontend/tests/backtest.test.tsx`, `e2e/backtest.spec.ts` | ✅ Verified |
+
 ---
 
 ## API Endpoint Matrix
@@ -77,5 +85,11 @@ This document tracks requirement implementation, validation status, and associat
 | `GET` | `/api/v1/signals/screen` | Universe screening for active entry signals | Phase 3 | `tests/test_api_signals.py`, `frontend/tests/signals.test.tsx`, `e2e/signals.spec.ts` |
 | `POST` | `/api/v1/risk/size` | Derives position size, capital, SL level, and monetary risk | Phase 4 | `tests/test_api_risk.py`, `frontend/tests/risk.test.tsx`, `e2e/risk.spec.ts` |
 | `GET` | `/api/v1/risk/config` | Strategy baseline risk, capital, and cost parameters | Phase 4 | `tests/test_api_risk.py` |
+| `POST` | `/api/v1/backtest/run` | Triggers asynchronous backtest simulation execution | Phase 5 | `tests/test_api_backtest.py`, `frontend/tests/backtest.test.tsx`, `e2e/backtest.spec.ts` |
+| `GET` | `/api/v1/backtest/{run_id}` | Retrieves execution status and summary metrics | Phase 5 | `tests/test_api_backtest.py`, `frontend/tests/backtest.test.tsx`, `e2e/backtest.spec.ts` |
+| `GET` | `/api/v1/backtest/{run_id}/trades` | Retrieves trade ledger of closed round trips | Phase 5 | `tests/test_api_backtest.py`, `frontend/tests/backtest.test.tsx`, `e2e/backtest.spec.ts` |
+| `GET` | `/api/v1/backtest/{run_id}/equity` | Retrieves mark-to-market daily equity curve points | Phase 5 | `tests/test_api_backtest.py`, `frontend/tests/backtest.test.tsx`, `e2e/backtest.spec.ts` |
+| `GET` | `/api/v1/backtest` | Lists historical persisted backtest simulation runs | Phase 5 | `tests/test_api_backtest.py`, `frontend/tests/backtest.test.tsx` |
+
 
 

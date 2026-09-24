@@ -297,3 +297,166 @@ class RiskConfigResponse(BaseModel):
             "(10 bps = 0.10%)"
         ),
     )
+
+
+class BacktestConfigSchema(BaseModel):
+    corpus: float = Field(
+        default=500000.0,
+        gt=0,
+        description="Starting portfolio corpus in INR",
+        examples=[500000.0],
+    )
+    risk_pct: float = Field(
+        default=0.02,
+        gt=0,
+        lt=1,
+        description="Risk percentage per trade (default 0.02 = 2%)",
+        examples=[0.02],
+    )
+    stop_loss_pct: float = Field(
+        default=0.07,
+        gt=0,
+        lt=1,
+        description="Stop loss percentage distance (default 0.07 = 7%)",
+        examples=[0.07],
+    )
+    lot_size: int = Field(
+        default=1,
+        ge=1,
+        description="Minimum share lot multiple",
+        examples=[1],
+    )
+    cost_bps: float = Field(
+        default=10.0,
+        ge=0,
+        description="Transaction friction and slippage costs in basis points",
+        examples=[10.0],
+    )
+    ema_spans: list[int] = Field(
+        default=[20, 50, 150, 200],
+        description="Trend EMA spans",
+        examples=[[20, 50, 150, 200]],
+    )
+    regime_spans: list[int] = Field(
+        default=[50, 200],
+        description="NIFTY regime EMA spans",
+        examples=[[50, 200]],
+    )
+    high_52w_factor: float = Field(
+        default=0.85,
+        gt=0,
+        description="Proximity threshold to 52-week high",
+        examples=[0.85],
+    )
+    high_52w_lookback: int = Field(
+        default=252,
+        gt=0,
+        description="Lookback window sessions for 52W high",
+        examples=[252],
+    )
+    allow_crossover_equal: bool = Field(
+        default=False,
+        description="Whether equality on bar T-1 satisfies crossover condition",
+    )
+
+
+class BacktestRunRequest(BaseModel):
+    start: str | None = Field(
+        default=None,
+        description="Optional backtest start date (YYYY-MM-DD)",
+        examples=["2020-06-01"],
+    )
+    end: str | None = Field(
+        default=None,
+        description="Optional backtest end date (YYYY-MM-DD)",
+        examples=["2022-04-29"],
+    )
+    config: BacktestConfigSchema | None = Field(
+        default=None,
+        description="Optional strategy parameter overrides",
+    )
+    symbols: list[str] | None = Field(
+        default=None,
+        description="Optional subset of symbols (defaults to universe)",
+        examples=[["ALPHA", "BETA", "GAMMA"]],
+    )
+
+
+class BacktestRunCreateResponse(BaseModel):
+    run_id: str = Field(..., description="Unique backtest run identifier")
+    status: str = Field(
+        default="pending",
+        description="Initial lifecycle status (pending, running)",
+    )
+    message: str = Field(
+        default="Backtest execution queued",
+        description="Informational status message",
+    )
+
+
+class BacktestStatusResponse(BaseModel):
+    run_id: str = Field(..., description="Unique backtest run identifier")
+    status: str = Field(
+        ...,
+        description="Current lifecycle status (pending, running, completed, failed)",
+    )
+    created_at: str = Field(..., description="Creation ISO timestamp")
+    start_date: str | None = Field(default=None, description="Start date")
+    end_date: str | None = Field(default=None, description="End date")
+    initial_capital: float = Field(..., description="Starting capital in INR")
+    final_capital: float | None = Field(
+        default=None, description="Ending capital in INR"
+    )
+    total_return_pct: float | None = Field(
+        default=None, description="Total portfolio return percentage"
+    )
+    total_trades: int | None = Field(
+        default=None, description="Total closed round-trip trades"
+    )
+    win_rate: float | None = Field(
+        default=None, description="Fraction of winning trades"
+    )
+    error_message: str | None = Field(
+        default=None, description="Error explanation if failed"
+    )
+
+
+class TradeItem(BaseModel):
+    symbol: str = Field(..., description="Equity ticker symbol")
+    entry_date: str = Field(..., description="Entry date (YYYY-MM-DD)")
+    entry_price: float = Field(..., description="Execution buy price with slippage")
+    qty: int = Field(..., description="Executed share quantity")
+    exit_date: str = Field(..., description="Exit date (YYYY-MM-DD)")
+    exit_price: float = Field(..., description="Execution sell price with slippage")
+    pnl: float = Field(..., description="Net realized profit/loss in INR")
+    pnl_pct: float = Field(..., description="Net realized return percentage")
+    exit_reason: str = Field(
+        ..., description="Exit reason: stop_loss, gap, exit_signal"
+    )
+    days_held: int = Field(..., description="Trading sessions held")
+    costs: float = Field(..., description="Total friction costs in INR")
+
+
+class BacktestTradesResponse(BaseModel):
+    run_id: str = Field(..., description="Unique backtest run identifier")
+    count: int = Field(..., description="Total number of closed trades")
+    trades: list[TradeItem] = Field(..., description="Chronological trade ledger")
+
+
+class EquityPoint(BaseModel):
+    date: str = Field(..., description="Session date (YYYY-MM-DD)")
+    equity: float = Field(..., description="Total mark-to-market equity")
+    cash: float = Field(..., description="Available cash balance")
+    positions_value: float = Field(..., description="Open positions market value")
+    open_positions: int = Field(..., description="Number of currently held positions")
+    daily_return: float = Field(..., description="Day-over-day return fraction")
+    drawdown: float = Field(..., description="Drawdown from equity peak in INR")
+    drawdown_pct: float = Field(..., description="Drawdown percentage from peak")
+
+
+class BacktestEquityResponse(BaseModel):
+    run_id: str = Field(..., description="Unique backtest run identifier")
+    count: int = Field(..., description="Number of equity curve data points")
+    equity_curve: list[EquityPoint] = Field(
+        ..., description="Chronological daily mark-to-market equity curve"
+    )

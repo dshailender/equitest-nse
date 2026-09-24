@@ -46,6 +46,8 @@ class CSVSource(PriceSource):
             self.fixtures_dir / f"{symbol}.parquet",
             self.fixtures_dir / f"{clean_symbol}.parquet",
             self.fixtures_dir / f"index_{clean_symbol}.parquet",
+            self.fixtures_dir / "tiny_universe" / f"{symbol}.parquet",
+            self.fixtures_dir / "tiny_universe" / f"{clean_symbol}.parquet",
         ]
 
         target_file = None
