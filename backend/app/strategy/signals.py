@@ -399,3 +399,7 @@ def generate_signals(
     out_df["exit"] = exit_sig.values
 
     return out_df
+
+
+# Alias for locked public interface from Phase 3/4
+compute_strategy_signals = generate_signals

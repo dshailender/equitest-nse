@@ -24,7 +24,27 @@ class StrategyConfig:
     high_52w_lookback: int = 252
     stop_loss_pct: float = 0.07
     risk_pct: float = 0.02
+    corpus: float = 500000.0
+    lot_size: int = 1
+    cost_bps: float = 10.0
     allow_crossover_equal: bool = False
+
+    def to_dict(self) -> dict:
+        """Serializes configuration to dictionary."""
+        return {
+            "ema_short": self.ema_short,
+            "ema_long": self.ema_long,
+            "ema_trend_spans": list(self.ema_trend_spans),
+            "regime_ema_spans": list(self.regime_ema_spans),
+            "high_52w_factor": self.high_52w_factor,
+            "high_52w_lookback": self.high_52w_lookback,
+            "stop_loss_pct": self.stop_loss_pct,
+            "risk_pct": self.risk_pct,
+            "corpus": self.corpus,
+            "lot_size": self.lot_size,
+            "cost_bps": self.cost_bps,
+            "allow_crossover_equal": self.allow_crossover_equal,
+        }
 
     @property
     def regime_spans(self) -> list[int]:
