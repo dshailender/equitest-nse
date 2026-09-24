@@ -4,7 +4,7 @@ import pandas as pd
 import pytest
 
 from app.strategy.config import StrategyConfig
-from app.strategy.signals import market_regime_ok
+from app.strategy.signals import market_regime_ok, trend_ok
 
 
 def test_strategy_config_defaults():
@@ -88,3 +88,75 @@ def test_market_regime_ok_on_fixture():
     assert regime.iloc[:199].sum() == 0
     # Later in trending bull markets, regime must have True periods
     assert regime.sum() > 0
+
+
+def test_trend_ok_synthetic():
+    # Synthetic DataFrame testing strict stacking of 4 EMAs
+    df = pd.DataFrame(
+        {
+            "date": [
+                "2023-01-01",
+                "2023-01-02",
+                "2023-01-03",
+                "2023-01-04",
+                "2023-01-05",
+                "2023-01-06",
+            ],
+            "ema_20": [200.0, 190.0, 200.0, 200.0, 200.0, 200.0],
+            "ema_50": [150.0, 150.0, 150.0, 150.0, 150.0, 150.0],
+            "ema_150": [100.0, 100.0, 120.0, 100.0, 100.0, 100.0],
+            "ema_200": [50.0, 50.0, 120.0, 110.0, None, 50.0],
+        }
+    )
+    # Day 1: 200 > 150 > 100 > 50 -> True (perfect stack)
+    # Day 2: 190 > 150 > 100 > 50 -> True
+    # Day 3: ema_150 == ema_200 (120 == 120) -> False (strict inequality)
+    # Day 4: ema_150 (100) < ema_200 (110) -> False (inverted)
+    # Day 5: ema_200 is NaN -> False
+    # Day 6: 200 > 150 > 100 > 50 -> True
+    df_copy = df.copy()
+
+    trend = trend_ok(df)
+
+    assert trend.iloc[0] is True or trend.iloc[0] == True  # noqa: E712
+    assert trend.iloc[1] is True or trend.iloc[1] == True  # noqa: E712
+    assert trend.iloc[2] is False or trend.iloc[2] == False  # noqa: E712
+    assert trend.iloc[3] is False or trend.iloc[3] == False  # noqa: E712
+    assert trend.iloc[4] is False or trend.iloc[4] == False  # noqa: E712
+    assert trend.iloc[5] is True or trend.iloc[5] == True  # noqa: E712
+
+    assert list(trend.index) == [
+        "2023-01-01",
+        "2023-01-02",
+        "2023-01-03",
+        "2023-01-04",
+        "2023-01-05",
+        "2023-01-06",
+    ]
+    assert trend.name == "trend_ok"
+
+    # Verify input DataFrame is NOT mutated
+    pd.testing.assert_frame_equal(df, df_copy)
+
+
+def test_trend_ok_empty():
+    df_empty = pd.DataFrame()
+    trend = trend_ok(df_empty)
+    assert trend.empty
+    assert trend.dtype == bool
+
+
+def test_trend_ok_on_fixture():
+    fixture_path = Path("data/fixtures/MIDCAP_STOCK_101.parquet")
+    if not fixture_path.exists():
+        pytest.skip("MIDCAP_STOCK_101 fixture not found")
+
+    df_stock = pd.read_parquet(fixture_path)
+    trend = trend_ok(df_stock)
+
+    assert len(trend) == len(df_stock)
+    assert trend.dtype == bool
+    # Initially before warm-up (200 bars), trend must be False
+    assert trend.iloc[:199].sum() == 0
+    # Later there should be sessions with confirmed uptrends
+    assert trend.sum() > 0

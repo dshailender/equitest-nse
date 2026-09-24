@@ -1,6 +1,10 @@
 import pandas as pd
 
-from app.indicators.pipeline import compute_nifty_indicators
+from app.indicators.pipeline import (
+    IndicatorConfig,
+    compute_indicators,
+    compute_nifty_indicators,
+)
 from app.strategy.config import StrategyConfig
 
 
@@ -57,3 +61,50 @@ def market_regime_ok(
 
     regime.name = "regime_ok"
     return regime
+
+
+def trend_ok(stock_df: pd.DataFrame, config: StrategyConfig | None = None) -> pd.Series:
+    """Evaluates stock trend filter (REQ-3.2).
+
+    Rule:
+        EMA 20 > EMA 50 > EMA 150 > EMA 200
+
+    Signal is valid only if all four EMAs are strictly stacked in ascending order.
+
+    Args:
+        stock_df: DataFrame containing equity OHLCV or indicator-augmented price series.
+        config: Strategy configuration containing trend EMA spans.
+
+    Returns:
+        pd.Series[bool] indexed by date, representing trend status on each session.
+        Never mutates the input DataFrame.
+    """
+    if stock_df.empty:
+        return pd.Series(dtype=bool, name="trend_ok")
+
+    cfg = config or StrategyConfig()
+    spans = cfg.ema_trend_spans
+    required_cols = [f"ema_{s}" for s in spans]
+
+    # Do not mutate input dataframe
+    if any(c not in stock_df.columns for c in required_cols):
+        ind_cfg = IndicatorConfig(spans=spans, include_high_52w=False)
+        df_calc = compute_indicators(stock_df, config=ind_cfg)
+    else:
+        df_calc = stock_df
+
+    ema_20 = df_calc["ema_20"].astype(float)
+    ema_50 = df_calc["ema_50"].astype(float)
+    ema_150 = df_calc["ema_150"].astype(float)
+    ema_200 = df_calc["ema_200"].astype(float)
+
+    trend = (ema_20 > ema_50) & (ema_50 > ema_150) & (ema_150 > ema_200)
+    trend = trend.fillna(False).astype(bool)
+
+    if "date" in df_calc.columns:
+        trend.index = pd.Index(df_calc["date"].astype(str))
+    else:
+        trend.index = df_calc.index
+
+    trend.name = "trend_ok"
+    return trend
