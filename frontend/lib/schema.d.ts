@@ -224,6 +224,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/risk/size": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Calculate Position Size and Risk
+         * @description Derives integer share quantity, capital required, stop loss price, and monetary risk amount based on corpus, entry price, stop loss %, and risk % (REQ-4.1, REQ-4.2, REQ-4.3).
+         */
+        post: operations["api_calculate_risk_size_api_v1_risk_size_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/risk/config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Default Risk Configuration
+         * @description Returns baseline strategy risk, stop loss, capital, and cost parameters.
+         */
+        get: operations["api_get_risk_config_api_v1_risk_config_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -535,6 +575,98 @@ export interface components {
              * @description Chronological series of OHLCV bars
              */
             prices: components["schemas"]["PriceItem"][];
+        };
+        /** RiskConfigResponse */
+        RiskConfigResponse: {
+            /**
+             * Corpus
+             * @description Default portfolio starting corpus in INR
+             * @default 500000
+             */
+            corpus: number;
+            /**
+             * Risk Pct
+             * @description Default risk percentage per trade (2%)
+             * @default 0.02
+             */
+            risk_pct: number;
+            /**
+             * Stop Loss Pct
+             * @description Default stop loss percentage (7%)
+             * @default 0.07
+             */
+            stop_loss_pct: number;
+            /**
+             * Lot Size
+             * @description Default share lot size multiple (1)
+             * @default 1
+             */
+            lot_size: number;
+            /**
+             * Cost Bps
+             * @description Default transaction friction and slippage costs in basis points (10 bps = 0.10%)
+             * @default 10
+             */
+            cost_bps: number;
+        };
+        /** RiskSizeRequest */
+        RiskSizeRequest: {
+            /**
+             * Corpus
+             * @description Total account capital / portfolio corpus
+             * @example 500000
+             */
+            corpus: number;
+            /**
+             * Entry
+             * @description Proposed trade entry price per share
+             * @example 100
+             */
+            entry: number;
+            /**
+             * Sl Pct
+             * @description Stop loss percentage distance from entry (default 0.07)
+             * @default 0.07
+             * @example 0.07
+             */
+            sl_pct: number;
+            /**
+             * Risk Pct
+             * @description Maximum account risk percentage per trade (default 0.02)
+             * @default 0.02
+             * @example 0.02
+             */
+            risk_pct: number;
+            /**
+             * Lot Size
+             * @description Minimum lot size multiple (default 1)
+             * @default 1
+             * @example 1
+             */
+            lot_size: number;
+        };
+        /** RiskSizeResponse */
+        RiskSizeResponse: {
+            /**
+             * Qty
+             * @description Derived integer position size / share quantity
+             */
+            qty: number;
+            /**
+             * Capital Required
+             * @description Total capital required for this position (qty * entry)
+             */
+            capital_required: number;
+            /**
+             * Sl Price
+             * @description Stop loss price level (entry * (1 - sl_pct))
+             */
+            sl_price: number;
+            /**
+             * Risk Amount
+             * @description Maximum monetary account risk for this trade (corpus * risk_pct)
+             */
+            risk_amount: number;
         };
         /** ScreenResponse */
         ScreenResponse: {
@@ -1047,6 +1179,59 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    api_calculate_risk_size_api_v1_risk_size_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RiskSizeRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RiskSizeResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    api_get_risk_config_api_v1_risk_config_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RiskConfigResponse"];
                 };
             };
         };

@@ -266,6 +266,45 @@ export const handlers = [
       signals: mockSignals,
     });
   }),
+
+  // Risk - Config
+  http.get("*/api/v1/risk/config", () => {
+    return HttpResponse.json({
+      corpus: 500000.0,
+      risk_pct: 0.02,
+      stop_loss_pct: 0.07,
+      lot_size: 1,
+      cost_bps: 10.0,
+    });
+  }),
+
+  // Risk - Size
+  http.post("*/api/v1/risk/size", async ({ request }) => {
+    const body = (await request.json()) as {
+      corpus: number;
+      entry: number;
+      sl_pct?: number;
+      risk_pct?: number;
+      lot_size?: number;
+    };
+    const slPct = body.sl_pct ?? 0.07;
+    const riskPct = body.risk_pct ?? 0.02;
+    const lotSize = body.lot_size ?? 1;
+
+    const riskAmt = Math.round(body.corpus * riskPct * 100) / 100;
+    const slDist = body.entry * slPct;
+    const rawQty = riskAmt / slDist;
+    const qty = Math.floor(rawQty / lotSize) * lotSize;
+    const capital = Math.round(qty * body.entry * 100) / 100;
+    const slPrice = Math.round(body.entry * (1 - slPct) * 100) / 100;
+
+    return HttpResponse.json({
+      qty,
+      capital_required: capital,
+      sl_price: slPrice,
+      risk_amount: riskAmt,
+    });
+  }),
 ];
 
 

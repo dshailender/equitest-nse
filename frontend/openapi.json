@@ -596,6 +596,70 @@
           }
         }
       }
+    },
+    "/api/v1/risk/size": {
+      "post": {
+        "tags": [
+          "risk"
+        ],
+        "summary": "Calculate Position Size and Risk",
+        "description": "Derives integer share quantity, capital required, stop loss price, and monetary risk amount based on corpus, entry price, stop loss %, and risk % (REQ-4.1, REQ-4.2, REQ-4.3).",
+        "operationId": "api_calculate_risk_size_api_v1_risk_size_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RiskSizeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RiskSizeResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/risk/config": {
+      "get": {
+        "tags": [
+          "risk"
+        ],
+        "summary": "Get Default Risk Configuration",
+        "description": "Returns baseline strategy risk, stop loss, capital, and cost parameters.",
+        "operationId": "api_get_risk_config_api_v1_risk_config_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RiskConfigResponse"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1111,6 +1175,134 @@
           "prices"
         ],
         "title": "PricesResponse"
+      },
+      "RiskConfigResponse": {
+        "properties": {
+          "corpus": {
+            "type": "number",
+            "title": "Corpus",
+            "description": "Default portfolio starting corpus in INR",
+            "default": 500000.0
+          },
+          "risk_pct": {
+            "type": "number",
+            "title": "Risk Pct",
+            "description": "Default risk percentage per trade (2%)",
+            "default": 0.02
+          },
+          "stop_loss_pct": {
+            "type": "number",
+            "title": "Stop Loss Pct",
+            "description": "Default stop loss percentage (7%)",
+            "default": 0.07
+          },
+          "lot_size": {
+            "type": "integer",
+            "title": "Lot Size",
+            "description": "Default share lot size multiple (1)",
+            "default": 1
+          },
+          "cost_bps": {
+            "type": "number",
+            "title": "Cost Bps",
+            "description": "Default transaction friction and slippage costs in basis points (10 bps = 0.10%)",
+            "default": 10.0
+          }
+        },
+        "type": "object",
+        "title": "RiskConfigResponse"
+      },
+      "RiskSizeRequest": {
+        "properties": {
+          "corpus": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Corpus",
+            "description": "Total account capital / portfolio corpus",
+            "examples": [
+              500000.0
+            ]
+          },
+          "entry": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Entry",
+            "description": "Proposed trade entry price per share",
+            "examples": [
+              100.0
+            ]
+          },
+          "sl_pct": {
+            "type": "number",
+            "exclusiveMaximum": 1.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Sl Pct",
+            "description": "Stop loss percentage distance from entry (default 0.07)",
+            "default": 0.07,
+            "examples": [
+              0.07
+            ]
+          },
+          "risk_pct": {
+            "type": "number",
+            "exclusiveMaximum": 1.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Risk Pct",
+            "description": "Maximum account risk percentage per trade (default 0.02)",
+            "default": 0.02,
+            "examples": [
+              0.02
+            ]
+          },
+          "lot_size": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Lot Size",
+            "description": "Minimum lot size multiple (default 1)",
+            "default": 1,
+            "examples": [
+              1
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "corpus",
+          "entry"
+        ],
+        "title": "RiskSizeRequest"
+      },
+      "RiskSizeResponse": {
+        "properties": {
+          "qty": {
+            "type": "integer",
+            "title": "Qty",
+            "description": "Derived integer position size / share quantity"
+          },
+          "capital_required": {
+            "type": "number",
+            "title": "Capital Required",
+            "description": "Total capital required for this position (qty * entry)"
+          },
+          "sl_price": {
+            "type": "number",
+            "title": "Sl Price",
+            "description": "Stop loss price level (entry * (1 - sl_pct))"
+          },
+          "risk_amount": {
+            "type": "number",
+            "title": "Risk Amount",
+            "description": "Maximum monetary account risk for this trade (corpus * risk_pct)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "qty",
+          "capital_required",
+          "sl_price",
+          "risk_amount"
+        ],
+        "title": "RiskSizeResponse"
       },
       "ScreenResponse": {
         "properties": {

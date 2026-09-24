@@ -432,4 +432,80 @@ export async function screenUniverse(date: string): Promise<ScreenResponse> {
   return ScreenResponseSchema.parse(json);
 }
 
+// --- Risk Schemas ---
+export const RiskSizeRequestSchema = z.object({
+  corpus: z.number().positive("Corpus must be greater than 0"),
+  entry: z.number().positive("Entry price must be greater than 0"),
+  sl_pct: z.number().positive("Stop loss must be greater than 0").max(1, "Stop loss fraction must not exceed 1").default(0.07),
+  risk_pct: z.number().positive("Risk must be greater than 0").max(1, "Risk fraction must not exceed 1").default(0.02),
+  lot_size: z.number().int().min(1, "Lot size must be at least 1").default(1),
+});
+export type RiskSizeRequest = z.infer<typeof RiskSizeRequestSchema>;
+
+export const RiskSizeResponseSchema = z.object({
+  qty: z.number().int(),
+  capital_required: z.number(),
+  sl_price: z.number(),
+  risk_amount: z.number(),
+});
+export type RiskSizeResponse = z.infer<typeof RiskSizeResponseSchema>;
+
+export const RiskConfigResponseSchema = z.object({
+  corpus: z.number(),
+  risk_pct: z.number(),
+  stop_loss_pct: z.number(),
+  lot_size: z.number().int(),
+  cost_bps: z.number(),
+});
+export type RiskConfigResponse = z.infer<typeof RiskConfigResponseSchema>;
+
+/**
+ * Calculate position size and risk metrics
+ */
+export async function calculateRiskSize(
+  req: RiskSizeRequest
+): Promise<RiskSizeResponse> {
+  const url = `${API_BASE_URL}/api/v1/risk/size`;
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify(req),
+  });
+
+  if (!response.ok) {
+    throw new ApiError(
+      response.status,
+      `Risk size calculation failed with status: ${response.status}`
+    );
+  }
+
+  const json = await response.json();
+  return RiskSizeResponseSchema.parse(json);
+}
+
+/**
+ * Fetch default risk and execution configuration parameters
+ */
+export async function fetchRiskConfig(): Promise<RiskConfigResponse> {
+  const url = `${API_BASE_URL}/api/v1/risk/config`;
+  const response = await fetch(url, {
+    headers: { Accept: "application/json" },
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new ApiError(
+      response.status,
+      `Risk config fetch failed with status: ${response.status}`
+    );
+  }
+
+  const json = await response.json();
+  return RiskConfigResponseSchema.parse(json);
+}
+
+
 

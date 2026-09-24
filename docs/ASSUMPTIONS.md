@@ -64,3 +64,38 @@ This document records the foundational assumptions, methodology decisions, and e
    - **Formula**: `Close(T) < EMA20(T)`.
    - **Execution**: Signal generated on bar $T$ close; execution occurs on session $T+1$ at Market Open.
 
+---
+
+## 5. Risk Management, Sizing & Stop Loss Invariants (Phase 4)
+
+1. **Initial Stop Loss Calculation (REQ-4.1)**:
+   - **Formula**: `SL Price = Entry Price × (1 - 0.07)` (7% hard stop loss).
+   - **Execution**: Evaluated on subsequent trading sessions. If $\text{Low}_T \le \text{SL Price}$, a stop loss exit is triggered.
+
+2. **Dynamic Account Risk (REQ-4.2)**:
+   - **Formula**: `Risk Amount = Current Corpus × 0.02` (2% risk per trade).
+   - **Dynamic Adjustment**: Initial risk on ₹5,00,000 starting corpus is ₹10,000. Compounding increases dollar risk during equity peaks and reduces dollar risk during portfolio drawdowns.
+
+3. **Position Sizing Derivation (REQ-4.3)**:
+   - **Formula**:
+     $$\text{Raw Qty} = \frac{\text{Corpus} \times \text{Risk \%}}{\text{Entry Price} \times \text{SL \%}}$$
+     $$\text{Quantity} = \left\lfloor \frac{\text{Raw Qty}}{\text{Lot Size}} \right\rfloor \times \text{Lot Size}$$
+   - **PRD Invariant & Arithmetic Relationship**:
+     - At ₹5,00,000 corpus and ₹100 entry: Risk is ₹10,000, SL distance is ₹7.00 $\implies \text{Qty} = \lfloor 10000 / 7 \rfloor = 1,428$ shares, requiring ₹1,42,800 capital ($\approx 28.56\%$ allocation).
+     - At ₹1,00,000 corpus and ₹100 entry: Risk is ₹2,000, SL distance is ₹7.00 $\implies \text{Qty} = \lfloor 2000 / 7 \rfloor = 285$ shares, requiring ₹28,500 capital ($28.5\%$ allocation).
+     - `TODO: PO confirm` whether lot sizes for cash equities default strictly to 1 or should support index derivative/basket lot sizes. Currently defaulted to `lot_size = 1`.
+
+4. **Overnight Gap-Down Semantics (Explicit Assumption)**:
+   - If a stock opens below the stop loss price ($\text{Open}_T \le \text{SL Price}$), the stop exit executes at the **Open price** rather than the stop loss price.
+   - *Impact*: Realized trade loss exceeds 7% ($\text{Loss} > 7\%$) and portfolio loss exceeds 2% ($\text{Drawdown} > 2\%$). The backtesting engine records realistic market gaps without artificial price improvement.
+
+5. **Transaction Frictions & Slippage (REQ-0.3)**:
+   - Modeled at **10 basis points (0.10%) per side**:
+     - Buy execution: $\text{Price} \times 1.0010$
+     - Sell execution: $\text{Price} \times 0.9990$
+
+6. **Portfolio Exposure & Capital Allocation**:
+   - System enforces total portfolio exposure $\le \text{Corpus}$.
+   - Because each trade requires $\sim 28.5\%$ of capital, the portfolio naturally caps at a maximum of **3 to 4 concurrent positions**. New entry signals are rejected if $\text{Open Positions Value} + \text{Required Capital} > \text{Corpus}$.
+
+

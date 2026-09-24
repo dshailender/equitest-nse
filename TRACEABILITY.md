@@ -10,7 +10,7 @@ This document tracks requirement implementation, validation status, and associat
 | **Phase 1** | Data Ingestion and Universe Construction | ✅ Completed |
 | **Phase 2** | Technical Indicator Computation & Preview Engine | ✅ Completed |
 | **Phase 3** | Entry, Exit, and Signal Rules | ✅ Completed |
-| **Phase 4** | Risk, Position Sizing, and Stop Loss | ⏳ Pending |
+| **Phase 4** | Risk, Position Sizing, and Stop Loss | ✅ Completed |
 | **Phase 5** | Backtest Simulation Engine | ⏳ Pending |
 | **Phase 6** | Parameter and Scenario Testing | ⏳ Pending |
 | **Phase 7** | Reporting and Analytics | ⏳ Pending |
@@ -25,7 +25,7 @@ This document tracks requirement implementation, validation status, and associat
 | :--- | :--- | :--- | :--- | :--- |
 | **REQ-0.1** | Look-Ahead & Survivorship Bias Prevention | `backend/app/data/universe.py`, `backend/app/api/v1/data.py` | `backend/tests/test_universe.py`, `backend/tests/test_api_data.py::test_prices_no_lookahead_leak` | ✅ Verified |
 | **REQ-0.2** | Corporate Action Adjustments (`adj_close`) | `backend/app/data/ingest.py`, `data/fixtures/RELIANCE.parquet` | `backend/tests/test_ingest.py`, `e2e/data.spec.ts` | ✅ Verified |
-| **REQ-0.3** | Transaction Frictions & Costs | Deferred to Phase 3+ | Strategy Engine integration | ⏳ Pending |
+| **REQ-0.3** | Transaction Frictions & Costs | `backend/app/risk/slippage.py::apply_costs` | `backend/tests/test_risk_costs.py::test_apply_costs_buy_side`, `test_apply_costs_sell_side` | ✅ Verified |
 
 ### Phase 1: Data Ingestion & Universe Construction
 | Req ID | Requirement | Implementation Artifacts | Test & Verification Evidence | Status |
@@ -50,6 +50,14 @@ This document tracks requirement implementation, validation status, and associat
 | **REQ-3.4** | Entry Trigger Crossover (`Close_T > EMA20_T & Close_T-1 < EMA20_T-1`) & Universe Screen | `backend/app/strategy/signals.py::entry_signal`, `GET /api/v1/signals/screen` | `backend/tests/test_strategy_signals.py::test_handcrafted_10_bar_signals`, `test_no_lookahead_truncation_guard`, `backend/tests/test_api_signals.py::test_api_signals_screen_fixture_date` | ✅ Verified |
 | **REQ-3.5** | Exit Trigger (`Close_T < EMA20_T`) & Symbol Signals API | `backend/app/strategy/signals.py::exit_signal`, `GET /api/v1/signals/{symbol}`, `frontend/app/signals/page.tsx` | `backend/tests/test_strategy_signals.py::test_handcrafted_10_bar_signals`, `backend/tests/test_api_signals.py`, `frontend/tests/signals.test.tsx`, `e2e/signals.spec.ts` | ✅ Verified |
 
+### Phase 4: Risk, Position Sizing, and Stop Loss
+| Req ID | Requirement | Implementation Artifacts | Test & Verification Evidence | Status |
+| :--- | :--- | :--- | :--- | :--- |
+| **REQ-4.1** | Stop Loss Calculation & Overnight Gap Resolution | `backend/app/risk/position.py::stop_loss_price`, `backend/app/risk/gap.py::resolve_stop_exit` | `backend/tests/test_risk_stop_loss.py::test_stop_loss_price_calculation`, `test_gap_down_exit_semantics` | ✅ Verified |
+| **REQ-4.2** | Dynamic Risk Allocation & Slippage Cost Modeling | `backend/app/risk/position.py::risk_amount`, `backend/app/risk/slippage.py::apply_costs` | `backend/tests/test_risk_costs.py::test_dynamic_risk_amount_calculation`, `test_apply_costs_buy_side`, `test_apply_costs_sell_side` | ✅ Verified |
+| **REQ-4.3** | Position Sizing & Exposure Allocation Constraints | `backend/app/risk/position.py::position_size`, `capital_required`, `can_allocate` | `backend/tests/test_risk_position.py` (Unit tests + Hypothesis property test: `qty*entry*sl_pct <= risk_amount`) | ✅ Verified |
+| **REQ-4.4** | Risk REST API & Interactive Sizing Dashboard | `backend/app/api/v1/risk.py`, `frontend/app/risk/page.tsx`, `frontend/lib/api.ts` | `backend/tests/test_api_risk.py`, `frontend/tests/risk.test.tsx`, `e2e/risk.spec.ts` | ✅ Verified |
+
 ---
 
 ## API Endpoint Matrix
@@ -67,4 +75,7 @@ This document tracks requirement implementation, validation status, and associat
 | `POST` | `/api/v1/indicators/preview` | Custom indicator preview | Phase 2 | `tests/test_api_indicators.py` |
 | `GET` | `/api/v1/signals/{symbol}` | Strategy trading signals & filter components | Phase 3 | `tests/test_api_signals.py`, `frontend/tests/signals.test.tsx`, `e2e/signals.spec.ts` |
 | `GET` | `/api/v1/signals/screen` | Universe screening for active entry signals | Phase 3 | `tests/test_api_signals.py`, `frontend/tests/signals.test.tsx`, `e2e/signals.spec.ts` |
+| `POST` | `/api/v1/risk/size` | Derives position size, capital, SL level, and monetary risk | Phase 4 | `tests/test_api_risk.py`, `frontend/tests/risk.test.tsx`, `e2e/risk.spec.ts` |
+| `GET` | `/api/v1/risk/config` | Strategy baseline risk, capital, and cost parameters | Phase 4 | `tests/test_api_risk.py` |
+
 

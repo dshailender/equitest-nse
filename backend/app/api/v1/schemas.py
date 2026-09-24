@@ -217,3 +217,83 @@ class ScreenResponse(BaseModel):
             "point-in-time constituent records"
         ),
     )
+
+
+class RiskSizeRequest(BaseModel):
+    corpus: float = Field(
+        ...,
+        gt=0,
+        description="Total account capital / portfolio corpus",
+        examples=[500000.0],
+    )
+    entry: float = Field(
+        ...,
+        gt=0,
+        description="Proposed trade entry price per share",
+        examples=[100.0],
+    )
+    sl_pct: float = Field(
+        default=0.07,
+        gt=0,
+        lt=1,
+        description="Stop loss percentage distance from entry (default 0.07)",
+        examples=[0.07],
+    )
+    risk_pct: float = Field(
+        default=0.02,
+        gt=0,
+        lt=1,
+        description="Maximum account risk percentage per trade (default 0.02)",
+        examples=[0.02],
+    )
+    lot_size: int = Field(
+        default=1,
+        ge=1,
+        description="Minimum lot size multiple (default 1)",
+        examples=[1],
+    )
+
+
+class RiskSizeResponse(BaseModel):
+    qty: int = Field(
+        ...,
+        description="Derived integer position size / share quantity",
+    )
+    capital_required: float = Field(
+        ...,
+        description="Total capital required for this position (qty * entry)",
+    )
+    sl_price: float = Field(
+        ...,
+        description="Stop loss price level (entry * (1 - sl_pct))",
+    )
+    risk_amount: float = Field(
+        ...,
+        description="Maximum monetary account risk for this trade (corpus * risk_pct)",
+    )
+
+
+class RiskConfigResponse(BaseModel):
+    corpus: float = Field(
+        default=500000.0,
+        description="Default portfolio starting corpus in INR",
+    )
+    risk_pct: float = Field(
+        default=0.02,
+        description="Default risk percentage per trade (2%)",
+    )
+    stop_loss_pct: float = Field(
+        default=0.07,
+        description="Default stop loss percentage (7%)",
+    )
+    lot_size: int = Field(
+        default=1,
+        description="Default share lot size multiple (1)",
+    )
+    cost_bps: float = Field(
+        default=10.0,
+        description=(
+            "Default transaction friction and slippage costs in basis points "
+            "(10 bps = 0.10%)"
+        ),
+    )
