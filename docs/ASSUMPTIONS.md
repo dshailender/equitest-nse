@@ -37,3 +37,30 @@ This document records the foundational assumptions, methodology decisions, and e
 
 2. **Price Filters**:
    - The 52W high filter requires `Price > 0.85 × 52W High` (i.e. within 15% of the 52-week high).
+
+---
+
+## 4. Signal Rules & Filter Invariants (Phase 3)
+
+1. **Market Regime Filter (REQ-3.1)**:
+   - **Condition**: Evaluated on NIFTY 50 closing price: `NIFTY Close > EMA 50 AND NIFTY Close > EMA 200`.
+   - **Zero Trade Invariant**: If market regime evaluates to False on session $T$, all entry signals across the entire universe are rejected (`entry_signal = False`).
+   - **Lookback Warm-up**: Before bar 200 of the benchmark series, regime evaluates to `False`.
+
+2. **Stock Trend Filter (REQ-3.2)**:
+   - **Condition**: Evaluated on equity adjusted close: `EMA 20 > EMA 50 > EMA 150 > EMA 200`.
+   - **Strict Hierarchy**: All four EMAs must be strictly stacked. If any adjacent EMAs are equal or inverted, trend evaluates to `False`.
+
+3. **52-Week High Proximity Filter (REQ-3.3)**:
+   - **Condition**: `Close > 0.85 × 52W High` (strictly within 15% of the rolling 252-day peak).
+   - **Scale Consistency**: Both the price and 52W high series use corporate-action adjusted pricing.
+
+4. **Entry Trigger & Crossover Invariant (REQ-3.4)**:
+   - **Formula**: `(Regime & Trend & Near52W) on T AND (Close_T > EMA20_T) AND (Close_{T-1} < EMA20_{T-1})`.
+   - **Strict Crossover**: By default, bar $T-1$ requires `Close < EMA20`.
+   - `TODO: PO confirm` whether exact equality at bar $T-1$ (`Close(T-1) == EMA20(T-1)`) should trigger an entry signal. Parameterized via `StrategyConfig.allow_crossover_equal = False`.
+
+5. **Exit Trigger Invariant (REQ-3.5)**:
+   - **Formula**: `Close(T) < EMA20(T)`.
+   - **Execution**: Signal generated on bar $T$ close; execution occurs on session $T+1$ at Market Open.
+

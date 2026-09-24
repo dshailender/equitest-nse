@@ -468,6 +468,134 @@
           }
         }
       }
+    },
+    "/api/v1/signals/screen": {
+      "get": {
+        "tags": [
+          "signals"
+        ],
+        "summary": "Screen Universe for Entry Signals",
+        "description": "Returns point-in-time universe constituent symbols with an active entry signal on the given date (REQ-3.4).",
+        "operationId": "api_screen_signals_api_v1_signals_screen_get",
+        "parameters": [
+          {
+            "name": "date",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+              "description": "Target evaluation date in YYYY-MM-DD format",
+              "examples": [
+                "2020-06-25"
+              ],
+              "title": "Date"
+            },
+            "description": "Target evaluation date in YYYY-MM-DD format"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/signals/{symbol}": {
+      "get": {
+        "tags": [
+          "signals"
+        ],
+        "summary": "Get Symbol Trading Signals",
+        "description": "Returns chronological series of OHLCV bars with technical indicators, filters, and entry/exit signal evaluations (REQ-3.4, REQ-3.5).",
+        "operationId": "api_get_symbol_signals_api_v1_signals__symbol__get",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Symbol"
+            }
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional start date (YYYY-MM-DD)",
+              "title": "Start"
+            },
+            "description": "Optional start date (YYYY-MM-DD)"
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional end date (YYYY-MM-DD)",
+              "title": "End"
+            },
+            "description": "Optional end date (YYYY-MM-DD)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignalsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -983,6 +1111,216 @@
           "prices"
         ],
         "title": "PricesResponse"
+      },
+      "ScreenResponse": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "title": "Date",
+            "description": "Target date for universe screening (YYYY-MM-DD)"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count",
+            "description": "Total number of constituent tickers with entry signal"
+          },
+          "symbols": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Symbols",
+            "description": "List of ticker symbols with active entry signals"
+          },
+          "survivorship_bias": {
+            "type": "boolean",
+            "title": "Survivorship Bias",
+            "description": "True if fallback current list was used due to missing point-in-time constituent records"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "count",
+          "symbols",
+          "survivorship_bias"
+        ],
+        "title": "ScreenResponse"
+      },
+      "SignalItem": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "title": "Date",
+            "description": "Session date (YYYY-MM-DD)"
+          },
+          "open": {
+            "type": "number",
+            "title": "Open",
+            "description": "Opening price"
+          },
+          "high": {
+            "type": "number",
+            "title": "High",
+            "description": "Highest price during session"
+          },
+          "low": {
+            "type": "number",
+            "title": "Low",
+            "description": "Lowest price during session"
+          },
+          "close": {
+            "type": "number",
+            "title": "Close",
+            "description": "Unadjusted closing price"
+          },
+          "adj_close": {
+            "type": "number",
+            "title": "Adj Close",
+            "description": "Corporate-action adjusted closing price"
+          },
+          "volume": {
+            "type": "number",
+            "title": "Volume",
+            "description": "Total trading volume"
+          },
+          "ema_20": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ema 20",
+            "description": "20-day EMA"
+          },
+          "ema_50": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ema 50",
+            "description": "50-day EMA"
+          },
+          "ema_150": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ema 150",
+            "description": "150-day EMA"
+          },
+          "ema_200": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ema 200",
+            "description": "200-day EMA"
+          },
+          "high_52w": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "High 52W",
+            "description": "52-week rolling high"
+          },
+          "regime_ok": {
+            "type": "boolean",
+            "title": "Regime Ok",
+            "description": "Market regime filter (NIFTY Close > EMA 50 & EMA 200)"
+          },
+          "trend_ok": {
+            "type": "boolean",
+            "title": "Trend Ok",
+            "description": "Stock trend filter (EMA 20 > EMA 50 > EMA 150 > EMA 200)"
+          },
+          "near_52w_high": {
+            "type": "boolean",
+            "title": "Near 52W High",
+            "description": "52W high proximity filter (Close > 0.85 * 52W High)"
+          },
+          "crossover": {
+            "type": "boolean",
+            "title": "Crossover",
+            "description": "EMA20 crossover trigger (Close_T > EMA20_T and Close_T-1 < EMA20_T-1)"
+          },
+          "entry": {
+            "type": "boolean",
+            "title": "Entry",
+            "description": "Entry signal triggered on bar T for execution on T+1 open"
+          },
+          "exit": {
+            "type": "boolean",
+            "title": "Exit",
+            "description": "Exit signal triggered on bar T (Close_T < EMA20_T)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "open",
+          "high",
+          "low",
+          "close",
+          "adj_close",
+          "volume",
+          "regime_ok",
+          "trend_ok",
+          "near_52w_high",
+          "crossover",
+          "entry",
+          "exit"
+        ],
+        "title": "SignalItem"
+      },
+      "SignalsResponse": {
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "title": "Symbol",
+            "description": "Equity ticker symbol"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count",
+            "description": "Number of signal rows returned"
+          },
+          "signals": {
+            "items": {
+              "$ref": "#/components/schemas/SignalItem"
+            },
+            "type": "array",
+            "title": "Signals",
+            "description": "Chronological series of signal-augmented OHLCV bars"
+          }
+        },
+        "type": "object",
+        "required": [
+          "symbol",
+          "count",
+          "signals"
+        ],
+        "title": "SignalsResponse"
       },
       "UniverseResponse": {
         "properties": {

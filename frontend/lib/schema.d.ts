@@ -184,6 +184,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/signals/screen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Screen Universe for Entry Signals
+         * @description Returns point-in-time universe constituent symbols with an active entry signal on the given date (REQ-3.4).
+         */
+        get: operations["api_screen_signals_api_v1_signals_screen_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/signals/{symbol}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Symbol Trading Signals
+         * @description Returns chronological series of OHLCV bars with technical indicators, filters, and entry/exit signal evaluations (REQ-3.4, REQ-3.5).
+         */
+        get: operations["api_get_symbol_signals_api_v1_signals__symbol__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -496,6 +536,140 @@ export interface components {
              */
             prices: components["schemas"]["PriceItem"][];
         };
+        /** ScreenResponse */
+        ScreenResponse: {
+            /**
+             * Date
+             * @description Target date for universe screening (YYYY-MM-DD)
+             */
+            date: string;
+            /**
+             * Count
+             * @description Total number of constituent tickers with entry signal
+             */
+            count: number;
+            /**
+             * Symbols
+             * @description List of ticker symbols with active entry signals
+             */
+            symbols: string[];
+            /**
+             * Survivorship Bias
+             * @description True if fallback current list was used due to missing point-in-time constituent records
+             */
+            survivorship_bias: boolean;
+        };
+        /** SignalItem */
+        SignalItem: {
+            /**
+             * Date
+             * @description Session date (YYYY-MM-DD)
+             */
+            date: string;
+            /**
+             * Open
+             * @description Opening price
+             */
+            open: number;
+            /**
+             * High
+             * @description Highest price during session
+             */
+            high: number;
+            /**
+             * Low
+             * @description Lowest price during session
+             */
+            low: number;
+            /**
+             * Close
+             * @description Unadjusted closing price
+             */
+            close: number;
+            /**
+             * Adj Close
+             * @description Corporate-action adjusted closing price
+             */
+            adj_close: number;
+            /**
+             * Volume
+             * @description Total trading volume
+             */
+            volume: number;
+            /**
+             * Ema 20
+             * @description 20-day EMA
+             */
+            ema_20?: number | null;
+            /**
+             * Ema 50
+             * @description 50-day EMA
+             */
+            ema_50?: number | null;
+            /**
+             * Ema 150
+             * @description 150-day EMA
+             */
+            ema_150?: number | null;
+            /**
+             * Ema 200
+             * @description 200-day EMA
+             */
+            ema_200?: number | null;
+            /**
+             * High 52W
+             * @description 52-week rolling high
+             */
+            high_52w?: number | null;
+            /**
+             * Regime Ok
+             * @description Market regime filter (NIFTY Close > EMA 50 & EMA 200)
+             */
+            regime_ok: boolean;
+            /**
+             * Trend Ok
+             * @description Stock trend filter (EMA 20 > EMA 50 > EMA 150 > EMA 200)
+             */
+            trend_ok: boolean;
+            /**
+             * Near 52W High
+             * @description 52W high proximity filter (Close > 0.85 * 52W High)
+             */
+            near_52w_high: boolean;
+            /**
+             * Crossover
+             * @description EMA20 crossover trigger (Close_T > EMA20_T and Close_T-1 < EMA20_T-1)
+             */
+            crossover: boolean;
+            /**
+             * Entry
+             * @description Entry signal triggered on bar T for execution on T+1 open
+             */
+            entry: boolean;
+            /**
+             * Exit
+             * @description Exit signal triggered on bar T (Close_T < EMA20_T)
+             */
+            exit: boolean;
+        };
+        /** SignalsResponse */
+        SignalsResponse: {
+            /**
+             * Symbol
+             * @description Equity ticker symbol
+             */
+            symbol: string;
+            /**
+             * Count
+             * @description Number of signal rows returned
+             */
+            count: number;
+            /**
+             * Signals
+             * @description Chronological series of signal-augmented OHLCV bars
+             */
+            signals: components["schemas"]["SignalItem"][];
+        };
         /** UniverseResponse */
         UniverseResponse: {
             /**
@@ -796,6 +970,74 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["IndicatorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    api_screen_signals_api_v1_signals_screen_get: {
+        parameters: {
+            query: {
+                /** @description Target evaluation date in YYYY-MM-DD format */
+                date: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScreenResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    api_get_symbol_signals_api_v1_signals__symbol__get: {
+        parameters: {
+            query?: {
+                /** @description Optional start date (YYYY-MM-DD) */
+                start?: string | null;
+                /** @description Optional end date (YYYY-MM-DD) */
+                end?: string | null;
+            };
+            header?: never;
+            path: {
+                symbol: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SignalsResponse"];
                 };
             };
             /** @description Validation Error */

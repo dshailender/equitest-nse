@@ -343,3 +343,93 @@ export async function previewIndicators(
   return IndicatorResponseSchema.parse(json);
 }
 
+// --- Signals Schemas ---
+export const SignalItemSchema = z.object({
+  date: z.string(),
+  open: z.number(),
+  high: z.number(),
+  low: z.number(),
+  close: z.number(),
+  adj_close: z.number(),
+  volume: z.number(),
+  ema_20: z.number().nullable().optional(),
+  ema_50: z.number().nullable().optional(),
+  ema_150: z.number().nullable().optional(),
+  ema_200: z.number().nullable().optional(),
+  high_52w: z.number().nullable().optional(),
+  regime_ok: z.boolean(),
+  trend_ok: z.boolean(),
+  near_52w_high: z.boolean(),
+  crossover: z.boolean(),
+  entry: z.boolean(),
+  exit: z.boolean(),
+});
+export type SignalItem = z.infer<typeof SignalItemSchema>;
+
+export const SignalsResponseSchema = z.object({
+  symbol: z.string(),
+  count: z.number(),
+  signals: z.array(SignalItemSchema),
+});
+export type SignalsResponse = z.infer<typeof SignalsResponseSchema>;
+
+export const ScreenResponseSchema = z.object({
+  date: z.string(),
+  count: z.number(),
+  symbols: z.array(z.string()),
+  survivorship_bias: z.boolean(),
+});
+export type ScreenResponse = z.infer<typeof ScreenResponseSchema>;
+
+/**
+ * Fetch trading signals and component filter evaluations for a symbol
+ */
+export async function fetchSignals(
+  symbol: string,
+  start?: string,
+  end?: string
+): Promise<SignalsResponse> {
+  const params = new URLSearchParams();
+  if (start) params.append("start", start);
+  if (end) params.append("end", end);
+  const qs = params.toString() ? `?${params.toString()}` : "";
+
+  const url = `${API_BASE_URL}/api/v1/signals/${encodeURIComponent(symbol)}${qs}`;
+  const response = await fetch(url, {
+    headers: { Accept: "application/json" },
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new ApiError(
+      response.status,
+      `Signals fetch failed for ${symbol} with status: ${response.status}`
+    );
+  }
+
+  const json = await response.json();
+  return SignalsResponseSchema.parse(json);
+}
+
+/**
+ * Screen universe constituents for active entry signals on a date
+ */
+export async function screenUniverse(date: string): Promise<ScreenResponse> {
+  const url = `${API_BASE_URL}/api/v1/signals/screen?date=${encodeURIComponent(date)}`;
+  const response = await fetch(url, {
+    headers: { Accept: "application/json" },
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new ApiError(
+      response.status,
+      `Screening failed for date ${date} with status: ${response.status}`
+    );
+  }
+
+  const json = await response.json();
+  return ScreenResponseSchema.parse(json);
+}
+
+

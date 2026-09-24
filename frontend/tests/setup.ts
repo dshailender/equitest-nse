@@ -90,7 +90,91 @@ export const mockIndicators = {
   ],
 };
 
+export const mockSignals = [
+  {
+    date: "2020-06-23",
+    open: 450.0,
+    high: 455.0,
+    low: 448.0,
+    close: 452.0,
+    adj_close: 452.0,
+    volume: 10000,
+    ema_20: 455.0,
+    ema_50: 440.0,
+    ema_150: 420.0,
+    ema_200: 400.0,
+    high_52w: 480.0,
+    regime_ok: true,
+    trend_ok: true,
+    near_52w_high: true,
+    crossover: false,
+    entry: false,
+    exit: true,
+  },
+  {
+    date: "2020-06-24",
+    open: 453.0,
+    high: 456.0,
+    low: 450.0,
+    close: 454.0,
+    adj_close: 454.0,
+    volume: 12000,
+    ema_20: 455.0,
+    ema_50: 441.0,
+    ema_150: 421.0,
+    ema_200: 401.0,
+    high_52w: 480.0,
+    regime_ok: true,
+    trend_ok: true,
+    near_52w_high: true,
+    crossover: false,
+    entry: false,
+    exit: true,
+  },
+  {
+    date: "2020-06-25",
+    open: 456.0,
+    high: 465.0,
+    low: 455.0,
+    close: 462.0,
+    adj_close: 462.0,
+    volume: 25000,
+    ema_20: 456.0,
+    ema_50: 442.0,
+    ema_150: 422.0,
+    ema_200: 402.0,
+    high_52w: 480.0,
+    regime_ok: true,
+    trend_ok: true,
+    near_52w_high: true,
+    crossover: true,
+    entry: true,
+    exit: false,
+  },
+  {
+    date: "2020-06-26",
+    open: 463.0,
+    high: 468.0,
+    low: 460.0,
+    close: 464.0,
+    adj_close: 464.0,
+    volume: 18000,
+    ema_20: 457.0,
+    ema_50: 443.0,
+    ema_150: 423.0,
+    ema_200: 403.0,
+    high_52w: 480.0,
+    regime_ok: true,
+    trend_ok: true,
+    near_52w_high: true,
+    crossover: false,
+    entry: false,
+    exit: false,
+  },
+];
+
 export const handlers = [
+
   // Health
   http.get("http://localhost:8000/health", () => {
     return HttpResponse.json({ status: "ok", version: "0.1.0" });
@@ -163,7 +247,27 @@ export const handlers = [
       symbol: body.symbol || "RELIANCE",
     });
   }),
+
+  // Signals - Screen
+  http.get("*/api/v1/signals/screen", () => {
+    return HttpResponse.json({
+      date: "2020-06-25",
+      count: 1,
+      symbols: ["MIDCAP_STOCK_101"],
+      survivorship_bias: false,
+    });
+  }),
+
+  // Signals - Symbol
+  http.get("*/api/v1/signals/:symbol", ({ params }) => {
+    return HttpResponse.json({
+      symbol: (params.symbol as string).toUpperCase(),
+      count: mockSignals.length,
+      signals: mockSignals,
+    });
+  }),
 ];
+
 
 export const server = setupServer(...handlers);
 
