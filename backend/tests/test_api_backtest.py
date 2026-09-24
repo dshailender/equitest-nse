@@ -96,3 +96,4 @@ def test_api_backtest_default_symbols(client):
     st = client.get(f"/api/v1/backtest/{run_id}").json()
     assert st["status"] == "completed"
     assert st["final_capital"] == 482707.20
+

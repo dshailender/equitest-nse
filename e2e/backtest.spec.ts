@@ -49,3 +49,4 @@ test.describe("Backtest Simulation Engine E2E Flow", () => {
     await expect(tradesTable).toContainText("Exit Signal");
   });
 });
+
