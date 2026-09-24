@@ -98,4 +98,26 @@ This document records the foundational assumptions, methodology decisions, and e
    - System enforces total portfolio exposure $\le \text{Corpus}$.
    - Because each trade requires $\sim 28.5\%$ of capital, the portfolio naturally caps at a maximum of **3 to 4 concurrent positions**. New entry signals are rejected if $\text{Open Positions Value} + \text{Required Capital} > \text{Corpus}$.
 
+---
+
+## 6. Backtest Simulation Engine & Capital Constraints (Phase 5)
+
+1. **Signal Clashing & Ranking Rule (PRD Open Question #3 / REQ-5.3)**:
+   - When multiple universe stocks generate an entry signal on the same session $T-1$, candidates are ranked by momentum score:
+     $$\text{Score} = \frac{\text{Close}_{T-1} - \text{EMA20}_{T-1}}{\text{EMA20}_{T-1}} \quad \text{(descending)}$$
+   - `DefaultRanker` prioritizes stocks whose closing prices have broken furthest above their 20-day EMA. Pluggable `Ranker` protocol allows custom ranking functions.
+   - `TODO: PO confirm` whether tie-breakers should incorporate volume breakout ratio or liquidity filters beyond symbol alphabetical sorting.
+
+2. **Capital Constraint & Position Rejections (REQ-5.3)**:
+   - Total exposure constraint enforces `sum(open positions value) + required capital <= corpus`.
+   - On ₹5,00,000 starting corpus with ~28.5% position allocation, a maximum of 3 concurrent positions can be opened. The 4th concurrent signal on the same session is rejected with `reason: "insufficient_capital"` and logged in `BacktestResult.rejections`.
+
+3. **Execution Semantics & Ordering**:
+   - On each session $T$:
+     1. Exits are evaluated and executed first at Market Open (SL hit, gap-down, or $T-1$ exit signal).
+     2. Free capital is updated.
+     3. Entry candidates from $T-1$ signals are ranked and executed at Market Open with buy slippage until free capital is exhausted.
+     4. Portfolio equity is marked-to-market using session $T$ closing prices.
+
+
 
