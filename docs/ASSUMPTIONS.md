@@ -147,6 +147,29 @@ This document records the foundational assumptions, methodology decisions, and e
 6. **Annualized Returns & Config Versioning**:
    - All completed runs record `config_version="1.0"`, optional parent `sweep_id`, `cagr` computed as $\left(\frac{\text{Final Capital}}{\text{Initial Capital}}\right)^{\frac{252}{N}} - 1$, and `max_drawdown_pct`.
 
+---
 
+## 8. Reporting, Performance Metrics & Exports (Phase 7)
 
+1. **Performance Metric Mathematical Specifications (REQ-7.1)**:
+   - **Annualization Factor**: 252 trading sessions per calendar year for Indian markets.
+   - **CAGR**: $\left(\frac{\text{Final Capital}}{\text{Initial Capital}}\right)^{\frac{252}{N}} - 1$, where $N$ is total trading sessions in the equity curve.
+   - **Max Drawdown**: Peak-to-trough decline on daily marked-to-market equity. Both percentage (`max_drawdown_pct`, 4 decimal places) and absolute rupee loss (`max_drawdown_amount`, 2 decimal places) are calculated.
+   - **Sharpe Ratio**: Risk-free rate $r_f = 0.0$. Annualized as $\frac{\mu_r}{\sigma_r} \times \sqrt{252}$, matching `empyrical.sharpe_ratio(..., risk_free=0, period="daily")` to within $10^{-6}$.
+   - **Sortino Ratio**: Minimum Acceptable Return $\text{MAR} = 0.0$, annualization 252. Downside deviation is computed over all return observations with positive returns clipped to 0: $\sigma_d = \sqrt{\frac{1}{N}\sum \min(0, r_i)^2}$, matching `empyrical.sortino_ratio(..., required_return=0, period="daily")` to within $10^{-6}$.
+   - **Calmar Ratio**: $\frac{\text{CAGR}}{|\text{Max Drawdown \%}|}$. If drawdown is zero or CAGR is negative, Calmar is set to 0.0.
+   - **Profit Factor**: $\frac{\sum \text{Gross Profits}}{\sum |\text{Gross Losses}|}$. If gross losses are zero, returns $\infty$ (`float('inf')`, formatted as `"∞"` in UI and `"Infinity"` in JSON).
+   - **Expectancy**: Monetary average return per closed trade: $(\text{Win Rate} \times \text{Avg Profit}) - ((1 - \text{Win Rate}) \times |\text{Avg Loss}|)$ in INR.
+   - **Avg Days Held**: Arithmetic mean of duration in calendar days from entry to exit across all closed trades (1 decimal place).
+   - **Decimal Serialization**: All float metrics support conversion to Python `Decimal` via `to_decimal_dict()` with precision matching documented requirements (2 decimal places for INR, 4 for rates/ratios, 1 for days).
 
+2. **Monthly Returns Aggregation Matrix (REQ-7.2)**:
+   - Aggregated directly from daily marked-to-market portfolio equity curves.
+   - Monthly return is compounded as $\frac{\text{Equity}_{\text{month\_end}}}{\text{Equity}_{\text{month\_start}}} - 1.0$.
+   - Missing months prior to the backtest start or after the backtest end are represented as `null`, avoiding artificial zero-return distortion.
+   - Annual return is compounded across available trading months: $\prod (1 + r_m) - 1.0$.
+
+3. **Multi-Format Export Engine (REQ-7.3)**:
+   - **CSV Export**: Trade ledger table (`{run_id}_trades.csv`).
+   - **XLSX Export**: Multi-worksheet OpenXML workbook (`Executive Summary`, `Performance Metrics`, `Trade Ledger`, `Monthly Returns`). Implemented using standard library `zipfile` and SpreadsheetML XML, requiring zero third-party C-extensions or external dependencies.
+   - **ZIP Export**: Complete archive containing `metrics.csv`, `trades.csv`, `monthly_returns.csv`, and `equity_curve.csv`.
