@@ -1,7 +1,9 @@
 """Stop loss and gap-down exit resolution module."""
 
 
-def resolve_stop_exit(open_: float, low: float, sl_price: float) -> tuple[float, str]:
+def resolve_stop_exit(
+    open_: float, low: float, sl_price: float
+) -> tuple[float, str]:
     """Resolve exit execution price and trigger reason for a stop loss order.
 
     Rules (PRD §4 & Assumptions):
@@ -33,3 +35,4 @@ def resolve_stop_exit(open_: float, low: float, sl_price: float) -> tuple[float,
         return (round(sl_price, 2), "stop_loss")
     else:
         return (0.0, "none")
+

@@ -112,7 +112,9 @@ def capital_required(size: int, entry: float) -> float:
     return round(size * entry, 2)
 
 
-def can_allocate(corpus: float, open_positions_value: float, required: float) -> bool:
+def can_allocate(
+    corpus: float, open_positions_value: float, required: float
+) -> bool:
     """Check whether candidate trade can be allocated without exceeding corpus.
 
     Rule: total exposure (open_positions_value + required) <= corpus.

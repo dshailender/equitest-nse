@@ -2,9 +2,9 @@
 
 import math
 
-import pytest
 from hypothesis import given
 from hypothesis import strategies as st
+import pytest
 
 from app.risk.position import (
     can_allocate,
@@ -123,24 +123,31 @@ def test_can_allocate_portfolio_exposure():
 
     # Trade 1: 0 open positions -> total 142,800 <= 500k -> True
     assert (
-        can_allocate(corpus, open_positions_value=0.0, required=trade_capital) is True
+        can_allocate(corpus, open_positions_value=0.0, required=trade_capital)
+        is True
     )
 
     # Trade 2: 1 open position (142,800) -> total 285,600 <= 500k -> True
     assert (
-        can_allocate(corpus, open_positions_value=142800.0, required=trade_capital)
+        can_allocate(
+            corpus, open_positions_value=142800.0, required=trade_capital
+        )
         is True
     )
 
     # Trade 3: 2 open positions (285,600) -> total 428,400 <= 500k -> True
     assert (
-        can_allocate(corpus, open_positions_value=285600.0, required=trade_capital)
+        can_allocate(
+            corpus, open_positions_value=285600.0, required=trade_capital
+        )
         is True
     )
 
     # Trade 4: 3 open positions (428,400) -> total 571,200 > 500k -> False
     assert (
-        can_allocate(corpus, open_positions_value=428400.0, required=trade_capital)
+        can_allocate(
+            corpus, open_positions_value=428400.0, required=trade_capital
+        )
         is False
     )
 
@@ -161,7 +168,9 @@ def test_hypothesis_risk_never_exceeds_max_risk_amount(
 ):
     """Property test (Hypothesis): for any entry>0, qty*entry*sl_pct <= risk_amount."""
     risk_limit = corpus * risk_pct
-    qty = position_size(corpus, entry, sl_pct=sl_pct, risk_pct=risk_pct, lot_size=1)
+    qty = position_size(
+        corpus, entry, sl_pct=sl_pct, risk_pct=risk_pct, lot_size=1
+    )
 
     assert qty >= 0
     actual_risk_at_stop = qty * entry * sl_pct
