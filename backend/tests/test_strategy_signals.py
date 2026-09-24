@@ -4,7 +4,7 @@ import pandas as pd
 import pytest
 
 from app.strategy.config import StrategyConfig
-from app.strategy.signals import market_regime_ok, trend_ok
+from app.strategy.signals import market_regime_ok, near_52w_high, trend_ok
 
 
 def test_strategy_config_defaults():
@@ -160,3 +160,75 @@ def test_trend_ok_on_fixture():
     assert trend.iloc[:199].sum() == 0
     # Later there should be sessions with confirmed uptrends
     assert trend.sum() > 0
+
+
+def test_near_52w_high_synthetic():
+    df = pd.DataFrame(
+        {
+            "date": [
+                "2023-01-01",
+                "2023-01-02",
+                "2023-01-03",
+                "2023-01-04",
+                "2023-01-05",
+            ],
+            "adj_close": [90.0, 85.0, 84.9, 100.0, 95.0],
+            "high_52w": [100.0, 100.0, 100.0, None, 100.0],
+        }
+    )
+    # Day 1: 90.0 > 0.85 * 100.0 (85.0) -> True
+    # Day 2: 85.0 > 85.0 -> False (strictly greater than)
+    # Day 3: 84.9 > 85.0 -> False
+    # Day 4: high_52w is NaN -> False
+    # Day 5: 95.0 > 85.0 -> True
+    df_copy = df.copy()
+
+    near = near_52w_high(df, factor=0.85)
+
+    assert near.iloc[0] is True or near.iloc[0] == True  # noqa: E712
+    assert near.iloc[1] is False or near.iloc[1] == False  # noqa: E712
+    assert near.iloc[2] is False or near.iloc[2] == False  # noqa: E712
+    assert near.iloc[3] is False or near.iloc[3] == False  # noqa: E712
+    assert near.iloc[4] is True or near.iloc[4] == True  # noqa: E712
+
+    assert list(near.index) == [
+        "2023-01-01",
+        "2023-01-02",
+        "2023-01-03",
+        "2023-01-04",
+        "2023-01-05",
+    ]
+    assert near.name == "near_52w_high"
+
+    # Test with custom factor
+    near_90 = near_52w_high(df, factor=0.90)
+    # Day 1: 90.0 > 0.90 * 100.0 (90.0) -> False
+    assert near_90.iloc[0] is False or near_90.iloc[0] == False  # noqa: E712
+    # Day 5: 95.0 > 90.0 -> True
+    assert near_90.iloc[4] is True or near_90.iloc[4] == True  # noqa: E712
+
+    # Verify input DataFrame is NOT mutated
+    pd.testing.assert_frame_equal(df, df_copy)
+
+
+def test_near_52w_high_empty():
+    df_empty = pd.DataFrame()
+    near = near_52w_high(df_empty)
+    assert near.empty
+    assert near.dtype == bool
+
+
+def test_near_52w_high_on_fixture():
+    fixture_path = Path("data/fixtures/MIDCAP_STOCK_101.parquet")
+    if not fixture_path.exists():
+        pytest.skip("MIDCAP_STOCK_101 fixture not found")
+
+    df_stock = pd.read_parquet(fixture_path)
+    near = near_52w_high(df_stock)
+
+    assert len(near) == len(df_stock)
+    assert near.dtype == bool
+    # Initially before warm-up (252 bars), near_52w_high must be False
+    assert near.iloc[:251].sum() == 0
+    # Later there should be sessions where stock is within 15% of 52W high
+    assert near.sum() > 0
