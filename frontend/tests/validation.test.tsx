@@ -25,7 +25,7 @@ describe("ValidationPage Component (REQ-8.1)", () => {
     render(<ValidationPage />);
 
     await waitFor(() => {
-      expect(screen.getAllByTestId("cross-check-row").length).toBe(3);
+      expect(screen.queryAllByTestId("cross-check-row").length).toBe(3);
     });
 
     const rows = screen.getAllByTestId("cross-check-row");
@@ -41,7 +41,7 @@ describe("ValidationPage Component (REQ-8.1)", () => {
     render(<ValidationPage />);
 
     await waitFor(() => {
-      expect(screen.getAllByTestId("cross-check-row").length).toBe(3);
+      expect(screen.queryAllByTestId("cross-check-row").length).toBe(3);
     });
 
     const toggle = screen.getByTestId("toggle-signals-only");

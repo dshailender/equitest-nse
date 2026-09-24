@@ -14,7 +14,7 @@ This document tracks requirement implementation, validation status, and associat
 | **Phase 5** | Backtest Simulation Engine | ✅ Completed |
 | **Phase 6** | Parameter and Scenario Testing | ✅ Completed |
 | **Phase 7** | Reporting and Analytics | ✅ Completed |
-| **Phase 8** | Validation, Acceptance, and Handoff | ⏳ Pending |
+| **Phase 8** | Validation, Acceptance, and Handoff | ✅ Completed |
 
 ---
 
@@ -82,13 +82,22 @@ This document tracks requirement implementation, validation status, and associat
 | **REQ-7.3** | Multi-Format Report Export Engine (CSV, XLSX, ZIP) | `backend/app/reports/export.py`, `GET /api/v1/reports/{run_id}/export` | `backend/tests/test_reports_export.py` (OpenXML SpreadsheetML validation without openpyxl dependency, multi-file ZIP archive, CSV format) | ✅ Verified |
 | **REQ-7.4** | Interactive Reports Dashboard, Charts & Exports | `frontend/app/reports/[runId]/page.tsx`, `frontend/lib/api.ts` | `frontend/tests/reports.test.tsx` (MSW unit/component tests for KPI cards, underwater drawdown chart, trade histogram, heatmap table), `e2e/reports.spec.ts` (Playwright E2E simulation to report, CSV/XLSX/ZIP downloads >0 bytes) | ✅ Verified |
 
+### Phase 8: Validation, Acceptance, and Handoff
+| Req ID | Requirement | Implementation Artifacts | Test & Verification Evidence | Status |
+| :--- | :--- | :--- | :--- | :--- |
+| **REQ-8.1** | TradingView Cross-Check Verification Engine & UI | `backend/app/validation/cross_check.py`, `backend/app/api/v1/validation.py`, `frontend/app/validation/page.tsx` | `backend/tests/test_validation_cross_check.py` (6 tests passing, golden comparison $\le 10^{-6}$ vs `reliance_ema20_expected`), `frontend/tests/validation.test.tsx` (4 tests), `e2e/acceptance.spec.ts` | ✅ Verified |
+| **REQ-8.2** | Run Audit & Reproducibility Provenance Tracking | `backend/app/validation/audit.py`, `GET /api/v1/backtest/{run_id}/audit`, `frontend/components/AuditPanel.tsx` | `backend/tests/test_validation_audit.py` (6 tests passing, deterministic SHA-256 parquet hash, git SHA fallback), `frontend/tests/reports.test.tsx`, `e2e/acceptance.spec.ts` | ✅ Verified |
+| **REQ-8.3** | Production Multi-Stage Containerization & Compose | `backend/Dockerfile`, `frontend/Dockerfile`, `docker-compose.prod.yml` | Multi-stage build stages, non-root users (`appuser:1001`, `nextjs:1001`), curl healthcheck validation, `docker compose config` syntax verification | ✅ Verified |
+| **REQ-8.4** | Institutional Documentation Hub & In-App Viewer | `docs/ARCHITECTURE.md`, `docs/STRATEGY.md`, `docs/ASSUMPTIONS.md`, `docs/RUNBOOK.md`, `frontend/app/docs/page.tsx` | `frontend/tests/docs.test.tsx` (2 tests passing), in-app tabbed viewer across all sections, PRD §4 Open Questions and 5-step parameter walkthrough verified | ✅ Verified |
+| **REQ-8.5** | Full End-to-End Acceptance Suite & Traceability | `e2e/acceptance.spec.ts`, `TRACEABILITY.md`, `README.md` | `e2e/acceptance.spec.ts` (7 end-to-end acceptance tests verifying health, baseline backtest, extended runs, sweeps, reports, audit, TradingView diff, docs), 100% CI pass | ✅ Verified |
+
 ---
 
 ## API Endpoint Matrix
 
 | Method | Endpoint | Description | Phase | Test Coverage |
 | :--- | :--- | :--- | :--- | :--- |
-| `GET` | `/health` | System health status | Phase 0 | `tests/test_health.py`, `tests/health.test.tsx`, `e2e/health.spec.ts` |
+| `GET` | `/health` | System health status | Phase 0 | `tests/test_health.py`, `tests/health.test.tsx`, `e2e/health.spec.ts`, `e2e/acceptance.spec.ts` |
 | `GET` | `/api/v1/health` | API v1 operational health | Phase 0 | `tests/test_health.py` |
 | `POST` | `/api/v1/data/ingest` | Market data ingestion | Phase 1 | `tests/test_api_data.py`, `e2e/data.spec.ts` |
 | `GET` | `/api/v1/data/coverage` | Stored symbol date ranges | Phase 1 | `tests/test_api_data.py`, `tests/data.test.tsx` |
@@ -101,17 +110,16 @@ This document tracks requirement implementation, validation status, and associat
 | `GET` | `/api/v1/signals/screen` | Universe screening for active entry signals | Phase 3 | `tests/test_api_signals.py`, `frontend/tests/signals.test.tsx`, `e2e/signals.spec.ts` |
 | `POST` | `/api/v1/risk/size` | Derives position size, capital, SL level, and monetary risk | Phase 4 | `tests/test_api_risk.py`, `frontend/tests/risk.test.tsx`, `e2e/risk.spec.ts` |
 | `GET` | `/api/v1/risk/config` | Strategy baseline risk, capital, and cost parameters | Phase 4 | `tests/test_api_risk.py` |
-| `POST` | `/api/v1/backtest/run` | Triggers asynchronous backtest simulation execution | Phase 5 | `tests/test_api_backtest.py`, `frontend/tests/backtest.test.tsx`, `e2e/backtest.spec.ts` |
+| `POST` | `/api/v1/backtest/run` | Triggers asynchronous backtest simulation execution | Phase 5 | `tests/test_api_backtest.py`, `frontend/tests/backtest.test.tsx`, `e2e/backtest.spec.ts`, `e2e/acceptance.spec.ts` |
 | `GET` | `/api/v1/backtest/{run_id}` | Retrieves execution status and summary metrics | Phase 5 | `tests/test_api_backtest.py`, `frontend/tests/backtest.test.tsx`, `e2e/backtest.spec.ts` |
 | `GET` | `/api/v1/backtest/{run_id}/trades` | Retrieves trade ledger of closed round trips | Phase 5 | `tests/test_api_backtest.py`, `frontend/tests/backtest.test.tsx`, `e2e/backtest.spec.ts` |
 | `GET` | `/api/v1/backtest/{run_id}/equity` | Retrieves mark-to-market daily equity curve points | Phase 5 | `tests/test_api_backtest.py`, `frontend/tests/backtest.test.tsx`, `e2e/backtest.spec.ts` |
 | `GET` | `/api/v1/backtest` | Lists historical persisted backtest simulation runs | Phase 5 | `tests/test_api_backtest.py`, `frontend/tests/backtest.test.tsx` |
-| `POST` | `/api/v1/backtest/sweep` | Triggers asynchronous multi-parameter Cartesian sweep | Phase 6 | `tests/test_sweep_engine.py`, `frontend/tests/sweep.test.tsx`, `e2e/sweep.spec.ts` |
+| `GET` | `/api/v1/backtest/{run_id}/audit` | Retrieves reproducibility & provenance record (git SHA, hash, versions) | Phase 8 | `tests/test_validation_audit.py`, `frontend/tests/reports.test.tsx`, `e2e/acceptance.spec.ts` |
+| `POST` | `/api/v1/backtest/sweep` | Triggers asynchronous multi-parameter Cartesian sweep | Phase 6 | `tests/test_sweep_engine.py`, `frontend/tests/sweep.test.tsx`, `e2e/sweep.spec.ts`, `e2e/acceptance.spec.ts` |
 | `GET` | `/api/v1/backtest/sweep/{sweep_id}` | Retrieves sweep execution status and child runs breakdown | Phase 6 | `tests/test_sweep_engine.py`, `frontend/tests/sweep.test.tsx`, `e2e/sweep.spec.ts` |
 | `GET` | `/api/v1/backtest/compare` | Compares multiple backtest runs with aligned metrics & curves | Phase 6 | `tests/test_sweep_engine.py`, `frontend/tests/sweep.test.tsx`, `e2e/sweep.spec.ts` |
-| `GET` | `/api/v1/reports/{run_id}/summary` | Retrieves comprehensive core and advanced performance metrics | Phase 7 | `tests/test_reports_export.py`, `tests/reports.test.tsx`, `e2e/reports.spec.ts` |
-| `GET` | `/api/v1/reports/{run_id}/monthly` | Retrieves Month x Year compounded returns matrix | Phase 7 | `tests/test_reports_export.py`, `tests/reports.test.tsx`, `e2e/reports.spec.ts` |
-| `GET` | `/api/v1/reports/{run_id}/export` | Multi-format export bundle download (CSV, XLSX, ZIP) | Phase 7 | `tests/test_reports_export.py`, `tests/reports.test.tsx`, `e2e/reports.spec.ts` |
-
-
-
+| `GET` | `/api/v1/reports/{run_id}/summary` | Retrieves comprehensive core and advanced performance metrics | Phase 7 | `tests/test_reports_export.py`, `tests/reports.test.tsx`, `e2e/reports.spec.ts`, `e2e/acceptance.spec.ts` |
+| `GET` | `/api/v1/reports/{run_id}/monthly` | Retrieves Month x Year compounded returns matrix | Phase 7 | `tests/test_reports_export.py`, `tests/reports.test.tsx`, `e2e/reports.spec.ts`, `e2e/acceptance.spec.ts` |
+| `GET` | `/api/v1/reports/{run_id}/export` | Multi-format export bundle download (CSV, XLSX, ZIP) | Phase 7 | `tests/test_reports_export.py`, `tests/reports.test.tsx`, `e2e/reports.spec.ts`, `e2e/acceptance.spec.ts` |
+| `GET` | `/api/v1/validation/{run_id}/{symbol}` | Retrieves aligned cross-check indicators and signals (JSON or CSV) | Phase 8 | `tests/test_validation_cross_check.py`, `frontend/tests/validation.test.tsx`, `e2e/acceptance.spec.ts` |

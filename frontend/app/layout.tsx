@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = { className: "font-sans" };
 
 export const metadata: Metadata = {
   title: "EquiTest NSE - Backtesting Framework",

@@ -77,26 +77,28 @@ test-frontend:
 test-e2e:
 	@echo "==> Running Playwright E2E tests..."
 	@bash -c '\
+		export no_proxy=127.0.0.1,localhost,::1; \
+		export NO_PROXY=127.0.0.1,localhost,::1; \
 		echo "Checking if services are already running..."; \
 		BACKEND_STARTED=0; \
 		FRONTEND_STARTED=0; \
-		if ! curl -s http://127.0.0.1:8000/health >/dev/null; then \
+		if ! curl -s --noproxy "*" http://127.0.0.1:8000/health | grep -q "\"status\""; then \
 			echo "Starting background backend service on :8000..."; \
 			$(VENV)/bin/uvicorn app.main:app --app-dir backend --host 127.0.0.1 --port 8000 > /tmp/equitest_backend_e2e.log 2>&1 & \
 			BACKEND_PID=$$!; \
 			BACKEND_STARTED=1; \
-			for i in $$(seq 1 30); do \
-				if curl -s http://127.0.0.1:8000/health >/dev/null; then break; fi; \
+			for i in $$(seq 1 40); do \
+				if curl -s --noproxy "*" http://127.0.0.1:8000/health | grep -q "\"status\""; then break; fi; \
 				sleep 0.5; \
 			done; \
 		fi; \
-		if ! curl -s http://127.0.0.1:3000 >/dev/null; then \
+		if ! curl -s --noproxy "*" http://127.0.0.1:3000 | grep -qi "html"; then \
 			echo "Starting background frontend service on :3000..."; \
 			(cd frontend && $(NPM) run dev) > /tmp/equitest_frontend_e2e.log 2>&1 & \
 			FRONTEND_PID=$$!; \
 			FRONTEND_STARTED=1; \
-			for i in $$(seq 1 40); do \
-				if curl -s http://127.0.0.1:3000 >/dev/null; then break; fi; \
+			for i in $$(seq 1 60); do \
+				if curl -s --noproxy "*" http://127.0.0.1:3000 | grep -qi "html"; then break; fi; \
 				sleep 0.5; \
 			done; \
 		fi; \
@@ -106,10 +108,12 @@ test-e2e:
 		if [ $$BACKEND_STARTED -eq 1 ]; then \
 			echo "Stopping background backend..."; \
 			kill $$BACKEND_PID 2>/dev/null || true; \
+			pkill -P $$BACKEND_PID 2>/dev/null || true; \
 		fi; \
 		if [ $$FRONTEND_STARTED -eq 1 ]; then \
 			echo "Stopping background frontend..."; \
 			kill $$FRONTEND_PID 2>/dev/null || true; \
+			pkill -P $$FRONTEND_PID 2>/dev/null || true; \
 		fi; \
 		exit $$TEST_EXIT'
 

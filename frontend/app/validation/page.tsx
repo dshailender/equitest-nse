@@ -26,9 +26,6 @@ export default function ValidationPage() {
       try {
         const pastRuns = await fetchBacktestRuns();
         setRuns(pastRuns);
-        if (pastRuns.length > 0 && pastRuns[0].status === "completed") {
-          setSelectedRunId(pastRuns[0].run_id);
-        }
       } catch {
         // Fallback to "default" run config
       }
