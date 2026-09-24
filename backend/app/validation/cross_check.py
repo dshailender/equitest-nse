@@ -79,7 +79,8 @@ def generate_cross_check_dataframe(
 
     # 1. Load equity prices
     price_source = get_price_source()
-    repo_root = Path(__file__).resolve().parents[4]
+    repo_root = Path(__file__).resolve().parents[3]
+
 
     stock_df = price_source.get_equity_prices(symbol, start="2000-01-01", end="2099-12-31")
 

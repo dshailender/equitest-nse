@@ -23,6 +23,8 @@ import {
   type PerformanceMetrics,
   type ReportSummaryResponse,
 } from "@/lib/api";
+import { AuditPanel } from "@/components/AuditPanel";
+
 
 const MONTH_COLS = [
   { key: "jan", label: "Jan" },
@@ -621,6 +623,10 @@ export default function ReportDetailPage({
           </table>
         </div>
       </div>
+
+      {/* Reproducibility & Provenance Audit Panel (REQ-8.2) */}
+      <AuditPanel runId={runId} />
     </div>
   );
 }
+

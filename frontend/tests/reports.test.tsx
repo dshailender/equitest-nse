@@ -86,4 +86,20 @@ describe("Reports & Analytics Dashboard (/reports/[runId])", () => {
 
     clickSpy.mockRestore();
   });
+
+  it("renders AuditPanel with Git SHA, data snapshot hash, and library versions (REQ-8.2)", async () => {
+    render(<ReportDetailPage params={{ runId: "test-run-123" }} />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId("audit-panel")).toBeInTheDocument();
+    });
+
+    expect(screen.getByTestId("audit-git-sha")).toHaveTextContent(
+      "45391fbd9b001161b500a4c5e92a22170daee4b9"
+    );
+    expect(screen.getByTestId("audit-data-hash")).toBeInTheDocument();
+    expect(screen.getByTestId("audit-versions")).toHaveTextContent("python:");
+    expect(screen.getByTestId("audit-versions")).toHaveTextContent("pandas:");
+  });
 });
+

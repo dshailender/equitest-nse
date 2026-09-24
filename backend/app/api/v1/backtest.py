@@ -13,6 +13,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from sqlmodel import Session, col, select
 
 from app.api.v1.schemas import (
+    BacktestAuditResponse,
     BacktestCompareResponse,
     BacktestEquityResponse,
     BacktestRunCreateResponse,
@@ -34,6 +35,8 @@ from app.db.session import engine, get_session
 from app.engine.backtest import Backtest
 from app.engine.result import BacktestResult
 from app.strategy.config import StrategyConfig
+from app.validation.audit import load_run_audit, record_run_audit
+
 
 logger = logging.getLogger(__name__)
 
@@ -121,6 +124,14 @@ def _execute_backtest_task(run_id: str, payload: dict) -> None:
             blob_path = repo_root / "data" / "backtests" / f"{run_id}.json"
             result.save(blob_path)
 
+            # Record audit provenance
+            record_run_audit(
+                run_id=run_id,
+                config=strat_config.model_dump(),
+                symbols=symbols_to_load,
+                created_at=run_record.created_at,
+            )
+
             # Update DB record
             run_record.status = "completed"
             run_record.result_blob_path = str(blob_path)
@@ -133,6 +144,7 @@ def _execute_backtest_task(run_id: str, payload: dict) -> None:
             session.add(run_record)
             session.commit()
             logger.info("Backtest %s completed successfully", run_id)
+
 
         except Exception as err:
             logger.exception("Backtest %s failed: %s", run_id, err)
@@ -653,3 +665,33 @@ def api_get_backtest_equity(
         )
 
     return BacktestEquityResponse(run_id=run_id, count=len(points), equity_curve=points)
+
+
+@router.get(
+    "/{run_id}/audit",
+    response_model=BacktestAuditResponse,
+    summary="Get Backtest Run Audit Provenance",
+    description=(
+        "Returns audit and reproducibility provenance record for a backtest run (REQ-8.2), "
+        "including Git commit SHA, config parameters, data snapshot hash, and library versions."
+    ),
+)
+def api_get_backtest_audit(
+    run_id: str,
+    session: Annotated[Session, Depends(get_session)],
+) -> BacktestAuditResponse:
+    try:
+        audit_data = load_run_audit(run_id, session)
+        return BacktestAuditResponse(**audit_data)
+    except ValueError as err:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(err),
+        ) from err
+    except Exception as err:
+        logger.exception("Failed loading audit for run %s: %s", run_id, err)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed loading audit record: {err}",
+        ) from err
+
