@@ -659,3 +659,41 @@ class BacktestEquityResponse(BaseModel):
     equity_curve: list[EquityPoint] = Field(
         ..., description="Chronological daily mark-to-market equity curve"
     )
+
+
+class MonthlyReturnRow(BaseModel):
+    year: int = Field(..., description="Calendar year")
+    jan: float | None = Field(default=None, description="January compounded return")
+    feb: float | None = Field(default=None, description="February compounded return")
+    mar: float | None = Field(default=None, description="March compounded return")
+    apr: float | None = Field(default=None, description="April compounded return")
+    may: float | None = Field(default=None, description="May compounded return")
+    jun: float | None = Field(default=None, description="June compounded return")
+    jul: float | None = Field(default=None, description="July compounded return")
+    aug: float | None = Field(default=None, description="August compounded return")
+    sep: float | None = Field(default=None, description="September compounded return")
+    oct: float | None = Field(default=None, description="October compounded return")
+    nov: float | None = Field(default=None, description="November compounded return")
+    dec: float | None = Field(default=None, description="December compounded return")
+    total: float = Field(..., description="Full year compounded return")
+
+
+class ReportMonthlyResponse(BaseModel):
+    run_id: str = Field(..., description="Unique backtest run identifier")
+    years: list[MonthlyReturnRow] = Field(..., description="Month x year returns matrix")
+
+
+from app.reports.metrics import PerformanceMetrics  # noqa: E402
+
+
+class ReportSummaryResponse(BaseModel):
+    run_id: str = Field(..., description="Unique backtest run identifier")
+    status: str = Field(..., description="Execution status")
+    created_at: str = Field(..., description="ISO 8601 creation timestamp")
+    config: dict[str, Any] = Field(
+        default_factory=dict, description="Strategy parameters"
+    )
+    metrics: PerformanceMetrics = Field(
+        ..., description="Calculated core and advanced KPIs"
+    )
+
