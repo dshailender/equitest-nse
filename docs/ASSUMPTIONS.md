@@ -4,7 +4,46 @@ This document records the foundational assumptions, methodology decisions, and e
 
 ---
 
+## 0. PRD §4 Open Questions & Design Decisions (Consolidated)
+
+The PRD defines several open questions regarding strategy execution, edge cases, and portfolio constraints. Below are the locked implementation choices and defaults:
+
+### Open Question #1: Universe Selection & Large-Cap Exclusion
+- **PRD Query**: Should the strategy include large-cap stocks (Nifty 50, Nifty Next 50) or focus strictly on mid/small-caps?
+- **Locked Choice**: The strategy strictly trades equities ranked **101 to 750 by market capitalization** (Nifty Midcap 150, Nifty Smallcap 250, Microcap 250). Large-caps (ranks 1 to 100) are explicitly excluded from the equity trading universe.
+- **Rationale**: The 4-EMA trend following and 52-week breakout momentum strategy targets high-beta growth stocks rather than mature large-caps.
+- `TODO: PO confirm` whether parameter sweeps across custom rank bands (e.g. 101–250 for Midcap only) should become strategy profiles in the UI.
+
+### Open Question #2: Stop Loss Execution on Overnight Gap-Downs
+- **PRD Query**: If a stock gaps down overnight below the 7% stop loss price ($\text{Open}_T \le \text{SL Price}$), at what price does the exit order fill?
+- **Locked Choice**: The stop exit fills at the **Market Open price** ($\text{Exit Price} = \text{Open}_T \times 0.9990$), NOT at the stop loss price.
+- **Rationale**: Modeling fills at the stop-loss price would represent unrealizable price improvement during market gap events. Realized losses exceed 7% ($\text{Loss} > 7\%$) and portfolio drawdown exceeds 2%, accurately capturing market gap risk.
+
+### Open Question #3: Candidate Ranking Rule Under Capital Constraints
+- **PRD Query**: When multiple universe constituents trigger entry signals simultaneously and free portfolio capital cannot fund all candidates, what is the prioritization rule?
+- **Locked Choice**: Candidates are ranked by **Momentum Breakout Score** descending:
+  $$\text{Score} = \frac{\text{Close}_T - \text{EMA20}_T}{\text{EMA20}_T} \quad \text{(descending)}$$
+- **Rationale**: Prioritizes stocks whose closing prices have broken furthest above their 20-day exponential moving average, maximizing initial momentum. Ties are broken alphabetically by ticker symbol. Pluggable rankers (`alphabetical`, `52w_proximity`) are supported via `ranking_method`.
+- `TODO: PO confirm` whether secondary tie-breaking should incorporate relative volume breakout metrics.
+
+### Open Question #4: Cash Equities Lot Sizing
+- **PRD Query**: Should the engine enforce discrete share quantities or fractional shares, and should lot sizes default to 1?
+- **Locked Choice**: `lot_size` defaults to **1 share** for NSE cash equities. Fractional shares are prohibited; quantities are floored to integer shares via `floor(Risk Amount / (Entry * 0.07))`.
+- `TODO: PO confirm` whether lot sizing configuration should support derivatives basket multiples if F&O contracts are traded in future phases.
+
+### Open Question #5: Corporate Actions & Rolling 52-Week Ceiling
+- **PRD Query**: How should splits, bonus issues, and dividends affect rolling 52-week highs and moving averages?
+- **Locked Choice**: All calculations operate on **corporate action adjusted prices** (`adj_close`). The rolling 52W high is normalized by the historical corporate action adjustment ratio (`high * (adj_close / close)`), ensuring splits do not distort historical price ceilings.
+
+### Open Question #6: Friction & Slippage Cost Modeling
+- **PRD Query**: What transaction costs and slippages should be assumed for mid/small-cap NSE equities?
+- **Locked Choice**: A fixed **10 basis points (0.10%) per side** ($0.20\%$ round trip) is applied to all market orders ($\text{Buy} = \text{Price} \times 1.0010$, $\text{Sell} = \text{Price} \times 0.9990$).
+- `TODO: PO confirm` whether exchange turnover charges, STT (Securities Transaction Tax), GST, and stamp duty should be itemized separately from execution slippage.
+
+---
+
 ## 1. Trading Universe & Bias Prevention
+
 
 1. **Trading Universe Constituents (NSE 101–750)**:
    - **Exclusion of Top 100**: The strategy strictly trades stocks ranked 101 to 750 by market capitalization (Nifty Midcap 150, Nifty Smallcap 250, and Microcap 250). Large-cap stocks (ranks 1 to 100) are explicitly excluded from the equity trading universe.

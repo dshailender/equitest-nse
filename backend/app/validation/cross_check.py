@@ -4,7 +4,6 @@ import io
 import json
 import logging
 from pathlib import Path
-from typing import Any
 
 import pandas as pd
 from sqlmodel import Session
@@ -37,13 +36,15 @@ def generate_cross_check_dataframe(
 ) -> tuple[pd.DataFrame, str]:
     """Generates aligned indicator and signal series for manual visual diffing.
 
-    Output columns: (date, close, ema_20, ema_50, ema_150, ema_200, high_52w, entry, exit).
+    Output columns: (date, close, ema_20, ema_50, ema_150, ema_200, high_52w,
+    entry, exit).
 
     Args:
-        run_id: Backtest run identifier (or 'default' to evaluate on baseline strategy config).
+        run_id: Backtest run identifier (or 'default' for baseline strategy config).
         symbol: Equity ticker symbol (e.g. 'RELIANCE', 'ALPHA').
         session: Optional active database session to retrieve run record.
-        filter_dates: If True and the run specified start/end dates, filters output to that range.
+        filter_dates: If True and the run specified start/end dates, filters
+            output to that range.
 
     Returns:
         Tuple of (DataFrame with exact CROSS_CHECK_COLUMNS, CSV formatted string).
@@ -80,17 +81,19 @@ def generate_cross_check_dataframe(
     # 1. Load equity prices
     price_source = get_price_source()
     repo_root = Path(__file__).resolve().parents[3]
+    fix_dir = repo_root / "data" / "fixtures"
 
-
-    stock_df = price_source.get_equity_prices(symbol, start="2000-01-01", end="2099-12-31")
+    stock_df = price_source.get_equity_prices(
+        symbol, start="2000-01-01", end="2099-12-31"
+    )
 
     # If empty via source, check local fixture fallback
     if stock_df.empty:
         symbol_upper = symbol.upper()
         candidates = [
-            repo_root / "data" / "fixtures" / f"{symbol_upper}.parquet",
-            repo_root / "data" / "fixtures" / "tiny_universe" / f"{symbol_upper}.parquet",
-            repo_root / "data" / "fixtures" / f"{symbol_upper.lower()}_2020_2023.parquet",
+            fix_dir / f"{symbol_upper}.parquet",
+            fix_dir / "tiny_universe" / f"{symbol_upper}.parquet",
+            fix_dir / f"{symbol_upper.lower()}_2020_2023.parquet",
         ]
         for c in candidates:
             if c.exists():
@@ -104,20 +107,24 @@ def generate_cross_check_dataframe(
     is_tiny = symbol in ("ALPHA", "BETA", "GAMMA")
     nifty_df = pd.DataFrame()
     if is_tiny:
-        tiny_nifty = repo_root / "data" / "fixtures" / "tiny_universe" / "NIFTY_TINY.parquet"
+        tiny_nifty = fix_dir / "tiny_universe" / "NIFTY_TINY.parquet"
         if tiny_nifty.exists():
             nifty_df = pd.read_parquet(tiny_nifty)
 
     if nifty_df.empty:
-        nifty_df = price_source.get_index_prices("^NSEI", start="2000-01-01", end="2099-12-31")
+        nifty_df = price_source.get_index_prices(
+            "^NSEI", start="2000-01-01", end="2099-12-31"
+        )
 
     if nifty_df.empty:
-        nifty_fixture = repo_root / "data" / "fixtures" / "NIFTY50.parquet"
+        nifty_fixture = fix_dir / "NIFTY50.parquet"
         if nifty_fixture.exists():
             nifty_df = pd.read_parquet(nifty_fixture)
 
     # 3. Compute indicators and signals
-    signals_df = generate_signals(stock_df=stock_df, nifty_df=nifty_df, config=strat_config)
+    signals_df = generate_signals(
+        stock_df=stock_df, nifty_df=nifty_df, config=strat_config
+    )
 
     # Ensure required columns exist
     if "date" not in signals_df.columns:

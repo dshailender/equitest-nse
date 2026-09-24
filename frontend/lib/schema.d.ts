@@ -424,6 +424,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/backtest/{run_id}/audit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Backtest Run Audit Provenance
+         * @description Returns audit and reproducibility provenance record for a backtest run (REQ-8.2), including Git commit SHA, config parameters, data snapshot hash, and library versions.
+         */
+        get: operations["api_get_backtest_audit_api_v1_backtest__run_id__audit_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/reports/{run_id}/summary": {
         parameters: {
             query?: never;
@@ -484,10 +504,67 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/validation/{run_id}/{symbol}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get TradingView Cross-Check Data
+         * @description Returns aligned indicators and entry/exit signals for manual visual diffing against TradingView (REQ-8.1). Supports JSON schema response or raw CSV file download via '?format=csv'.
+         */
+        get: operations["api_get_cross_check_api_v1_validation__run_id___symbol__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** BacktestAuditResponse */
+        BacktestAuditResponse: {
+            /**
+             * Run Id
+             * @description Unique backtest run identifier
+             */
+            run_id: string;
+            /**
+             * Git Sha
+             * @description Git commit hash of codebase during execution
+             */
+            git_sha: string;
+            /**
+             * Config
+             * @description Strategy configuration parameters
+             */
+            config: {
+                [key: string]: unknown;
+            };
+            /**
+             * Data Hash
+             * @description SHA-256 snapshot hash of input parquet market data
+             */
+            data_hash: string;
+            /**
+             * Versions
+             * @description Runtime and library dependencies versions
+             */
+            versions: {
+                [key: string]: string;
+            };
+            /**
+             * Created At
+             * @description Execution ISO timestamp
+             */
+            created_at?: string | null;
+        };
         /** BacktestCompareResponse */
         BacktestCompareResponse: {
             /**
@@ -886,6 +963,82 @@ export interface components {
              * @description List of symbol coverage summaries
              */
             items: components["schemas"]["CoverageItem"][];
+        };
+        /** CrossCheckPoint */
+        CrossCheckPoint: {
+            /**
+             * Date
+             * @description Session date (YYYY-MM-DD)
+             */
+            date: string;
+            /**
+             * Close
+             * @description Price used for indicators and evaluation
+             */
+            close: number;
+            /**
+             * Ema 20
+             * @description 20-day Exponential Moving Average
+             */
+            ema_20?: number | null;
+            /**
+             * Ema 50
+             * @description 50-day Exponential Moving Average
+             */
+            ema_50?: number | null;
+            /**
+             * Ema 150
+             * @description 150-day Exponential Moving Average
+             */
+            ema_150?: number | null;
+            /**
+             * Ema 200
+             * @description 200-day Exponential Moving Average
+             */
+            ema_200?: number | null;
+            /**
+             * High 52W
+             * @description 252-day rolling 52-week high
+             */
+            high_52w?: number | null;
+            /**
+             * Entry
+             * @description Whether entry signal triggered on this session
+             */
+            entry: boolean;
+            /**
+             * Exit
+             * @description Whether exit signal triggered on this session
+             */
+            exit: boolean;
+        };
+        /** CrossCheckResponse */
+        CrossCheckResponse: {
+            /**
+             * Run Id
+             * @description Backtest run identifier
+             */
+            run_id: string;
+            /**
+             * Symbol
+             * @description NSE equity ticker symbol
+             */
+            symbol: string;
+            /**
+             * Count
+             * @description Total trading sessions returned
+             */
+            count: number;
+            /**
+             * Rows
+             * @description Aligned indicator and signal data rows
+             */
+            rows: components["schemas"]["CrossCheckPoint"][];
+            /**
+             * Csv
+             * @description Raw CSV string formatted for TradingView visual diff
+             */
+            csv: string;
         };
         /** EquityPoint */
         EquityPoint: {
@@ -2556,6 +2709,37 @@ export interface operations {
             };
         };
     };
+    api_get_backtest_audit_api_v1_backtest__run_id__audit_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BacktestAuditResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     api_get_report_summary_api_v1_reports__run_id__summary_get: {
         parameters: {
             query?: never;
@@ -2639,6 +2823,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    api_get_cross_check_api_v1_validation__run_id___symbol__get: {
+        parameters: {
+            query?: {
+                /** @description Response format: 'json' (default) or 'csv' (file attachment) */
+                format?: string;
+            };
+            header?: never;
+            path: {
+                run_id: string;
+                symbol: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CrossCheckResponse"];
                 };
             };
             /** @description Validation Error */

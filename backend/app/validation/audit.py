@@ -84,12 +84,13 @@ def get_library_versions() -> dict[str, str]:
 
 
 def compute_data_snapshot_hash(symbols: list[str] | None = None) -> str:
-    """Computes deterministic SHA-256 fingerprint across input market data parquet files.
+    """Computes deterministic SHA-256 fingerprint across market parquet files.
 
-    Stable and identical across repeated backtest executions evaluated on the same fixture data.
+    Stable and identical across repeated runs evaluated on the same fixture data.
 
     Args:
-        symbols: Optional list of equity symbols included in run. If None, hashes active fixture files.
+        symbols: Optional list of equity symbols included in run. If None,
+            hashes active fixture files.
 
     Returns:
         Hexadecimal SHA-256 digest string.
@@ -193,7 +194,7 @@ def load_run_audit(run_id: str, session: Session) -> dict[str, Any]:
 
     if audit_file.exists():
         try:
-            with open(audit_file, "r", encoding="utf-8") as f:
+            with open(audit_file, encoding="utf-8") as f:
                 return json.load(f)
         except Exception as e:
             logger.warning("Failed reading audit file %s: %s", audit_file, e)

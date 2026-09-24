@@ -37,7 +37,6 @@ from app.engine.result import BacktestResult
 from app.strategy.config import StrategyConfig
 from app.validation.audit import load_run_audit, record_run_audit
 
-
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/backtest", tags=["backtest"])
@@ -144,7 +143,6 @@ def _execute_backtest_task(run_id: str, payload: dict) -> None:
             session.add(run_record)
             session.commit()
             logger.info("Backtest %s completed successfully", run_id)
-
 
         except Exception as err:
             logger.exception("Backtest %s failed: %s", run_id, err)
@@ -672,8 +670,9 @@ def api_get_backtest_equity(
     response_model=BacktestAuditResponse,
     summary="Get Backtest Run Audit Provenance",
     description=(
-        "Returns audit and reproducibility provenance record for a backtest run (REQ-8.2), "
-        "including Git commit SHA, config parameters, data snapshot hash, and library versions."
+        "Returns audit and reproducibility provenance record for a backtest "
+        "run (REQ-8.2), including Git commit SHA, config parameters, "
+        "data snapshot hash, and library versions."
     ),
 )
 def api_get_backtest_audit(
@@ -694,4 +693,3 @@ def api_get_backtest_audit(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed loading audit record: {err}",
         ) from err
-

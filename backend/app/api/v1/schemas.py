@@ -718,7 +718,9 @@ class CrossCheckPoint(BaseModel):
     high_52w: float | None = Field(
         default=None, description="252-day rolling 52-week high"
     )
-    entry: bool = Field(..., description="Whether entry signal triggered on this session")
+    entry: bool = Field(
+        ..., description="Whether entry signal triggered on this session"
+    )
     exit: bool = Field(..., description="Whether exit signal triggered on this session")
 
 
@@ -739,16 +741,11 @@ class BacktestAuditResponse(BaseModel):
     git_sha: str = Field(
         ..., description="Git commit hash of codebase during execution"
     )
-    config: dict[str, Any] = Field(
-        ..., description="Strategy configuration parameters"
-    )
+    config: dict[str, Any] = Field(..., description="Strategy configuration parameters")
     data_hash: str = Field(
         ..., description="SHA-256 snapshot hash of input parquet market data"
     )
     versions: dict[str, str] = Field(
         ..., description="Runtime and library dependencies versions"
     )
-    created_at: str | None = Field(
-        default=None, description="Execution ISO timestamp"
-    )
-
+    created_at: str | None = Field(default=None, description="Execution ISO timestamp")

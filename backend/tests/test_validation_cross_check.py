@@ -1,4 +1,4 @@
-"""Unit and API integration tests for TradingView cross-check verification engine (REQ-8.1)."""
+"""Unit and API integration tests for TradingView cross-check engine (REQ-8.1)."""
 
 import io
 from pathlib import Path
@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from fastapi.testclient import TestClient
+from sqlmodel import Session
 
 from app.api.v1.schemas import CrossCheckResponse
 from app.db.models import BacktestRun
@@ -16,7 +17,6 @@ from app.validation.cross_check import (
     CROSS_CHECK_COLUMNS,
     generate_cross_check_dataframe,
 )
-from sqlmodel import Session
 
 
 @pytest.fixture
@@ -68,7 +68,7 @@ def test_cross_check_dataframe_columns_and_dates(sample_run_id):
 
 
 def test_cross_check_unfiltered_dates():
-    """Asserts warm-up and full session history when filter_dates=False or default config."""
+    """Asserts warm-up and full session history with filter_dates=False."""
     df, csv_str = generate_cross_check_dataframe(
         run_id="default",
         symbol="RELIANCE",
@@ -85,7 +85,7 @@ def test_cross_check_unfiltered_dates():
 
 
 def test_cross_check_matches_golden_reliance_ema20():
-    """Asserts computed cross-check EMA-20 matches golden reliance_ema20_expected within 1e-6."""
+    """Asserts computed cross-check EMA-20 matches golden reliance_ema20_expected."""
     fixtures_dir = Path(__file__).resolve().parents[2] / "data" / "fixtures"
     expected_csv_path = fixtures_dir / "reliance_ema20_expected.csv"
     assert expected_csv_path.exists()
@@ -108,9 +108,8 @@ def test_cross_check_matches_golden_reliance_ema20():
     assert np.max(diff) < 1e-6
 
 
-
 def test_api_cross_check_json_endpoint(client, sample_run_id):
-    """Happy path: GET /api/v1/validation/{run_id}/{symbol} returns CrossCheckResponse."""
+    """Happy path: GET /api/v1/validation/{run_id}/{symbol} returns JSON."""
     resp = client.get(f"/api/v1/validation/{sample_run_id}/ALPHA")
     assert resp.status_code == 200
 
@@ -124,7 +123,7 @@ def test_api_cross_check_json_endpoint(client, sample_run_id):
 
 
 def test_api_cross_check_csv_endpoint(client, sample_run_id):
-    """Happy path: GET /api/v1/validation/{run_id}/{symbol}?format=csv returns CSV file."""
+    """Happy path: GET /api/v1/validation/{run_id}/{symbol}?format=csv returns CSV."""
     resp = client.get(f"/api/v1/validation/{sample_run_id}/ALPHA?format=csv")
     assert resp.status_code == 200
     assert "text/csv" in resp.headers["content-type"]

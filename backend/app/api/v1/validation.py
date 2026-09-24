@@ -1,7 +1,7 @@
 """REST API router for TradingView cross-check validation (REQ-8.1)."""
 
 import logging
-from typing import Annotated
+from typing import Annotated, Any
 
 import numpy as np
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
@@ -21,8 +21,9 @@ router = APIRouter(prefix="/validation", tags=["validation"])
     response_model=CrossCheckResponse,
     summary="Get TradingView Cross-Check Data",
     description=(
-        "Returns aligned indicators and entry/exit signals for manual visual diffing against "
-        "TradingView (REQ-8.1). Supports JSON schema response or raw CSV file download via '?format=csv'."
+        "Returns aligned indicators and entry/exit signals for manual visual "
+        "diffing against TradingView (REQ-8.1). Supports JSON schema response "
+        "or raw CSV file download via '?format=csv'."
     ),
 )
 def api_get_cross_check(
@@ -54,19 +55,20 @@ def api_get_cross_check(
         ) from err
 
     except Exception as err:
-        logger.exception("Failed generating cross-check for %s/%s: %s", run_id, symbol, err)
+        logger.exception(
+            "Failed generating cross-check for %s/%s: %s", run_id, symbol, err
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Cross-check computation failed: {err}",
         ) from err
 
     if format == "csv":
+        filename = f"{symbol_clean}_cross_check_{run_id}.csv"
         return Response(
             content=csv_str,
             media_type="text/csv",
-            headers={
-                "Content-Disposition": f'attachment; filename="{symbol_clean}_cross_check_{run_id}.csv"'
-            },
+            headers={"Content-Disposition": f'attachment; filename="{filename}"'},
         )
 
     # Convert DataFrame records to Pydantic CrossCheckPoint objects

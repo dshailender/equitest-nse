@@ -986,6 +986,49 @@
         }
       }
     },
+    "/api/v1/backtest/{run_id}/audit": {
+      "get": {
+        "tags": [
+          "backtest"
+        ],
+        "summary": "Get Backtest Run Audit Provenance",
+        "description": "Returns audit and reproducibility provenance record for a backtest run (REQ-8.2), including Git commit SHA, config parameters, data snapshot hash, and library versions.",
+        "operationId": "api_get_backtest_audit_api_v1_backtest__run_id__audit_get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BacktestAuditResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/reports/{run_id}/summary": {
       "get": {
         "tags": [
@@ -1125,10 +1168,129 @@
           }
         }
       }
+    },
+    "/api/v1/validation/{run_id}/{symbol}": {
+      "get": {
+        "tags": [
+          "validation"
+        ],
+        "summary": "Get TradingView Cross-Check Data",
+        "description": "Returns aligned indicators and entry/exit signals for manual visual diffing against TradingView (REQ-8.1). Supports JSON schema response or raw CSV file download via '?format=csv'.",
+        "operationId": "api_get_cross_check_api_v1_validation__run_id___symbol__get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          },
+          {
+            "name": "symbol",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Symbol"
+            }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^(json|csv)$",
+              "description": "Response format: 'json' (default) or 'csv' (file attachment)",
+              "default": "json",
+              "title": "Format"
+            },
+            "description": "Response format: 'json' (default) or 'csv' (file attachment)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CrossCheckResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "BacktestAuditResponse": {
+        "properties": {
+          "run_id": {
+            "type": "string",
+            "title": "Run Id",
+            "description": "Unique backtest run identifier"
+          },
+          "git_sha": {
+            "type": "string",
+            "title": "Git Sha",
+            "description": "Git commit hash of codebase during execution"
+          },
+          "config": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Config",
+            "description": "Strategy configuration parameters"
+          },
+          "data_hash": {
+            "type": "string",
+            "title": "Data Hash",
+            "description": "SHA-256 snapshot hash of input parquet market data"
+          },
+          "versions": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Versions",
+            "description": "Runtime and library dependencies versions"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At",
+            "description": "Execution ISO timestamp"
+          }
+        },
+        "type": "object",
+        "required": [
+          "run_id",
+          "git_sha",
+          "config",
+          "data_hash",
+          "versions"
+        ],
+        "title": "BacktestAuditResponse"
+      },
       "BacktestCompareResponse": {
         "properties": {
           "run_ids": {
@@ -1845,6 +2007,139 @@
           "items"
         ],
         "title": "CoverageResponse"
+      },
+      "CrossCheckPoint": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "title": "Date",
+            "description": "Session date (YYYY-MM-DD)"
+          },
+          "close": {
+            "type": "number",
+            "title": "Close",
+            "description": "Price used for indicators and evaluation"
+          },
+          "ema_20": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ema 20",
+            "description": "20-day Exponential Moving Average"
+          },
+          "ema_50": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ema 50",
+            "description": "50-day Exponential Moving Average"
+          },
+          "ema_150": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ema 150",
+            "description": "150-day Exponential Moving Average"
+          },
+          "ema_200": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ema 200",
+            "description": "200-day Exponential Moving Average"
+          },
+          "high_52w": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "High 52W",
+            "description": "252-day rolling 52-week high"
+          },
+          "entry": {
+            "type": "boolean",
+            "title": "Entry",
+            "description": "Whether entry signal triggered on this session"
+          },
+          "exit": {
+            "type": "boolean",
+            "title": "Exit",
+            "description": "Whether exit signal triggered on this session"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "close",
+          "entry",
+          "exit"
+        ],
+        "title": "CrossCheckPoint"
+      },
+      "CrossCheckResponse": {
+        "properties": {
+          "run_id": {
+            "type": "string",
+            "title": "Run Id",
+            "description": "Backtest run identifier"
+          },
+          "symbol": {
+            "type": "string",
+            "title": "Symbol",
+            "description": "NSE equity ticker symbol"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count",
+            "description": "Total trading sessions returned"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/CrossCheckPoint"
+            },
+            "type": "array",
+            "title": "Rows",
+            "description": "Aligned indicator and signal data rows"
+          },
+          "csv": {
+            "type": "string",
+            "title": "Csv",
+            "description": "Raw CSV string formatted for TradingView visual diff"
+          }
+        },
+        "type": "object",
+        "required": [
+          "run_id",
+          "symbol",
+          "count",
+          "rows",
+          "csv"
+        ],
+        "title": "CrossCheckResponse"
       },
       "EquityPoint": {
         "properties": {

@@ -44,13 +44,13 @@ def test_library_versions_populated():
     assert "numpy" in versions
     assert "pydantic" in versions
     assert "sqlmodel" in versions
-    for k, v in versions.items():
+    for _k, v in versions.items():
         assert isinstance(v, str)
         assert v != ""
 
 
 def test_stable_data_hash_across_runs():
-    """Asserts data snapshot hash is strictly deterministic and identical on same fixture."""
+    """Asserts data snapshot hash is deterministic and identical on same fixture."""
     hash1 = compute_data_snapshot_hash(["ALPHA", "BETA", "GAMMA"])
     hash2 = compute_data_snapshot_hash(["ALPHA", "BETA", "GAMMA"])
     assert hash1 is not None
@@ -147,7 +147,6 @@ def test_simulation_execution_generates_audit():
         "config": {"corpus": 500000.0, "risk_pct": 0.02, "sl_pct": 0.07},
     }
 
-
     with Session(engine) as session:
         run_rec = BacktestRun(
             id=run_id,
@@ -162,9 +161,11 @@ def test_simulation_execution_generates_audit():
 
     repo_root = Path(__file__).resolve().parents[2]
     audit_file = repo_root / "data" / "backtests" / f"{run_id}_audit.json"
-    assert audit_file.exists(), f"Expected audit file {audit_file} to be created by task"
+    assert (
+        audit_file.exists()
+    ), f"Expected audit file {audit_file} to be created by task"
 
-    with open(audit_file, "r", encoding="utf-8") as f:
+    with open(audit_file, encoding="utf-8") as f:
         data = json.load(f)
     assert data["run_id"] == run_id
     assert data["git_sha"] is not None
