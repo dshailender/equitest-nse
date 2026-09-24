@@ -1,4 +1,6 @@
-from pydantic import BaseModel, Field
+from typing import Any
+
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class IngestRequest(BaseModel):
@@ -300,11 +302,18 @@ class RiskConfigResponse(BaseModel):
 
 
 class BacktestConfigSchema(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+
     corpus: float = Field(
         default=500000.0,
         gt=0,
-        description="Starting portfolio corpus in INR",
+        description="Starting portfolio corpus/capital in INR",
         examples=[500000.0],
+    )
+    capital: float | None = Field(
+        default=None,
+        gt=0,
+        description="Starting portfolio capital in INR (alias for corpus)",
     )
     risk_pct: float = Field(
         default=0.02,
@@ -319,6 +328,12 @@ class BacktestConfigSchema(BaseModel):
         lt=1,
         description="Stop loss percentage distance (default 0.07 = 7%)",
         examples=[0.07],
+    )
+    sl_pct: float | None = Field(
+        default=None,
+        gt=0,
+        lt=1,
+        description="Stop loss percentage distance (alias for stop_loss_pct)",
     )
     lot_size: int = Field(
         default=1,
@@ -358,6 +373,64 @@ class BacktestConfigSchema(BaseModel):
         default=False,
         description="Whether equality on bar T-1 satisfies crossover condition",
     )
+    ranking_rule: str = Field(
+        default="momentum",
+        description=(
+            "Candidate prioritization rule under capital constraints "
+            "(momentum, alphabetical, 52w_proximity)"
+        ),
+        examples=["momentum"],
+    )
+    universe_start_rank: int = Field(
+        default=101,
+        ge=1,
+        description="Starting universe rank (inclusive)",
+        examples=[101],
+    )
+    universe_end_rank: int = Field(
+        default=750,
+        ge=1,
+        description="Ending universe rank (inclusive)",
+        examples=[750],
+    )
+
+    @model_validator(mode="before")
+    @classmethod
+    def handle_aliases(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            # capital & corpus
+            if data.get("capital") is not None and data.get("corpus") is None:
+                data["corpus"] = data["capital"]
+            elif data.get("corpus") is not None and data.get("capital") is None:
+                data["capital"] = data["corpus"]
+            elif data.get("capital") is not None and data.get("corpus") is not None:
+                data["corpus"] = data["capital"]
+
+            # sl_pct & stop_loss_pct
+            if data.get("sl_pct") is not None and data.get("stop_loss_pct") is None:
+                data["stop_loss_pct"] = data["sl_pct"]
+            elif data.get("stop_loss_pct") is not None and data.get("sl_pct") is None:
+                data["sl_pct"] = data["stop_loss_pct"]
+            elif (
+                data.get("sl_pct") is not None and data.get("stop_loss_pct") is not None
+            ):
+                data["stop_loss_pct"] = data["sl_pct"]
+
+            # Convert whole numbers (e.g. 5, 7 -> 0.05, 0.07; 1, 2 -> 0.01, 0.02)
+            sl_val = data.get("sl_pct")
+            if isinstance(sl_val, (int, float)) and sl_val >= 1.0:
+                data["sl_pct"] = sl_val / 100.0
+                data["stop_loss_pct"] = data["sl_pct"]
+
+            stop_val = data.get("stop_loss_pct")
+            if isinstance(stop_val, (int, float)) and stop_val >= 1.0:
+                data["stop_loss_pct"] = stop_val / 100.0
+                data["sl_pct"] = data["stop_loss_pct"]
+
+            risk_val = data.get("risk_pct")
+            if isinstance(risk_val, (int, float)) and risk_val >= 1.0:
+                data["risk_pct"] = risk_val / 100.0
+        return data
 
 
 class BacktestRunRequest(BaseModel):
@@ -403,6 +476,12 @@ class BacktestStatusResponse(BaseModel):
     created_at: str = Field(..., description="Creation ISO timestamp")
     start_date: str | None = Field(default=None, description="Start date")
     end_date: str | None = Field(default=None, description="End date")
+    config_version: str = Field(
+        default="1.0", description="Configuration schema version"
+    )
+    sweep_id: str | None = Field(
+        default=None, description="Parent parameter sweep ID if applicable"
+    )
     initial_capital: float = Field(..., description="Starting capital in INR")
     final_capital: float | None = Field(
         default=None, description="Ending capital in INR"
@@ -410,14 +489,145 @@ class BacktestStatusResponse(BaseModel):
     total_return_pct: float | None = Field(
         default=None, description="Total portfolio return percentage"
     )
+    cagr: float | None = Field(default=None, description="Compound Annual Growth Rate")
     total_trades: int | None = Field(
         default=None, description="Total closed round-trip trades"
     )
     win_rate: float | None = Field(
         default=None, description="Fraction of winning trades"
     )
+    max_drawdown_pct: float | None = Field(
+        default=None, description="Maximum percentage drawdown"
+    )
     error_message: str | None = Field(
         default=None, description="Error explanation if failed"
+    )
+
+
+class SweepRunRequest(BaseModel):
+    base_config: BacktestConfigSchema | None = Field(
+        default=None,
+        description="Optional base strategy configuration template",
+    )
+    param_grid: dict[str, list[Any]] = Field(
+        ...,
+        description="Map of parameter names to lists of candidate values to sweep",
+        examples=[{"sl_pct": [0.05, 0.06, 0.07], "risk_pct": [0.01, 0.02, 0.03]}],
+    )
+    start: str | None = Field(
+        default=None,
+        description="Optional backtest start date (YYYY-MM-DD)",
+        examples=["2020-06-01"],
+    )
+    end: str | None = Field(
+        default=None,
+        description="Optional backtest end date (YYYY-MM-DD)",
+        examples=["2022-04-29"],
+    )
+    symbols: list[str] | None = Field(
+        default=None,
+        description="Optional subset of symbols (defaults to universe)",
+        examples=[["ALPHA", "BETA", "GAMMA"]],
+    )
+
+
+class SweepRunCreateResponse(BaseModel):
+    sweep_id: str = Field(..., description="Unique parameter sweep identifier")
+    total_runs: int = Field(..., description="Total permutation child runs generated")
+    run_ids: list[str] = Field(..., description="List of generated child run IDs")
+    status: str = Field(default="pending", description="Initial lifecycle status")
+    message: str = Field(
+        default="Parameter sweep execution queued successfully",
+        description="Informational status message",
+    )
+
+
+class SweepRunItem(BaseModel):
+    run_id: str = Field(..., description="Child run ID")
+    status: str = Field(..., description="Child run lifecycle status")
+    params: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Parameter values for this specific run",
+    )
+    initial_capital: float = Field(..., description="Starting capital")
+    final_capital: float | None = Field(default=None, description="Ending capital")
+    total_return_pct: float | None = Field(
+        default=None, description="Total return percentage"
+    )
+    total_trades: int | None = Field(default=None, description="Total trades count")
+    win_rate: float | None = Field(default=None, description="Win rate")
+    max_drawdown_pct: float | None = Field(
+        default=None, description="Maximum drawdown percentage"
+    )
+    cagr: float | None = Field(default=None, description="Compound Annual Growth Rate")
+    error_message: str | None = Field(
+        default=None, description="Error message if failed"
+    )
+
+
+class SweepStatusResponse(BaseModel):
+    sweep_id: str = Field(..., description="Unique sweep identifier")
+    status: str = Field(
+        ...,
+        description=(
+            "Overall sweep status (pending, running, completed, partial, failed)"
+        ),
+    )
+    created_at: str = Field(..., description="Creation ISO timestamp")
+    param_grid: dict[str, list[Any]] = Field(
+        default_factory=dict, description="Parameters swept"
+    )
+    total_runs: int = Field(..., description="Total permutation runs")
+    completed_runs: int = Field(..., description="Number of completed runs so far")
+    runs: list[SweepRunItem] = Field(
+        ..., description="Summary metrics for each child run"
+    )
+
+
+class EquityPoint(BaseModel):
+    date: str = Field(..., description="Session date (YYYY-MM-DD)")
+    equity: float = Field(..., description="Total mark-to-market equity")
+    cash: float = Field(..., description="Available cash balance")
+    positions_value: float = Field(..., description="Open positions market value")
+    open_positions: int = Field(..., description="Number of currently held positions")
+    daily_return: float = Field(..., description="Day-over-day return fraction")
+    drawdown: float = Field(..., description="Drawdown from equity peak in INR")
+    drawdown_pct: float = Field(..., description="Drawdown percentage from peak")
+
+
+class CompareMetricItem(BaseModel):
+    run_id: str = Field(..., description="Run identifier")
+    status: str = Field(..., description="Run status")
+    config: dict[str, Any] = Field(
+        default_factory=dict, description="Configuration parameters"
+    )
+    initial_capital: float = Field(..., description="Starting capital")
+    final_capital: float | None = Field(default=None, description="Ending capital")
+    total_return_pct: float | None = Field(
+        default=None, description="Total return percentage"
+    )
+    cagr: float | None = Field(default=None, description="Compound Annual Growth Rate")
+    total_trades: int | None = Field(default=None, description="Total trades count")
+    win_rate: float | None = Field(default=None, description="Win rate")
+    max_drawdown_pct: float | None = Field(
+        default=None, description="Max percentage drawdown"
+    )
+    avg_profit: float | None = Field(
+        default=None, description="Average profit on winning trades"
+    )
+    avg_loss: float | None = Field(
+        default=None, description="Average loss on losing trades"
+    )
+
+
+class BacktestCompareResponse(BaseModel):
+    run_ids: list[str] = Field(..., description="List of compared run IDs")
+    runs: dict[str, CompareMetricItem] = Field(
+        ..., description="Summary metrics dictionary keyed by run_id"
+    )
+    equity_curves: dict[str, list[EquityPoint]] = Field(
+        default_factory=dict,
+        description="Overlaid equity curves keyed by run_id",
     )
 
 
@@ -441,17 +651,6 @@ class BacktestTradesResponse(BaseModel):
     run_id: str = Field(..., description="Unique backtest run identifier")
     count: int = Field(..., description="Total number of closed trades")
     trades: list[TradeItem] = Field(..., description="Chronological trade ledger")
-
-
-class EquityPoint(BaseModel):
-    date: str = Field(..., description="Session date (YYYY-MM-DD)")
-    equity: float = Field(..., description="Total mark-to-market equity")
-    cash: float = Field(..., description="Available cash balance")
-    positions_value: float = Field(..., description="Open positions market value")
-    open_positions: int = Field(..., description="Number of currently held positions")
-    daily_return: float = Field(..., description="Day-over-day return fraction")
-    drawdown: float = Field(..., description="Drawdown from equity peak in INR")
-    drawdown_pct: float = Field(..., description="Drawdown percentage from peak")
 
 
 class BacktestEquityResponse(BaseModel):

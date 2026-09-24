@@ -18,9 +18,36 @@ engine = create_engine(
 
 def init_db() -> None:
     """Initialize database tables for SQLModel metadata."""
+    from sqlalchemy import text
+
     from app.db import models  # noqa: F401
 
     SQLModel.metadata.create_all(engine)
+
+    # Lightweight migration for existing SQLite databases
+    with engine.connect() as conn:
+        cursor = conn.connection.cursor()
+        cursor.execute("PRAGMA table_info(backtest_runs)")
+        existing_cols = {row[1] for row in cursor.fetchall()}
+        if existing_cols:
+            if "config_version" not in existing_cols:
+                conn.execute(
+                    text(
+                        "ALTER TABLE backtest_runs ADD COLUMN config_version "
+                        "VARCHAR DEFAULT '1.0'"
+                    )
+                )
+            if "sweep_id" not in existing_cols:
+                conn.execute(
+                    text("ALTER TABLE backtest_runs ADD COLUMN sweep_id VARCHAR")
+                )
+            if "cagr" not in existing_cols:
+                conn.execute(text("ALTER TABLE backtest_runs ADD COLUMN cagr FLOAT"))
+            if "max_drawdown_pct" not in existing_cols:
+                conn.execute(
+                    text("ALTER TABLE backtest_runs ADD COLUMN max_drawdown_pct FLOAT")
+                )
+            conn.commit()
 
 
 def get_session() -> Generator[Session, None, None]:
