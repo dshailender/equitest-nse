@@ -81,6 +81,18 @@ export default function RootLayout({
                     Reports
                   </a>
                   <a
+                    href="/validation"
+                    className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 transition-colors"
+                  >
+                    Validation
+                  </a>
+                  <a
+                    href="/docs"
+                    className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 transition-colors"
+                  >
+                    Docs
+                  </a>
+                  <a
                     href="/api-health"
                     className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 transition-colors"
                   >

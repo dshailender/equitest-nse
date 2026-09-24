@@ -698,3 +698,57 @@ class ReportSummaryResponse(BaseModel):
     metrics: PerformanceMetrics = Field(
         ..., description="Calculated core and advanced KPIs"
     )
+
+
+class CrossCheckPoint(BaseModel):
+    date: str = Field(..., description="Session date (YYYY-MM-DD)")
+    close: float = Field(..., description="Price used for indicators and evaluation")
+    ema_20: float | None = Field(
+        default=None, description="20-day Exponential Moving Average"
+    )
+    ema_50: float | None = Field(
+        default=None, description="50-day Exponential Moving Average"
+    )
+    ema_150: float | None = Field(
+        default=None, description="150-day Exponential Moving Average"
+    )
+    ema_200: float | None = Field(
+        default=None, description="200-day Exponential Moving Average"
+    )
+    high_52w: float | None = Field(
+        default=None, description="252-day rolling 52-week high"
+    )
+    entry: bool = Field(..., description="Whether entry signal triggered on this session")
+    exit: bool = Field(..., description="Whether exit signal triggered on this session")
+
+
+class CrossCheckResponse(BaseModel):
+    run_id: str = Field(..., description="Backtest run identifier")
+    symbol: str = Field(..., description="NSE equity ticker symbol")
+    count: int = Field(..., description="Total trading sessions returned")
+    rows: list[CrossCheckPoint] = Field(
+        ..., description="Aligned indicator and signal data rows"
+    )
+    csv: str = Field(
+        ..., description="Raw CSV string formatted for TradingView visual diff"
+    )
+
+
+class BacktestAuditResponse(BaseModel):
+    run_id: str = Field(..., description="Unique backtest run identifier")
+    git_sha: str = Field(
+        ..., description="Git commit hash of codebase during execution"
+    )
+    config: dict[str, Any] = Field(
+        ..., description="Strategy configuration parameters"
+    )
+    data_hash: str = Field(
+        ..., description="SHA-256 snapshot hash of input parquet market data"
+    )
+    versions: dict[str, str] = Field(
+        ..., description="Runtime and library dependencies versions"
+    )
+    created_at: str | None = Field(
+        default=None, description="Execution ISO timestamp"
+    )
+

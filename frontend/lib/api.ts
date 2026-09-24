@@ -986,6 +986,103 @@ export function getReportExportUrl(
   return `${API_BASE_URL}/api/v1/reports/${encodeURIComponent(runId)}/export?format=${format}`;
 }
 
+// --- Validation Cross-Check Schemas & Methods (REQ-8.1) ---
+
+export const CrossCheckPointSchema = z.object({
+  date: z.string(),
+  close: z.number(),
+  ema_20: z.number().nullable().optional(),
+  ema_50: z.number().nullable().optional(),
+  ema_150: z.number().nullable().optional(),
+  ema_200: z.number().nullable().optional(),
+  high_52w: z.number().nullable().optional(),
+  entry: z.boolean(),
+  exit: z.boolean(),
+});
+export type CrossCheckPoint = z.infer<typeof CrossCheckPointSchema>;
+
+export const CrossCheckResponseSchema = z.object({
+  run_id: z.string(),
+  symbol: z.string(),
+  count: z.number(),
+  rows: z.array(CrossCheckPointSchema),
+  csv: z.string(),
+});
+export type CrossCheckResponse = z.infer<typeof CrossCheckResponseSchema>;
+
+/**
+ * Fetches aligned indicator and signal series for TradingView visual cross-check (REQ-8.1)
+ */
+export async function fetchCrossCheck(
+  runId: string,
+  symbol: string
+): Promise<CrossCheckResponse> {
+  const url = `${API_BASE_URL}/api/v1/validation/${encodeURIComponent(
+    runId
+  )}/${encodeURIComponent(symbol)}?format=json`;
+  const response = await fetch(url, {
+    headers: { Accept: "application/json" },
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new ApiError(
+      response.status,
+      `Cross-check fetch failed with status: ${response.status}`
+    );
+  }
+
+  const json = await response.json();
+  return CrossCheckResponseSchema.parse(json);
+}
+
+/**
+ * Returns direct CSV download URL for TradingView diff (REQ-8.1)
+ */
+export function getCrossCheckDownloadUrl(runId: string, symbol: string): string {
+  return `${API_BASE_URL}/api/v1/validation/${encodeURIComponent(
+    runId
+  )}/${encodeURIComponent(symbol)}?format=csv`;
+}
+
+// --- Backtest Audit Schemas & Methods (REQ-8.2) ---
+
+export const BacktestAuditResponseSchema = z.object({
+  run_id: z.string(),
+  git_sha: z.string(),
+  config: z.record(z.any()),
+  data_hash: z.string(),
+  versions: z.record(z.string()),
+  created_at: z.string().nullable().optional(),
+});
+export type BacktestAuditResponse = z.infer<typeof BacktestAuditResponseSchema>;
+
+/**
+ * Fetches reproducibility and provenance audit trail for a backtest run (REQ-8.2)
+ */
+export async function fetchBacktestAudit(
+  runId: string
+): Promise<BacktestAuditResponse> {
+  const url = `${API_BASE_URL}/api/v1/backtest/${encodeURIComponent(
+    runId
+  )}/audit`;
+  const response = await fetch(url, {
+    headers: { Accept: "application/json" },
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new ApiError(
+      response.status,
+      `Backtest audit fetch failed with status: ${response.status}`
+    );
+  }
+
+  const json = await response.json();
+  return BacktestAuditResponseSchema.parse(json);
+}
+
+
 
 
 

@@ -694,7 +694,100 @@ export const handlers = [
       });
     }
   }),
+
+  // Validation - Cross-Check (REQ-8.1)
+  http.get("*/api/v1/validation/:run_id/:symbol", ({ request, params }) => {
+    const url = new URL(request.url);
+    const fmt = url.searchParams.get("format") || "json";
+    const runId = String(params.run_id);
+    const symbol = String(params.symbol);
+
+    const mockRows = [
+      {
+        date: "2020-06-01",
+        close: 750.0,
+        ema_20: 745.0,
+        ema_50: 730.0,
+        ema_150: 710.0,
+        ema_200: 700.0,
+        high_52w: 780.0,
+        entry: true,
+        exit: false,
+      },
+      {
+        date: "2020-06-02",
+        close: 735.0,
+        ema_20: 744.0,
+        ema_50: 731.0,
+        ema_150: 710.5,
+        ema_200: 700.5,
+        high_52w: 780.0,
+        entry: false,
+        exit: true,
+      },
+      {
+        date: "2020-06-03",
+        close: 740.0,
+        ema_20: 743.5,
+        ema_50: 731.5,
+        ema_150: 711.0,
+        ema_200: 701.0,
+        high_52w: 780.0,
+        entry: false,
+        exit: false,
+      },
+    ];
+
+    const csvContent =
+      "date,close,ema_20,ema_50,ema_150,ema_200,high_52w,entry,exit\n" +
+      "2020-06-01,750.0,745.0,730.0,710.0,700.0,780.0,True,False\n" +
+      "2020-06-02,735.0,744.0,731.0,710.5,700.5,780.0,False,True\n" +
+      "2020-06-03,740.0,743.5,731.5,711.0,701.0,780.0,False,False\n";
+
+    if (fmt === "csv") {
+      return new HttpResponse(csvContent, {
+        headers: {
+          "Content-Type": "text/csv; charset=utf-8",
+          "Content-Disposition": `attachment; filename="${symbol}_cross_check_${runId}.csv"`,
+        },
+      });
+    }
+
+    return HttpResponse.json({
+      run_id: runId,
+      symbol: symbol,
+      count: mockRows.length,
+      rows: mockRows,
+      csv: csvContent,
+    });
+  }),
+
+  // Backtest - Audit (REQ-8.2)
+  http.get("*/api/v1/backtest/:run_id/audit", ({ params }) => {
+    return HttpResponse.json({
+      run_id: String(params.run_id),
+      git_sha: "45391fbd9b001161b500a4c5e92a22170daee4b9",
+      config: {
+        corpus: 500000.0,
+        risk_pct: 0.02,
+        sl_pct: 0.07,
+        slippage_bps: 10.0,
+        ranking_method: "momentum",
+      },
+      data_hash: "a1b2c3d4e5f67890abcdef1234567890abcdef1234567890abcdef1234567890",
+      versions: {
+        python: "3.14.7",
+        fastapi: "0.141.1",
+        pandas: "3.0.6",
+        numpy: "2.5.3",
+        pydantic: "2.10.4",
+        sqlmodel: "0.0.46",
+      },
+      created_at: "2026-09-24T12:00:00Z",
+    });
+  }),
 ];
+
 
 export const server = setupServer(...handlers);
 

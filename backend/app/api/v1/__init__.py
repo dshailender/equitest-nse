@@ -33,6 +33,7 @@ from app.api.v1.indicators import router as indicators_router  # noqa: E402
 from app.api.v1.reports import router as reports_router  # noqa: E402
 from app.api.v1.risk import router as risk_router  # noqa: E402
 from app.api.v1.signals import router as signals_router  # noqa: E402
+from app.api.v1.validation import router as validation_router  # noqa: E402
 
 api_router.include_router(data_router)
 api_router.include_router(indicators_router)
@@ -40,3 +41,5 @@ api_router.include_router(signals_router)
 api_router.include_router(risk_router)
 api_router.include_router(backtest_router)
 api_router.include_router(reports_router)
+api_router.include_router(validation_router)
+
