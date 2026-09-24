@@ -153,3 +153,67 @@ class IndicatorPreviewRequest(BaseModel):
         default_factory=IndicatorConfigSchema,
         description="Indicator calculation configuration",
     )
+
+
+class SignalItem(BaseModel):
+    date: str = Field(..., description="Session date (YYYY-MM-DD)")
+    open: float = Field(..., description="Opening price")
+    high: float = Field(..., description="Highest price during session")
+    low: float = Field(..., description="Lowest price during session")
+    close: float = Field(..., description="Unadjusted closing price")
+    adj_close: float = Field(..., description="Corporate-action adjusted closing price")
+    volume: float = Field(..., description="Total trading volume")
+    ema_20: float | None = Field(default=None, description="20-day EMA")
+    ema_50: float | None = Field(default=None, description="50-day EMA")
+    ema_150: float | None = Field(default=None, description="150-day EMA")
+    ema_200: float | None = Field(default=None, description="200-day EMA")
+    high_52w: float | None = Field(default=None, description="52-week rolling high")
+    regime_ok: bool = Field(
+        ..., description="Market regime filter (NIFTY Close > EMA 50 & EMA 200)"
+    )
+    trend_ok: bool = Field(
+        ..., description="Stock trend filter (EMA 20 > EMA 50 > EMA 150 > EMA 200)"
+    )
+    near_52w_high: bool = Field(
+        ..., description="52W high proximity filter (Close > 0.85 * 52W High)"
+    )
+    crossover: bool = Field(
+        ...,
+        description=(
+            "EMA20 crossover trigger (Close_T > EMA20_T and Close_T-1 < EMA20_T-1)"
+        ),
+    )
+
+    entry: bool = Field(
+        ..., description="Entry signal triggered on bar T for execution on T+1 open"
+    )
+    exit: bool = Field(
+        ..., description="Exit signal triggered on bar T (Close_T < EMA20_T)"
+    )
+
+
+class SignalsResponse(BaseModel):
+    symbol: str = Field(..., description="Equity ticker symbol")
+    count: int = Field(..., description="Number of signal rows returned")
+    signals: list[SignalItem] = Field(
+        ..., description="Chronological series of signal-augmented OHLCV bars"
+    )
+
+
+class ScreenResponse(BaseModel):
+    date: str = Field(
+        ..., description="Target date for universe screening (YYYY-MM-DD)"
+    )
+    count: int = Field(
+        ..., description="Total number of constituent tickers with entry signal"
+    )
+    symbols: list[str] = Field(
+        ..., description="List of ticker symbols with active entry signals"
+    )
+    survivorship_bias: bool = Field(
+        ...,
+        description=(
+            "True if fallback current list was used due to missing "
+            "point-in-time constituent records"
+        ),
+    )

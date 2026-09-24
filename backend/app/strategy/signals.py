@@ -169,3 +169,233 @@ def near_52w_high(
 
     is_near.name = "near_52w_high"
     return is_near
+
+
+def exit_signal(
+    stock_df: pd.DataFrame, config: StrategyConfig | None = None
+) -> pd.Series:
+    """Evaluates strategy exit signal on bar T (REQ-3.5).
+
+    Rule:
+        Close(T) < EMA20(T)
+
+    Execution takes place on session T+1 at the Open price.
+
+    Args:
+        stock_df: DataFrame containing equity OHLCV or indicator-augmented price series.
+        config: Strategy configuration containing short EMA span (default 20).
+
+    Returns:
+        pd.Series[bool] indexed by date, aligned to stock_df.
+        Never mutates input DataFrame.
+    """
+    if stock_df.empty:
+        return pd.Series(dtype=bool, name="exit")
+
+    cfg = config or StrategyConfig()
+    short_col = f"ema_{cfg.ema_short}"
+
+    if short_col not in stock_df.columns:
+        ind_cfg = IndicatorConfig(spans=[cfg.ema_short], include_high_52w=False)
+        df_calc = compute_indicators(stock_df, config=ind_cfg)
+    else:
+        df_calc = stock_df
+
+    if "adj_close" in df_calc.columns:
+        close_series = df_calc["adj_close"].astype(float)
+    elif "close" in df_calc.columns:
+        close_series = df_calc["close"].astype(float)
+    else:
+        raise ValueError("stock_df must contain 'adj_close' or 'close' column")
+
+    ema_series = df_calc[short_col].astype(float)
+
+    exit_sig = close_series < ema_series
+    exit_sig = exit_sig.fillna(False).astype(bool)
+
+    if "date" in df_calc.columns:
+        exit_sig.index = pd.Index(df_calc["date"].astype(str))
+    else:
+        exit_sig.index = df_calc.index
+
+    exit_sig.name = "exit"
+    return exit_sig
+
+
+def entry_signal(
+    stock_df: pd.DataFrame,
+    nifty_df: pd.DataFrame,
+    config: StrategyConfig | None = None,
+) -> pd.Series:
+    """Evaluates strategy entry signal on bar T (REQ-3.4).
+
+    Rules:
+        (regime_ok & trend_ok & near_52w_high) on T
+        AND (Close_T > EMA20_T) AND (Close_{T-1} < EMA20_{T-1})
+
+    Execution takes place on session T+1 at the Open price.
+
+    Args:
+        stock_df: DataFrame containing equity OHLCV or indicator-augmented price series.
+        nifty_df: DataFrame containing NIFTY benchmark OHLCV or indicator series.
+        config: Strategy configuration.
+
+    Returns:
+        pd.Series[bool] indexed by date, aligned to stock_df.
+        Never mutates input DataFrames.
+    """
+    if stock_df.empty:
+        return pd.Series(dtype=bool, name="entry")
+
+    cfg = config or StrategyConfig()
+
+    # Determine date index for stock_df
+    if "date" in stock_df.columns:
+        stock_dates = pd.Index(stock_df["date"].astype(str))
+    else:
+        stock_dates = stock_df.index
+
+    # 1. Market regime filter (indexed by nifty dates)
+    regime = market_regime_ok(nifty_df, config=cfg)
+    aligned_regime = (
+        regime.reindex(stock_dates, fill_value=False).fillna(False).astype(bool)
+    )
+    aligned_regime.index = stock_dates
+
+    # 2. Trend filter
+    trend = trend_ok(stock_df, config=cfg)
+    trend.index = stock_dates
+
+    # 3. Near 52W high filter
+    near_high = near_52w_high(stock_df, factor=cfg.high_52w_factor, config=cfg)
+    near_high.index = stock_dates
+
+    # 4. EMA20 crossover
+    short_col = f"ema_{cfg.ema_short}"
+    if short_col not in stock_df.columns:
+        ind_cfg = IndicatorConfig(spans=[cfg.ema_short], include_high_52w=False)
+        df_calc = compute_indicators(stock_df, config=ind_cfg)
+    else:
+        df_calc = stock_df
+
+    if "adj_close" in df_calc.columns:
+        close_series = df_calc["adj_close"].astype(float)
+    elif "close" in df_calc.columns:
+        close_series = df_calc["close"].astype(float)
+    else:
+        raise ValueError("stock_df must contain 'adj_close' or 'close' column")
+
+    ema_series = df_calc[short_col].astype(float)
+
+    close_curr = close_series
+    ema_curr = ema_series
+    close_prev = close_series.shift(1)
+    ema_prev = ema_series.shift(1)
+
+    if cfg.allow_crossover_equal:
+        crossover = (close_curr > ema_curr) & (close_prev <= ema_prev)
+    else:
+        crossover = (close_curr > ema_curr) & (close_prev < ema_prev)
+
+    crossover = crossover.fillna(False).astype(bool)
+    crossover.index = stock_dates
+
+    # All conditions combined
+    entry = aligned_regime & trend & near_high & crossover
+    entry.name = "entry"
+    return entry
+
+
+def generate_signals(
+    stock_df: pd.DataFrame,
+    nifty_df: pd.DataFrame,
+    config: StrategyConfig | None = None,
+) -> pd.DataFrame:
+    """Computes all technical indicators, filters, and strategy signals.
+
+    Augments the stock OHLCV DataFrame with:
+    - Indicators: ema_20, ema_50, ema_150, ema_200, high_52w
+    - Component filters: regime_ok, trend_ok, near_52w_high, crossover
+    - Final signals: entry, exit
+
+    Args:
+        stock_df: DataFrame containing equity OHLCV prices.
+        nifty_df: DataFrame containing NIFTY benchmark OHLCV prices.
+        config: Strategy configuration parameters.
+
+    Returns:
+        DataFrame augmented with all indicator and signal columns.
+        Never mutates input DataFrames.
+    """
+    if stock_df.empty:
+        return stock_df.copy()
+
+    cfg = config or StrategyConfig()
+
+    # Compute indicators if not already present
+    required_cols = [f"ema_{s}" for s in cfg.ema_trend_spans] + ["high_52w"]
+    if any(c not in stock_df.columns for c in required_cols):
+        ind_cfg = IndicatorConfig(
+            spans=cfg.ema_trend_spans,
+            include_high_52w=True,
+            high_52w_lookback=cfg.high_52w_lookback,
+        )
+        augmented = compute_indicators(stock_df, config=ind_cfg)
+    else:
+        augmented = stock_df.copy()
+
+    # Date indexing
+    if "date" in augmented.columns:
+        dates = pd.Index(augmented["date"].astype(str))
+    else:
+        dates = augmented.index
+
+    # Filters
+    regime = market_regime_ok(nifty_df, config=cfg)
+    aligned_regime = regime.reindex(dates, fill_value=False).fillna(False).astype(bool)
+    aligned_regime.index = dates
+
+    trend = trend_ok(augmented, config=cfg)
+    trend.index = dates
+
+    near_high = near_52w_high(augmented, factor=cfg.high_52w_factor, config=cfg)
+    near_high.index = dates
+
+    # Crossover
+    short_col = f"ema_{cfg.ema_short}"
+    close_series = (
+        augmented["adj_close"].astype(float)
+        if "adj_close" in augmented.columns
+        else augmented["close"].astype(float)
+    )
+    ema_series = augmented[short_col].astype(float)
+
+    close_curr = close_series
+    ema_curr = ema_series
+    close_prev = close_series.shift(1)
+    ema_prev = ema_series.shift(1)
+
+    if cfg.allow_crossover_equal:
+        crossover = (close_curr > ema_curr) & (close_prev <= ema_prev)
+    else:
+        crossover = (close_curr > ema_curr) & (close_prev < ema_prev)
+
+    crossover = crossover.fillna(False).astype(bool)
+    crossover.index = dates
+
+    entry = (aligned_regime & trend & near_high & crossover).astype(bool)
+    entry.index = dates
+
+    exit_sig = (close_curr < ema_curr).fillna(False).astype(bool)
+    exit_sig.index = dates
+
+    # Append columns
+    out_df = augmented.copy()
+    out_df["regime_ok"] = aligned_regime.values
+    out_df["trend_ok"] = trend.values
+    out_df["near_52w_high"] = near_high.values
+    out_df["crossover"] = crossover.values
+    out_df["entry"] = entry.values
+    out_df["exit"] = exit_sig.values
+
+    return out_df
