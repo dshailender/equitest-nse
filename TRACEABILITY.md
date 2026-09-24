@@ -12,7 +12,7 @@ This document tracks requirement implementation, validation status, and associat
 | **Phase 3** | Entry, Exit, and Signal Rules | ✅ Completed |
 | **Phase 4** | Risk, Position Sizing, and Stop Loss | ✅ Completed |
 | **Phase 5** | Backtest Simulation Engine | ✅ Completed |
-| **Phase 6** | Parameter and Scenario Testing | ⏳ Pending |
+| **Phase 6** | Parameter and Scenario Testing | ✅ Completed |
 | **Phase 7** | Reporting and Analytics | ⏳ Pending |
 | **Phase 8** | Validation, Acceptance, and Handoff | ⏳ Pending |
 
@@ -66,6 +66,14 @@ This document tracks requirement implementation, validation status, and associat
 | **REQ-5.3** | Capital Constraints, Ranking Rule & Rejections | `backend/app/engine/backtest.py::DefaultRanker`, `docs/ASSUMPTIONS.md` | `backend/tests/test_engine_constraints.py` (Concurrent position rejection logging, momentum sorting rule, pluggable Ranker protocol) | ✅ Verified |
 | **REQ-5.4** | Persistence, REST API & Backtest Dashboard | `backend/app/api/v1/backtest.py`, `backend/app/db/models.py`, `frontend/app/backtest/page.tsx`, `frontend/lib/api.ts` | `backend/tests/test_api_backtest.py`, `frontend/tests/backtest.test.tsx`, `e2e/backtest.spec.ts` | ✅ Verified |
 
+### Phase 6: Parameter and Scenario Testing
+| Req ID | Requirement | Implementation Artifacts | Test & Verification Evidence | Status |
+| :--- | :--- | :--- | :--- | :--- |
+| **REQ-6.1** | Strategy Parameterization & Config Model | `backend/app/strategy/config.py`, `backend/app/engine/backtest.py` (Rankers), `backend/app/data/universe.py` | `backend/tests/test_strategy_config.py` (Pydantic model validation, alias mappings, rankers, universe bounds 101–750) | ✅ Verified |
+| **REQ-6.2** | Parameter Sweep Cartesian Engine & Progress Reporting | `backend/app/api/v1/backtest.py`, `backend/app/db/models.py`, `POST /sweep`, `GET /sweep/{id}` | `backend/tests/test_sweep_engine.py::test_api_sweep_3x3_grid_and_status` (3x3 grid generates 9 child runs, partial status aggregation) | ✅ Verified |
+| **REQ-6.3** | Multi-Run Scenario Comparison & Alignment | `backend/app/api/v1/backtest.py`, `backend/engine/result.py::cagr`, `GET /compare` | `backend/tests/test_sweep_engine.py::test_api_compare_endpoint`, `backend/tests/test_determinism.py` (Hypothesis property determinism) | ✅ Verified |
+| **REQ-6.4** | Interactive Sensitivity Heatmap & Scenario Dashboard | `frontend/app/sweep/page.tsx`, `frontend/lib/api.ts` | `frontend/tests/sweep.test.tsx` (MSW unit tests for grid builder, heatmap, runs table, compare drawer), `e2e/sweep.spec.ts` (Playwright E2E 2x2 sweep) | ✅ Verified |
+
 ---
 
 ## API Endpoint Matrix
@@ -90,6 +98,9 @@ This document tracks requirement implementation, validation status, and associat
 | `GET` | `/api/v1/backtest/{run_id}/trades` | Retrieves trade ledger of closed round trips | Phase 5 | `tests/test_api_backtest.py`, `frontend/tests/backtest.test.tsx`, `e2e/backtest.spec.ts` |
 | `GET` | `/api/v1/backtest/{run_id}/equity` | Retrieves mark-to-market daily equity curve points | Phase 5 | `tests/test_api_backtest.py`, `frontend/tests/backtest.test.tsx`, `e2e/backtest.spec.ts` |
 | `GET` | `/api/v1/backtest` | Lists historical persisted backtest simulation runs | Phase 5 | `tests/test_api_backtest.py`, `frontend/tests/backtest.test.tsx` |
+| `POST` | `/api/v1/backtest/sweep` | Triggers asynchronous multi-parameter Cartesian sweep | Phase 6 | `tests/test_sweep_engine.py`, `frontend/tests/sweep.test.tsx`, `e2e/sweep.spec.ts` |
+| `GET` | `/api/v1/backtest/sweep/{sweep_id}` | Retrieves sweep execution status and child runs breakdown | Phase 6 | `tests/test_sweep_engine.py`, `frontend/tests/sweep.test.tsx`, `e2e/sweep.spec.ts` |
+| `GET` | `/api/v1/backtest/compare` | Compares multiple backtest runs with aligned metrics & curves | Phase 6 | `tests/test_sweep_engine.py`, `frontend/tests/sweep.test.tsx`, `e2e/sweep.spec.ts` |
 
 
 

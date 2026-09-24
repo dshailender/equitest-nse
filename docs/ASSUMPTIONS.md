@@ -119,5 +119,34 @@ This document records the foundational assumptions, methodology decisions, and e
      3. Entry candidates from $T-1$ signals are ranked and executed at Market Open with buy slippage until free capital is exhausted.
      4. Portfolio equity is marked-to-market using session $T$ closing prices.
 
+---
+
+## 7. Parameter Sweeps, Scenario Testing & Versioning (Phase 6)
+
+1. **Config Schema & Backward Compatibility (REQ-6.1)**:
+   - `StrategyConfig` is implemented as a Pydantic v2 `BaseModel` supporting runtime validation (`gt=0`, `lt=1`, etc.), dictionary serialization (`to_dict()`), and legacy alias compatibility (`corpus` $\leftrightarrow$ `capital`, `stop_loss_pct` $\leftrightarrow$ `sl_pct`, `ema_trend_spans` $\leftrightarrow$ `ema_spans`, `regime_spans` $\leftrightarrow$ `regime_ema_spans`).
+   - Percentage parameters (`sl_pct`, `risk_pct`) automatically normalize whole numbers $\ge 1.0$ (e.g. $5 \to 0.05$, $2 \to 0.02$) to fractional decimals for seamless user input.
+
+2. **Pluggable Ranking Protocols**:
+   - Supported candidate prioritization rules:
+     - `"momentum"`: Sort by breakout percentage above EMA-20: $(Close_{T-1} - EMA20) / EMA20$ descending.
+     - `"alphabetical"`: Deterministic lexical sort by ticker symbol ascending.
+     - `"52w_proximity"`: Proximity to 52-week rolling peak: $Close_{T-1} / High52W_{T-1}$ descending.
+
+3. **Universe Rank Parameterization**:
+   - `universe_start_rank` (default 101) and `universe_end_rank` (default 750) allow parameter sweeps across market-cap segments (e.g., Midcap 150: 101–250, Smallcap 250: 251–500, Microcap 250: 501–750).
+
+4. **Cartesian Sweep Limits & Execution Semantics (REQ-6.2)**:
+   - Parameter sweeps generate the full Cartesian product across candidate parameter lists.
+   - Grid size is capped at 50 permutations per request to prevent worker saturation.
+   - Sweep runs execute asynchronously in background tasks, reporting live status (`pending`, `running`, `partial`, `completed`, `failed`) and per-child progress metrics.
+
+5. **Multi-Run Metric Alignment & Overlaid Curves (REQ-6.3)**:
+   - Comparison endpoint (`GET /api/v1/backtest/compare?run_ids=...`) returns aligned performance metrics and synchronized mark-to-market equity curves across multiple runs for side-by-side evaluation.
+
+6. **Annualized Returns & Config Versioning**:
+   - All completed runs record `config_version="1.0"`, optional parent `sweep_id`, `cagr` computed as $\left(\frac{\text{Final Capital}}{\text{Initial Capital}}\right)^{\frac{252}{N}} - 1$, and `max_drawdown_pct`.
+
+
 
 
