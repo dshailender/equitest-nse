@@ -35,3 +35,4 @@ class StrategyConfig:
     def ema_spans(self) -> list[int]:
         """Alias for ema_trend_spans."""
         return self.ema_trend_spans
+

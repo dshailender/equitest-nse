@@ -50,3 +50,4 @@ test.describe("Strategy Signals & Execution E2E Flow", () => {
     await expect(screenCard).toContainText("MIDCAP_STOCK_101");
   });
 });
+

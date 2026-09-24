@@ -65,3 +65,4 @@ describe("SignalsPage Component", () => {
     });
   });
 });
+

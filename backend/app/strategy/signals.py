@@ -344,6 +344,7 @@ def generate_signals(
     else:
         augmented = stock_df.copy()
 
+
     # Date indexing
     if "date" in augmented.columns:
         dates = pd.Index(augmented["date"].astype(str))
