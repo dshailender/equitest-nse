@@ -531,7 +531,7 @@ export default function ReportDetailPage({
             </span>
           </div>
 
-          <div className="h-64 w-full">
+          <div data-testid="chart-histogram" className="h-64 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={histogramData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />

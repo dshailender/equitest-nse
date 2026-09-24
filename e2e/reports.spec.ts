@@ -76,7 +76,8 @@ test.describe("Strategy Reports & Analytics E2E Flow", () => {
       const csvStats = fs.statSync(csvPath);
       expect(csvStats.size).toBeGreaterThan(0);
       const csvContent = fs.readFileSync(csvPath, "utf-8");
-      expect(csvContent).toContain("Metric,Value");
+      expect(csvContent).toContain("symbol,entry_date");
+      expect(csvContent).toContain("ALPHA");
     }
 
     // 9. Test XLSX Export Download
