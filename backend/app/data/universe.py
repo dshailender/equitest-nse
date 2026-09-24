@@ -7,7 +7,9 @@ from sqlmodel import Session, select
 from app.db.models import UniverseMembership
 
 
-def get_default_fallback_constituents() -> list[dict[str, Any]]:
+def get_default_fallback_constituents(
+    start_rank: int = 101, end_rank: int = 750
+) -> list[dict[str, Any]]:
     """Generates default current NSE 750 constituent list with ranks 101 to 750.
 
     Used when point-in-time constituent data is missing, setting survivorship_bias=True.
@@ -82,10 +84,10 @@ def get_default_fallback_constituents() -> list[dict[str, Any]]:
         "DIXON",
         "AMBER",
     ]
-    # Expand to fill 650 symbols (ranks 101 to 750)
+    # Expand to fill symbols from start_rank to end_rank
     constituents = []
     base_count = len(sample_midcaps)
-    for rank in range(101, 751):
+    for rank in range(start_rank, end_rank + 1):
         idx = (rank - 101) % base_count
         cycle = (rank - 101) // base_count
         suffix = f"_{cycle}" if cycle > 0 else ""
@@ -95,9 +97,12 @@ def get_default_fallback_constituents() -> list[dict[str, Any]]:
 
 
 def get_universe(
-    date: str, session: Session | None = None
+    date: str,
+    session: Session | None = None,
+    start_rank: int = 101,
+    end_rank: int = 750,
 ) -> tuple[list[str], bool, list[dict[str, Any]]]:
-    """Resolves tickers ranked 101–750 by market cap on the specified date.
+    """Resolves tickers ranked between start_rank and end_rank by market cap.
 
     Returns:
         (tickers, survivorship_bias, details)
@@ -111,8 +116,8 @@ def get_universe(
         statement = (
             select(UniverseMembership)
             .where(UniverseMembership.date == date)
-            .where(UniverseMembership.rank >= 101)
-            .where(UniverseMembership.rank <= 750)
+            .where(UniverseMembership.rank >= start_rank)
+            .where(UniverseMembership.rank <= end_rank)
             .order_by(UniverseMembership.rank)
         )
         results = session.exec(statement).all()
@@ -137,8 +142,8 @@ def get_universe(
                     effective_date = matching_dates[-1]
                     subset = df[
                         (df["date"] == effective_date)
-                        & (df["rank"] >= 101)
-                        & (df["rank"] <= 750)
+                        & (df["rank"] >= start_rank)
+                        & (df["rank"] <= end_rank)
                     ].sort_values(by="rank")
 
                     if not subset.empty:
@@ -149,6 +154,8 @@ def get_universe(
             pass
 
     # 3. Fallback to current constituents with survivorship bias flag
-    fallback = get_default_fallback_constituents()
+    fallback = get_default_fallback_constituents(
+        start_rank=start_rank, end_rank=end_rank
+    )
     tickers = [item["symbol"] for item in fallback]
     return tickers, True, fallback

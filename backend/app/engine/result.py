@@ -97,6 +97,30 @@ class BacktestResult:
             return 0.0
         return round(float(self.equity_curve["drawdown_pct"].max()), 4)
 
+    @property
+    def cagr(self) -> float:
+        """Annualized compound growth rate (CAGR)."""
+        if (
+            not self.equity_curve.empty
+            and "date" in self.equity_curve.columns
+            and len(self.equity_curve) >= 2
+            and self.initial_capital > 0
+            and self.final_capital > 0
+        ):
+            try:
+                start_dt = pd.to_datetime(self.equity_curve["date"].iloc[0])
+                end_dt = pd.to_datetime(self.equity_curve["date"].iloc[-1])
+                days = (end_dt - start_dt).days
+                if days > 0:
+                    years = days / 365.25
+                    cagr_val = (self.final_capital / self.initial_capital) ** (
+                        1.0 / years
+                    ) - 1.0
+                    return round(float(cagr_val), 4)
+            except Exception:
+                pass
+        return self.total_return_pct
+
     def summary(self) -> dict[str, Any]:
         """Returns key performance indicators dictionary."""
         return {
@@ -104,6 +128,7 @@ class BacktestResult:
             "final_capital": self.final_capital,
             "total_return": self.total_return,
             "total_return_pct": self.total_return_pct,
+            "cagr": self.cagr,
             "total_trades": self.total_trades,
             "win_trades": self.win_trades,
             "loss_trades": self.loss_trades,

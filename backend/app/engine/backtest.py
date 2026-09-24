@@ -87,6 +87,78 @@ class DefaultRanker:
         return [sym for _, sym in scores]
 
 
+class AlphabeticalRanker:
+    """Sorts candidate symbols alphabetically ascending."""
+
+    def rank(
+        self,
+        candidates: list[str],
+        eval_date: str,
+        signals: dict[str, pd.DataFrame],
+    ) -> list[str]:
+        return sorted(candidates)
+
+
+class Proximity52WRanker:
+    """Prioritizes candidates nearest to their 52-week high:
+
+    Score = Close / high_52w descending.
+    """
+
+    def rank(
+        self,
+        candidates: list[str],
+        eval_date: str,
+        signals: dict[str, pd.DataFrame],
+    ) -> list[str]:
+        if len(candidates) <= 1:
+            return list(candidates)
+
+        scores: list[tuple[float, str]] = []
+        for sym in candidates:
+            sig_df = signals.get(sym)
+            if sig_df is None or sig_df.empty:
+                scores.append((-float("inf"), sym))
+                continue
+
+            if "date" in sig_df.columns:
+                matches = sig_df[sig_df["date"] == eval_date]
+            else:
+                matches = sig_df.loc[[eval_date]] if eval_date in sig_df.index else None
+
+            if matches is None or matches.empty:
+                scores.append((-float("inf"), sym))
+                continue
+
+            row = matches.iloc[0]
+            close_val = float(
+                row["adj_close"] if "adj_close" in matches.columns else row["close"]
+            )
+            high52_val = (
+                float(row["high_52w"]) if "high_52w" in matches.columns else 0.0
+            )
+
+            if high52_val > 0:
+                proximity = close_val / high52_val
+            else:
+                proximity = -float("inf")
+
+            scores.append((proximity, sym))
+
+        scores.sort(key=lambda item: (-item[0], item[1]))
+        return [sym for _, sym in scores]
+
+
+def get_ranker(rule: str | None = None) -> Ranker:
+    """Resolves Ranker instance from strategy configuration rule string."""
+    normalized = (rule or "momentum").strip().lower()
+    if normalized in ("alphabetical", "alpha"):
+        return AlphabeticalRanker()
+    if normalized in ("52w_proximity", "high_52w", "proximity", "near_52w"):
+        return Proximity52WRanker()
+    return DefaultRanker()
+
+
 class Backtest:
     """Event-driven daily backtesting simulation engine.
 
@@ -108,7 +180,7 @@ class Backtest:
         self.prices = prices or {}
         self.nifty = nifty if nifty is not None else pd.DataFrame()
         self.universe_provider = universe_provider
-        self.ranker = ranker or DefaultRanker()
+        self.ranker = ranker or get_ranker(self.config.ranking_rule)
 
     def run(
         self,
