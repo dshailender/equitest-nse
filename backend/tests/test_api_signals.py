@@ -64,7 +64,7 @@ async def test_api_signals_screen_fixture_date(async_client: AsyncClient):
     data = resp.json()
     assert data["date"] == "2020-06-25"
     assert data["survivorship_bias"] is False
-    assert "MIDCAP_STOCK_101" in data["symbols"]
+    assert "BALKRISIND" in data["symbols"]
     assert data["count"] >= 1
 
 

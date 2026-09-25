@@ -15,7 +15,7 @@ test.describe("Strategy Reports & Analytics E2E Flow", () => {
     // 2. Wait for simulation to finish
     const finalCapitalBacktest = page.locator('[data-testid="final-capital-value"]');
     await expect(finalCapitalBacktest).toBeVisible({ timeout: 45000 });
-    await expect(finalCapitalBacktest).toContainText("603,905");
+    await expect(finalCapitalBacktest).toContainText("630,365");
 
     // 3. Click "View Detailed Report & Analytics"
     const viewReportBtn = page.locator('[data-testid="btn-view-report"]');
@@ -29,13 +29,13 @@ test.describe("Strategy Reports & Analytics E2E Flow", () => {
     // 5. Verify Core KPI metrics
     const finalCapMetric = page.locator('[data-testid="metric-final-capital"]');
     await expect(finalCapMetric).toBeVisible();
-    await expect(finalCapMetric).toContainText("603,905");
+    await expect(finalCapMetric).toContainText("630,365");
 
     const totalTradesMetric = page.locator('[data-testid="metric-total-trades"]');
-    await expect(totalTradesMetric).toHaveText("104");
+    await expect(totalTradesMetric).toHaveText("87");
 
     const winRateMetric = page.locator('[data-testid="metric-win-rate"]');
-    await expect(winRateMetric).toHaveText("34.62%");
+    await expect(winRateMetric).toHaveText("41.38%");
 
     // 6. Verify Advanced KPI metrics
     const cagrMetric = page.locator('[data-testid="metric-cagr"]');
@@ -77,7 +77,7 @@ test.describe("Strategy Reports & Analytics E2E Flow", () => {
       expect(csvStats.size).toBeGreaterThan(0);
       const csvContent = fs.readFileSync(csvPath, "utf-8");
       expect(csvContent).toContain("symbol,entry_date");
-      expect(csvContent).toContain("MIDCAP_STOCK_101");
+      expect(csvContent).toContain("FEDERALBNK");
     }
 
     // 9. Test XLSX Export Download

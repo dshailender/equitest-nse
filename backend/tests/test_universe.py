@@ -122,3 +122,35 @@ def test_universe_company_names_metadata():
     for item in details_pit:
         assert item["name"] != ""
         assert item["sector"] != ""
+
+
+def test_universe_authentic_constituents_no_synthetic_tokens():
+    """Verify ranks 101 to 750 use authentic NSE tickers (AUD-B-002)."""
+    # 1. Point-in-time fixture dates
+    for d in ["2020-01-01", "2022-01-01", "2024-01-01"]:
+        tickers, survivorship_bias, details = get_universe(d)
+        assert not survivorship_bias
+        assert len(tickers) == 650
+        assert len(set(tickers)) == 650
+        assert all(not sym.startswith("MIDCAP_STOCK_") for sym in tickers)
+        assert all(not sym.startswith("TOP_") for sym in tickers)
+        assert all("_" not in sym for sym in tickers)
+        for item in details:
+            assert item["symbol"]
+            assert item["name"]
+            assert item["sector"]
+            assert 101 <= item["rank"] <= 750
+
+    # 2. Fallback generator date
+    tickers_fb, survivorship_bias_fb, details_fb = get_universe("2015-01-01")
+    assert survivorship_bias_fb
+    assert len(tickers_fb) == 650
+    assert len(set(tickers_fb)) == 650
+    assert all(not sym.startswith("MIDCAP_STOCK_") for sym in tickers_fb)
+    assert all(not sym.startswith("TOP_") for sym in tickers_fb)
+    assert all("_" not in sym for sym in tickers_fb)
+    for item in details_fb:
+        assert item["symbol"]
+        assert item["name"]
+        assert item["sector"]
+        assert 101 <= item["rank"] <= 750

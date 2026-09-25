@@ -4,6 +4,7 @@ from typing import Any
 import pandas as pd
 from sqlmodel import Session, select
 
+from app.data.constituents import AUTHENTIC_NSE_CONSTITUENTS
 from app.db.models import UniverseMembership
 
 COMPANY_METADATA: dict[str, dict[str, str]] = {
@@ -163,88 +164,17 @@ def get_symbol_metadata(symbol: str) -> dict[str, str]:
 def get_default_fallback_constituents(
     start_rank: int = 101, end_rank: int = 750
 ) -> list[dict[str, Any]]:
-    """Generates default current NSE 750 constituent list with ranks 101 to 750.
+    """Generates default current NSE constituent list with ranks 101 to 750.
 
     Used when point-in-time constituent data is missing, setting survivorship_bias=True.
     """
-    sample_midcaps = [
-        "IDEA",
-        "YESBANK",
-        "SUZLON",
-        "ZOMATO",
-        "PAYTM",
-        "NYKAA",
-        "POLICYBZR",
-        "DELHIVERY",
-        "TATACHEM",
-        "TATACOMM",
-        "TATAELXSI",
-        "FEDERALBNK",
-        "IDFCFIRSTB",
-        "BANDHANBNK",
-        "AUBANK",
-        "ASHOKLEY",
-        "BALKRISIND",
-        "MRF",
-        "APOLLOTYRE",
-        "BHARATFORG",
-        "ESCORTS",
-        "TIINDIA",
-        "EXIDEIND",
-        "AMARAJABAT",
-        "BOSCHLTD",
-        "MOTHERSON",
-        "LUPIN",
-        "AUROPHARMA",
-        "BIOCON",
-        "GLENMARK",
-        "TORNTPHARM",
-        "ALKEM",
-        "IPCALAB",
-        "LAURUSLABS",
-        "NATCOPHARM",
-        "GRANULES",
-        "STAR",
-        "JUBLFOOD",
-        "DEVYANI",
-        "SAPPHIRE",
-        "WESTLIFE",
-        "BATAINDIA",
-        "RELAXO",
-        "PAGEIND",
-        "TRENT",
-        "ABFRL",
-        "RAYMOND",
-        "VBL",
-        "RADICO",
-        "UBL",
-        "COFORGE",
-        "MPHASIS",
-        "PERSISTENT",
-        "LTIM",
-        "LTTS",
-        "KPITTECH",
-        "TATACOMM",
-        "CYIENT",
-        "SONACOMS",
-        "POLYCAB",
-        "KEI",
-        "HAVELLS",
-        "CROMPTON",
-        "VOLTAS",
-        "BLUESTARCO",
-        "WHIRLPOOL",
-        "DIXON",
-        "AMBER",
-    ]
-    # Expand to fill symbols from start_rank to end_rank
     constituents = []
-    base_count = len(sample_midcaps)
     for rank in range(start_rank, end_rank + 1):
-        idx = (rank - 101) % base_count
-        cycle = (rank - 101) // base_count
-        suffix = f"_{cycle}" if cycle > 0 else ""
-        symbol = f"{sample_midcaps[idx]}{suffix}"
+        idx = rank - 101
+        if 0 <= idx < len(AUTHENTIC_NSE_CONSTITUENTS):
+            symbol = AUTHENTIC_NSE_CONSTITUENTS[idx]
+        else:
+            symbol = f"NSE_STOCK_{rank}"
         meta = get_symbol_metadata(symbol)
         constituents.append(
             {

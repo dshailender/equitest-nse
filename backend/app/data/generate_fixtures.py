@@ -3,7 +3,9 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from app.data.constituents import AUTHENTIC_NSE_CONSTITUENTS, TOP_100_CONSTITUENTS
 from app.data.ingest import validate_ohlcv_dataframe
+from app.data.universe import get_symbol_metadata
 
 
 def generate_ohlcv_series(
@@ -66,7 +68,7 @@ def generate_ohlcv_series(
 
 
 def generate_constituents() -> pd.DataFrame:
-    """Generates constituent lists for 3 historical dates (ranks 1 to 750)."""
+    """Generates constituent lists for 3 historical dates using authentic tickers."""
     dates = ["2020-01-01", "2022-01-01", "2024-01-01"]
     records = []
 
@@ -77,11 +79,20 @@ def generate_constituents() -> pd.DataFrame:
         shift = 0 if d == "2020-01-01" else (10 if d == "2022-01-01" else 25)
         for rank in range(1, 751):
             if rank <= 100:
-                sym = f"TOP_{rank}"
+                sym = TOP_100_CONSTITUENTS[rank - 1]
             else:
-                sym_num = ((rank + shift - 101) % 650) + 101
-                sym = f"MIDCAP_STOCK_{sym_num}"
-            records.append({"date": d, "symbol": sym, "rank": rank})
+                idx = (rank + shift - 101) % len(AUTHENTIC_NSE_CONSTITUENTS)
+                sym = AUTHENTIC_NSE_CONSTITUENTS[idx]
+            meta = get_symbol_metadata(sym)
+            records.append(
+                {
+                    "date": d,
+                    "symbol": sym,
+                    "rank": rank,
+                    "name": meta["name"],
+                    "sector": meta["sector"],
+                }
+            )
 
     return pd.DataFrame(records)
 

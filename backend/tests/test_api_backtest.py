@@ -95,8 +95,8 @@ def test_api_backtest_default_symbols(client):
     run_id = post_res.json()["run_id"]
     st = client.get(f"/api/v1/backtest/{run_id}").json()
     assert st["status"] == "completed"
-    assert st["final_capital"] == 603905.46
-    assert st["total_trades"] == 104
+    assert st["final_capital"] == 630365.73
+    assert st["total_trades"] == 87
 
     # Verify trades ledger contains universe constituents and not ALPHA/BETA/GAMMA
     trades_res = client.get(f"/api/v1/backtest/{run_id}/trades")
@@ -104,7 +104,7 @@ def test_api_backtest_default_symbols(client):
     trades_data = trades_res.json()
     symbols_traded = {t["symbol"] for t in trades_data["trades"]}
     assert len(symbols_traded) > 10
-    assert "MIDCAP_STOCK_101" in symbols_traded
+    assert "FEDERALBNK" in symbols_traded
     assert "ALPHA" not in symbols_traded
     assert "BETA" not in symbols_traded
     assert "GAMMA" not in symbols_traded
@@ -160,7 +160,8 @@ def test_api_backtest_multi_symbol_fixture_execution(client):
     assert (
         len(symbols_traded) >= 15
     ), f"Expected >= 15 diverse symbols traded, got {len(symbols_traded)}"
-    assert all(s.startswith("MIDCAP_STOCK_") for s in symbols_traded)
+    assert all(not s.startswith("MIDCAP_STOCK_") for s in symbols_traded)
+    assert all("_" not in s for s in symbols_traded)
 
 
 def test_api_backtest_pre_2020_fallback_execution(client):

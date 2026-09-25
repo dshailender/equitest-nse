@@ -47,7 +47,7 @@ test.describe("Strategy Signals & Execution E2E Flow", () => {
 
     const screenCard = page.locator('[data-testid="screen-results-card"]');
     await expect(screenCard).toBeVisible({ timeout: 15000 });
-    await expect(screenCard).toContainText("MIDCAP_STOCK_101");
+    await expect(screenCard).toContainText("BALKRISIND");
   });
 });
 
