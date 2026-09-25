@@ -218,3 +218,70 @@ def test_api_backtest_pre_2020_fallback_execution(client):
     assert equity_res.status_code == 200
     eq_data = equity_res.json()
     assert eq_data["count"] > 200
+
+
+def test_api_backtest_injects_point_in_time_universe_provider(client, monkeypatch):
+    """AUD-C-002: Inject point-in-time universe provider into Backtest engine
+    during simulation run.
+
+    Acceptance criteria:
+    - Backtest executes with universe_provider active.
+    - T-1 entry screening calls universe_provider(prev_date) on each trading session.
+    """
+    from app.engine.backtest import Backtest
+
+    original_run = Backtest.run
+    captured_providers = []
+    called_dates = []
+
+    def tracking_run(self, *args, **kwargs):
+        captured_providers.append(self.universe_provider)
+        assert (
+            self.universe_provider is not None
+        ), "universe_provider must be active on Backtest"
+        assert callable(self.universe_provider), "universe_provider must be callable"
+
+        real_provider = self.universe_provider
+
+        def spy_provider(eval_date: str):
+            called_dates.append(eval_date)
+            return real_provider(eval_date)
+
+        self.universe_provider = spy_provider
+        return original_run(self, *args, **kwargs)
+
+    monkeypatch.setattr(Backtest, "run", tracking_run)
+
+    # 1. Trigger simulation run with default universe
+    payload = {
+        "start": "2020-06-01",
+        "end": "2022-04-29",
+    }
+    post_res = client.post("/api/v1/backtest/run", json=payload)
+    assert post_res.status_code == 202
+    run_id = post_res.json()["run_id"]
+
+    status_res = client.get(f"/api/v1/backtest/{run_id}")
+    assert status_res.status_code == 200
+    st = status_res.json()
+    assert st["status"] == "completed"
+
+    # Verify Acceptance Criterion 1: Backtest executes with universe_provider active
+    assert len(captured_providers) == 1
+    provider = captured_providers[0]
+    assert provider is not None
+    assert callable(provider)
+
+    # Verify Acceptance Criterion 2: T-1 entry screening calls
+    # universe_provider(prev_date) on each session
+    assert len(called_dates) == 500  # 500 trading days evaluated on T-1
+    # Prior session T-1 for initial session 2020-06-01
+    assert called_dates[0] == "2020-05-29"
+    assert "2021-05-25" in called_dates
+
+    # Verify provider output resolves point-in-time tickers and survivorship_bias flag
+    tickers, bias = provider("2021-05-25")
+    assert isinstance(tickers, list)
+    assert len(tickers) == 650
+    assert "FEDERALBNK" in tickers
+    assert isinstance(bias, bool)

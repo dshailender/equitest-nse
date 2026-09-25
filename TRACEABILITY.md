@@ -74,6 +74,7 @@ This document tracks requirement implementation, validation status, and associat
 | **AUD-A-002** | Prevent Silent Truncation of Multi-Year Backtest Date Ranges & Adjust CAGR | `backend/app/engine/backtest.py`, `backend/app/engine/result.py` | `backend/tests/test_engine_execution.py::test_backtest_date_truncation_warning_and_cagr_10y`, `test_backtest_date_truncation_warning_and_cagr_15y`, `test_backtest_no_truncation_warning_within_coverage`, `test_backtest_result_warnings_serialization` | ✅ Verified |
 | **AUD-A-003** | Representative Offline Midcap Price Parquet Fixtures (Ranks 101–150) | `backend/app/data/generate_fixtures.py`, `data/fixtures/MIDCAP_STOCK_*.parquet` | `backend/tests/test_api_backtest.py::test_api_backtest_multi_symbol_fixture_execution`, `e2e/backtest.spec.ts` | ✅ Verified |
 | **AUD-A-004** | Pre-2020 Universe Fallback (sample_midcaps) Local Parquet Price Fixtures | `backend/app/data/generate_fixtures.py`, `data/fixtures/{IDEA,YESBANK,...}.parquet` | `backend/tests/test_api_backtest.py::test_api_backtest_pre_2020_fallback_execution` | ✅ Verified |
+| **AUD-C-002** | Inject Point-in-Time Universe Provider into Backtest Engine | `backend/app/api/v1/backtest.py` | `backend/tests/test_api_backtest.py::test_api_backtest_injects_point_in_time_universe_provider` | ✅ Verified |
 
 ### Phase 6: Parameter and Scenario Testing
 | Req ID | Requirement | Implementation Artifacts | Test & Verification Evidence | Status |

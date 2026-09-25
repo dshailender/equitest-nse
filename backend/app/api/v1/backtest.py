@@ -107,11 +107,29 @@ def _execute_backtest_task(run_id: str, payload: dict) -> None:
                 if not df.empty:
                     prices[sym] = df
 
+            # Prepare dynamic point-in-time universe provider (AUD-C-002)
+            if symbols_requested:
+
+                def universe_provider(eval_date: str) -> tuple[list[str], bool]:
+                    return symbols_requested, False
+
+            else:
+
+                def universe_provider(eval_date: str) -> tuple[list[str], bool]:
+                    tickers, bias, _ = get_universe(
+                        date=eval_date,
+                        session=session,
+                        start_rank=strat_config.universe_start_rank,
+                        end_rank=strat_config.universe_end_rank,
+                    )
+                    return tickers, bias
+
             # Run backtest
             backtest = Backtest(
                 config=strat_config,
                 prices=prices,
                 nifty=nifty_df,
+                universe_provider=universe_provider,
             )
             result = backtest.run(start=req.start, end=req.end)
 
