@@ -76,18 +76,14 @@ def _execute_backtest_task(run_id: str, payload: dict) -> None:
             if symbols_requested:
                 symbols_to_load = symbols_requested
             else:
-                tiny_dir = repo_root / "data" / "fixtures" / "tiny_universe"
-                if (tiny_dir / "ALPHA.parquet").exists():
-                    symbols_to_load = ["ALPHA", "BETA", "GAMMA"]
-                else:
-                    eval_date = req.start or "2022-01-01"
-                    tickers, _, _ = get_universe(
-                        date=eval_date,
-                        session=session,
-                        start_rank=strat_config.universe_start_rank,
-                        end_rank=strat_config.universe_end_rank,
-                    )
-                    symbols_to_load = tickers[:50]  # Cap for responsive simulation
+                eval_date = req.start or "2022-01-01"
+                tickers, _, _ = get_universe(
+                    date=eval_date,
+                    session=session,
+                    start_rank=strat_config.universe_start_rank,
+                    end_rank=strat_config.universe_end_rank,
+                )
+                symbols_to_load = tickers
 
             # If targeting tiny_universe symbols or benchmark empty, check fixture
             is_tiny = any(s in ("ALPHA", "BETA", "GAMMA") for s in symbols_to_load)

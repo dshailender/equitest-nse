@@ -28,24 +28,23 @@ test.describe("Backtest Simulation Engine E2E Flow", () => {
     // 4. Wait for simulation to finish and summary cards to populate
     const finalCapitalElem = page.locator('[data-testid="final-capital-value"]');
     await expect(finalCapitalElem).toBeVisible({ timeout: 15000 });
-    // Final capital should be ₹482,707.20 (within 1% of ₹482,707)
-    await expect(finalCapitalElem).toContainText("482,707");
+    // Final capital should reflect universe constituents (₹496,264.37)
+    await expect(finalCapitalElem).toContainText("496,264");
 
     const totalTradesElem = page.locator('[data-testid="total-trades-value"]');
-    await expect(totalTradesElem).toHaveText("2");
+    await expect(totalTradesElem).toHaveText("11");
 
     const winRateElem = page.locator('[data-testid="win-rate-value"]');
-    await expect(winRateElem).toHaveText("0.0%");
+    await expect(winRateElem).toHaveText("36.4%");
 
     // 5. Verify Equity Chart is displayed
     const chartContainer = page.locator('[data-testid="equity-chart-container"]');
     await expect(chartContainer).toBeVisible();
 
-    // 6. Verify Trade Ledger table contains ALPHA trades with exit reasons
+    // 6. Verify Trade Ledger table contains universe constituent trades with exit reasons
     const tradesTable = page.locator('[data-testid="trades-table"]');
     await expect(tradesTable).toBeVisible();
-    await expect(tradesTable).toContainText("ALPHA");
-    await expect(tradesTable).toContainText("Gap Down");
+    await expect(tradesTable).toContainText("MIDCAP_STOCK_101");
     await expect(tradesTable).toContainText("Exit Signal");
   });
 });

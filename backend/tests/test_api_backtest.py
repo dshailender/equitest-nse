@@ -85,7 +85,7 @@ def test_api_backtest_not_found(client):
 
 
 def test_api_backtest_default_symbols(client):
-    """POST /api/v1/backtest/run without explicit symbols defaults to tiny universe."""
+    """POST /api/v1/backtest/run without symbols resolves universe constituents."""
     payload = {
         "start": "2020-06-01",
         "end": "2022-04-29",
@@ -95,4 +95,29 @@ def test_api_backtest_default_symbols(client):
     run_id = post_res.json()["run_id"]
     st = client.get(f"/api/v1/backtest/{run_id}").json()
     assert st["status"] == "completed"
-    assert st["final_capital"] == 482707.20
+    assert st["final_capital"] == 496264.37
+
+    # Verify trades ledger contains universe constituents and not ALPHA/BETA/GAMMA
+    trades_res = client.get(f"/api/v1/backtest/{run_id}/trades")
+    assert trades_res.status_code == 200
+    trades_data = trades_res.json()
+    symbols_traded = {t["symbol"] for t in trades_data["trades"]}
+    assert "ALPHA" not in symbols_traded
+    assert "BETA" not in symbols_traded
+    assert "GAMMA" not in symbols_traded
+
+
+def test_api_backtest_default_parameters_resolves_universe(client):
+    """POST /api/v1/backtest/run with empty payload resolves universe."""
+    post_res = client.post("/api/v1/backtest/run", json={})
+    assert post_res.status_code == 202
+    run_id = post_res.json()["run_id"]
+    st = client.get(f"/api/v1/backtest/{run_id}").json()
+    assert st["status"] == "completed"
+    trades_res = client.get(f"/api/v1/backtest/{run_id}/trades")
+    assert trades_res.status_code == 200
+    trades_data = trades_res.json()
+    symbols_traded = {t["symbol"] for t in trades_data["trades"]}
+    assert "ALPHA" not in symbols_traded
+    assert "BETA" not in symbols_traded
+    assert "GAMMA" not in symbols_traded

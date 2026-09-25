@@ -38,19 +38,18 @@ test.describe("Institutional Acceptance Suite (REQ-8.5)", () => {
     // Verify baseline results
     const finalCapitalElem = page.locator('[data-testid="final-capital-value"]');
     await expect(finalCapitalElem).toBeVisible({ timeout: 25000 });
-    await expect(finalCapitalElem).toContainText("482,707");
+    await expect(finalCapitalElem).toContainText("496,264");
 
     const totalTradesElem = page.locator('[data-testid="total-trades-value"]');
-    await expect(totalTradesElem).toHaveText("2");
+    await expect(totalTradesElem).toHaveText("11");
 
     const winRateElem = page.locator('[data-testid="win-rate-value"]');
-    await expect(winRateElem).toHaveText("0.0%");
+    await expect(winRateElem).toHaveText("36.4%");
 
-    // Verify Trade Ledger contains ALPHA with overnight gap and exit signal
+    // Verify Trade Ledger contains universe constituent trades with exit signal
     const tradesTable = page.locator('[data-testid="trades-table"]');
     await expect(tradesTable).toBeVisible();
-    await expect(tradesTable).toContainText("ALPHA");
-    await expect(tradesTable).toContainText("Gap Down");
+    await expect(tradesTable).toContainText("MIDCAP_STOCK_101");
     await expect(tradesTable).toContainText("Exit Signal");
   });
 
@@ -124,8 +123,8 @@ test.describe("Institutional Acceptance Suite (REQ-8.5)", () => {
     await expect(page.locator("h1")).toContainText("Strategy Performance Report");
 
     // Verify KPI Cards
-    await expect(page.locator('[data-testid="metric-final-capital"]')).toContainText("482,707");
-    await expect(page.locator('[data-testid="metric-total-trades"]')).toHaveText("2");
+    await expect(page.locator('[data-testid="metric-final-capital"]')).toContainText("496,264");
+    await expect(page.locator('[data-testid="metric-total-trades"]')).toHaveText("11");
     await expect(page.locator('[data-testid="metric-cagr"]')).toBeVisible();
     await expect(page.locator('[data-testid="metric-max-drawdown"]')).toBeVisible();
     await expect(page.locator('[data-testid="metric-sharpe"]')).toBeVisible();
