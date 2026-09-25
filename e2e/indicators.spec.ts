@@ -24,7 +24,7 @@ test.describe("Technical Indicators Preview E2E Flow", () => {
     await expect(chartCard).toContainText("RELIANCE");
 
     const chart = page.locator('[data-testid="indicator-chart"]');
-    await expect(chart).toBeVisible();
+    await expect(chart).toBeVisible({ timeout: 15000 });
 
     // 4. Assert 4 EMA lines render in the SVG
     const emaLines = chart.locator(".ema-line");

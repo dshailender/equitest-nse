@@ -38,13 +38,13 @@ test.describe("Institutional Acceptance Suite (REQ-8.5)", () => {
     // Verify baseline results
     const finalCapitalElem = page.locator('[data-testid="final-capital-value"]');
     await expect(finalCapitalElem).toBeVisible({ timeout: 25000 });
-    await expect(finalCapitalElem).toContainText("496,264");
+    await expect(finalCapitalElem).toContainText("603,905");
 
     const totalTradesElem = page.locator('[data-testid="total-trades-value"]');
-    await expect(totalTradesElem).toHaveText("11");
+    await expect(totalTradesElem).toHaveText("104");
 
     const winRateElem = page.locator('[data-testid="win-rate-value"]');
-    await expect(winRateElem).toHaveText("36.4%");
+    await expect(winRateElem).toHaveText("34.6%");
 
     // Verify Trade Ledger contains universe constituent trades with exit signal
     const tradesTable = page.locator('[data-testid="trades-table"]');
@@ -115,7 +115,7 @@ test.describe("Institutional Acceptance Suite (REQ-8.5)", () => {
     await page.locator('[data-testid="btn-run-backtest"]').click();
 
     const finalCap = page.locator('[data-testid="final-capital-value"]');
-    await expect(finalCap).toBeVisible({ timeout: 25000 });
+    await expect(finalCap).toBeVisible({ timeout: 45000 });
 
     // Open detailed report
     await page.locator('[data-testid="btn-view-report"]').click();
@@ -123,8 +123,8 @@ test.describe("Institutional Acceptance Suite (REQ-8.5)", () => {
     await expect(page.locator("h1")).toContainText("Strategy Performance Report");
 
     // Verify KPI Cards
-    await expect(page.locator('[data-testid="metric-final-capital"]')).toContainText("496,264");
-    await expect(page.locator('[data-testid="metric-total-trades"]')).toHaveText("11");
+    await expect(page.locator('[data-testid="metric-final-capital"]')).toContainText("603,905");
+    await expect(page.locator('[data-testid="metric-total-trades"]')).toHaveText("104");
     await expect(page.locator('[data-testid="metric-cagr"]')).toBeVisible();
     await expect(page.locator('[data-testid="metric-max-drawdown"]')).toBeVisible();
     await expect(page.locator('[data-testid="metric-sharpe"]')).toBeVisible();

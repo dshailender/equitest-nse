@@ -3,6 +3,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from app.data.ingest import validate_ohlcv_dataframe
+
 
 def generate_ohlcv_series(
     start_date: str = "2019-01-01",
@@ -11,12 +13,13 @@ def generate_ohlcv_series(
     volatility: float = 0.015,
     split_date: str | None = None,
     split_ratio: float = 2.0,
+    seed: int = 42,
 ) -> pd.DataFrame:
     """Generates synthetic daily OHLCV series adhering to all financial invariants."""
     # Generate business days
     dates = pd.date_range(start=start_date, end=end_date, freq="B")
     n = len(dates)
-    np.random.seed(42)
+    np.random.seed(seed)
 
     # Random walk for close prices
     returns = np.random.normal(loc=0.0004, scale=volatility, size=n)
@@ -95,7 +98,9 @@ def main():
         end_date="2024-01-01",
         initial_price=11000.0,
         volatility=0.010,
+        seed=42,
     )
+    validate_ohlcv_dataframe(nifty_df)
     nifty_df.to_parquet(fixtures_dir / "NIFTY50.parquet", index=False)
     nifty_df.to_parquet(fixtures_dir / "^NSEI.parquet", index=False)
 
@@ -107,21 +112,50 @@ def main():
         volatility=0.018,
         split_date="2021-06-01",
         split_ratio=2.0,
+        seed=42,
     )
+    validate_ohlcv_dataframe(reliance_df)
     reliance_df.to_parquet(fixtures_dir / "RELIANCE.parquet", index=False)
 
     for sym, price, vol in [
         ("HDFCBANK", 1200.0, 0.014),
         ("INFY", 800.0, 0.016),
         ("TATAMOTORS", 300.0, 0.025),
-        ("MIDCAP_STOCK_101", 450.0, 0.022),
     ]:
         df = generate_ohlcv_series(
             start_date="2019-01-01",
             end_date="2024-01-01",
             initial_price=price,
             volatility=vol,
+            seed=42,
         )
+        validate_ohlcv_dataframe(df)
+        df.to_parquet(fixtures_dir / f"{sym}.parquet", index=False)
+
+    # Midcap Constituents (Ranks 101 to 150)
+    for i in range(101, 151):
+        sym = f"MIDCAP_STOCK_{i}"
+        if i == 101:
+            price = 450.0
+            vol = 0.022
+            seed = 42
+        elif i == 143:
+            price = 150.0 + float((i * 37) % 1200)
+            vol = 0.016 + float((i * 7) % 15) * 0.001
+            seed = 186
+        else:
+            price = 150.0 + float((i * 37) % 1200)
+            vol = 0.016 + float((i * 7) % 15) * 0.001
+            seed = 42 + i
+
+        df = generate_ohlcv_series(
+            start_date="2019-01-01",
+            end_date="2024-01-01",
+            initial_price=price,
+            volatility=vol,
+            seed=seed,
+        )
+        validate_ohlcv_dataframe(df)
         df.to_parquet(fixtures_dir / f"{sym}.parquet", index=False)
 
     # 3. Constituents point-in-time

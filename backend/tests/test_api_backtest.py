@@ -95,13 +95,16 @@ def test_api_backtest_default_symbols(client):
     run_id = post_res.json()["run_id"]
     st = client.get(f"/api/v1/backtest/{run_id}").json()
     assert st["status"] == "completed"
-    assert st["final_capital"] == 496264.37
+    assert st["final_capital"] == 603905.46
+    assert st["total_trades"] == 104
 
     # Verify trades ledger contains universe constituents and not ALPHA/BETA/GAMMA
     trades_res = client.get(f"/api/v1/backtest/{run_id}/trades")
     assert trades_res.status_code == 200
     trades_data = trades_res.json()
     symbols_traded = {t["symbol"] for t in trades_data["trades"]}
+    assert len(symbols_traded) > 10
+    assert "MIDCAP_STOCK_101" in symbols_traded
     assert "ALPHA" not in symbols_traded
     assert "BETA" not in symbols_traded
     assert "GAMMA" not in symbols_traded
@@ -121,3 +124,40 @@ def test_api_backtest_default_parameters_resolves_universe(client):
     assert "ALPHA" not in symbols_traded
     assert "BETA" not in symbols_traded
     assert "GAMMA" not in symbols_traded
+
+
+def test_api_backtest_multi_symbol_fixture_execution(client):
+    """AUD-A-003: data/fixtures contains multiple midcap constituents and trades
+    diverse midcap stocks.
+    """
+    from pathlib import Path
+
+    repo_root = Path(__file__).resolve().parents[2]
+    fixtures_dir = repo_root / "data" / "fixtures"
+
+    # 1. Verify data/fixtures contains OHLCV parquet files for multiple constituents
+    midcap_files = list(fixtures_dir.glob("MIDCAP_STOCK_*.parquet"))
+    assert (
+        len(midcap_files) >= 20
+    ), f"Expected at least 20 midcap fixtures, found {len(midcap_files)}"
+
+    # 2. Run backtest with default parameters and verify trades across diverse stocks
+    payload = {
+        "start": "2020-06-01",
+        "end": "2022-04-29",
+    }
+    post_res = client.post("/api/v1/backtest/run", json=payload)
+    assert post_res.status_code == 202
+    run_id = post_res.json()["run_id"]
+
+    trades_res = client.get(f"/api/v1/backtest/{run_id}/trades")
+    assert trades_res.status_code == 200
+    trades_data = trades_res.json()
+
+    assert trades_data["count"] > 20
+    symbols_traded = {t["symbol"] for t in trades_data["trades"]}
+    # Diverse midcap stocks must have executed trades
+    assert (
+        len(symbols_traded) >= 15
+    ), f"Expected >= 15 diverse symbols traded, got {len(symbols_traded)}"
+    assert all(s.startswith("MIDCAP_STOCK_") for s in symbols_traded)

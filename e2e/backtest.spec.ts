@@ -28,14 +28,14 @@ test.describe("Backtest Simulation Engine E2E Flow", () => {
     // 4. Wait for simulation to finish and summary cards to populate
     const finalCapitalElem = page.locator('[data-testid="final-capital-value"]');
     await expect(finalCapitalElem).toBeVisible({ timeout: 15000 });
-    // Final capital should reflect universe constituents (₹496,264.37)
-    await expect(finalCapitalElem).toContainText("496,264");
+    // Final capital should reflect universe constituents (₹603,905.46)
+    await expect(finalCapitalElem).toContainText("603,905");
 
     const totalTradesElem = page.locator('[data-testid="total-trades-value"]');
-    await expect(totalTradesElem).toHaveText("11");
+    await expect(totalTradesElem).toHaveText("104");
 
     const winRateElem = page.locator('[data-testid="win-rate-value"]');
-    await expect(winRateElem).toHaveText("36.4%");
+    await expect(winRateElem).toHaveText("34.6%");
 
     // 5. Verify Equity Chart is displayed
     const chartContainer = page.locator('[data-testid="equity-chart-container"]');

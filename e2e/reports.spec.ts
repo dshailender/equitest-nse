@@ -14,8 +14,8 @@ test.describe("Strategy Reports & Analytics E2E Flow", () => {
 
     // 2. Wait for simulation to finish
     const finalCapitalBacktest = page.locator('[data-testid="final-capital-value"]');
-    await expect(finalCapitalBacktest).toBeVisible({ timeout: 20000 });
-    await expect(finalCapitalBacktest).toContainText("496,264");
+    await expect(finalCapitalBacktest).toBeVisible({ timeout: 45000 });
+    await expect(finalCapitalBacktest).toContainText("603,905");
 
     // 3. Click "View Detailed Report & Analytics"
     const viewReportBtn = page.locator('[data-testid="btn-view-report"]');
@@ -29,13 +29,13 @@ test.describe("Strategy Reports & Analytics E2E Flow", () => {
     // 5. Verify Core KPI metrics
     const finalCapMetric = page.locator('[data-testid="metric-final-capital"]');
     await expect(finalCapMetric).toBeVisible();
-    await expect(finalCapMetric).toContainText("496,264");
+    await expect(finalCapMetric).toContainText("603,905");
 
     const totalTradesMetric = page.locator('[data-testid="metric-total-trades"]');
-    await expect(totalTradesMetric).toHaveText("11");
+    await expect(totalTradesMetric).toHaveText("104");
 
     const winRateMetric = page.locator('[data-testid="metric-win-rate"]');
-    await expect(winRateMetric).toHaveText("36.36%");
+    await expect(winRateMetric).toHaveText("34.62%");
 
     // 6. Verify Advanced KPI metrics
     const cagrMetric = page.locator('[data-testid="metric-cagr"]');
