@@ -6,6 +6,7 @@ import pandas as pd
 import pytest
 
 from app.engine.backtest import Backtest
+from app.engine.result import BacktestResult
 from app.risk.slippage import apply_costs
 from app.strategy.config import StrategyConfig
 
@@ -121,3 +122,60 @@ def test_order_execution_strictly_at_market_open_with_costs(tiny_universe_data):
     t2 = result.trades.iloc[1]
     assert t2["exit_price"] == expected_exit
     assert t2["exit_price"] != exit_row["close"]
+
+
+def test_backtest_date_truncation_warning_and_cagr_10y(tiny_universe_data):
+    """Requesting 10y horizon earlier than coverage generates warnings and CAGR."""
+    prices, nifty = tiny_universe_data
+    engine = Backtest(config=StrategyConfig(), prices=prices, nifty=nifty)
+    result = engine.run(start="2014-01-01", end="2024-01-01")
+
+    # Verify warnings are present
+    assert len(result.warnings) >= 1
+    assert any("earlier than earliest available data" in w for w in result.warnings)
+    assert any("annualized over full requested period" in w for w in result.warnings)
+
+    # Verify CAGR uses 10-year horizon (~10 years), not 500-day 2-year horizon (-0.0183)
+    assert result.cagr != -0.0183
+    assert result.cagr == pytest.approx(-0.0037, abs=0.0005)
+    assert result.summary()["warnings"] == result.warnings
+
+
+def test_backtest_date_truncation_warning_and_cagr_15y(tiny_universe_data):
+    """Requesting 15y horizon earlier than coverage differentiates CAGR from 10y."""
+    prices, nifty = tiny_universe_data
+    engine = Backtest(config=StrategyConfig(), prices=prices, nifty=nifty)
+    result_15y = engine.run(start="2009-01-01", end="2024-01-01")
+    result_10y = engine.run(start="2014-01-01", end="2024-01-01")
+
+    assert len(result_15y.warnings) >= 1
+    # 15y CAGR must be distinct from 10y CAGR and distinct from 2y unadjusted CAGR
+    assert result_15y.cagr != result_10y.cagr
+    assert result_15y.cagr != -0.0183
+    assert result_15y.cagr == pytest.approx(-0.0024, abs=0.0005)
+
+
+def test_backtest_no_truncation_warning_within_coverage(tiny_universe_data):
+    """Running within coverage produces no truncation warnings."""
+    prices, nifty = tiny_universe_data
+    engine = Backtest(config=StrategyConfig(), prices=prices, nifty=nifty)
+    result = engine.run(start="2020-06-01", end="2021-12-31")
+
+    assert result.warnings == []
+    assert result.summary()["warnings"] == []
+
+
+def test_backtest_result_warnings_serialization(tmp_path, tiny_universe_data):
+    """BacktestResult preserves warnings across JSON save and load cycle."""
+    prices, nifty = tiny_universe_data
+    engine = Backtest(config=StrategyConfig(), prices=prices, nifty=nifty)
+    result = engine.run(start="2014-01-01", end="2024-01-01")
+    assert len(result.warnings) > 0
+
+    save_path = tmp_path / "result_with_warnings.json"
+    result.save(save_path)
+
+    loaded = BacktestResult.load(save_path)
+    assert loaded.warnings == result.warnings
+    assert loaded.cagr == result.cagr
+    assert loaded.summary()["warnings"] == result.warnings

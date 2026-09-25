@@ -19,6 +19,7 @@ class BacktestResult:
     rejections: list[dict[str, Any]] = field(default_factory=list)
     open_positions: list[dict[str, Any]] = field(default_factory=list)
     initial_capital: float = 500000.0
+    warnings: list[str] = field(default_factory=list)
 
     @property
     def final_capital(self) -> float:
@@ -110,6 +111,20 @@ class BacktestResult:
             try:
                 start_dt = pd.to_datetime(self.equity_curve["date"].iloc[0])
                 end_dt = pd.to_datetime(self.equity_curve["date"].iloc[-1])
+
+                # When user requested a wider period than available data coverage,
+                # annualize CAGR over the user-requested horizon
+                req_start = self.period.get("start")
+                req_end = self.period.get("end")
+                if req_start:
+                    parsed_req_start = pd.to_datetime(req_start)
+                    if parsed_req_start < start_dt:
+                        start_dt = parsed_req_start
+                if req_end:
+                    parsed_req_end = pd.to_datetime(req_end)
+                    if parsed_req_end > end_dt:
+                        end_dt = parsed_req_end
+
                 days = (end_dt - start_dt).days
                 if days > 0:
                     years = days / 365.25
@@ -138,6 +153,7 @@ class BacktestResult:
             "max_drawdown": self.max_drawdown,
             "max_drawdown_pct": self.max_drawdown_pct,
             "period": self.period,
+            "warnings": self.warnings,
         }
 
     def to_dict(self) -> dict[str, Any]:
@@ -158,6 +174,7 @@ class BacktestResult:
             "equity_curve": equity_list,
             "rejections": self.rejections,
             "open_positions": self.open_positions,
+            "warnings": self.warnings,
         }
 
     def to_json(self, indent: int = 2) -> str:
@@ -182,6 +199,7 @@ class BacktestResult:
         equity_df = pd.DataFrame(data.get("equity_curve", []))
         summary = data.get("summary", {})
         init_cap = float(summary.get("initial_capital", 500000.0))
+        warnings = data.get("warnings") or summary.get("warnings", [])
 
         return cls(
             trades=trades_df,
@@ -191,4 +209,5 @@ class BacktestResult:
             rejections=data.get("rejections", []),
             open_positions=data.get("open_positions", []),
             initial_capital=init_cap,
+            warnings=warnings,
         )

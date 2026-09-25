@@ -67,6 +67,7 @@ This document tracks requirement implementation, validation status, and associat
 | **REQ-5.3** | Capital Constraints, Ranking Rule & Rejections | `backend/app/engine/backtest.py::DefaultRanker`, `docs/ASSUMPTIONS.md` | `backend/tests/test_engine_constraints.py` (Concurrent position rejection logging, momentum sorting rule, pluggable Ranker protocol) | ✅ Verified |
 | **REQ-5.4** | Persistence, REST API & Backtest Dashboard | `backend/app/api/v1/backtest.py`, `backend/app/db/models.py`, `frontend/app/backtest/page.tsx`, `frontend/lib/api.ts` | `backend/tests/test_api_backtest.py`, `frontend/tests/backtest.test.tsx`, `e2e/backtest.spec.ts` | ✅ Verified |
 | **AUD-A-001** | Universe Constituents Default (NSE 101–750 instead of synthetic mock) | `backend/app/api/v1/backtest.py` | `backend/tests/test_api_backtest.py::test_api_backtest_default_symbols`, `test_api_backtest_default_parameters_resolves_universe`, `e2e/backtest.spec.ts` | ✅ Verified |
+| **AUD-A-002** | Prevent Silent Truncation of Multi-Year Backtest Date Ranges & Adjust CAGR | `backend/app/engine/backtest.py`, `backend/app/engine/result.py` | `backend/tests/test_engine_execution.py::test_backtest_date_truncation_warning_and_cagr_10y`, `test_backtest_date_truncation_warning_and_cagr_15y`, `test_backtest_no_truncation_warning_within_coverage`, `test_backtest_result_warnings_serialization` | ✅ Verified |
 
 ### Phase 6: Parameter and Scenario Testing
 | Req ID | Requirement | Implementation Artifacts | Test & Verification Evidence | Status |

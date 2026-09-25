@@ -251,6 +251,29 @@ class Backtest:
             if (start is None or d >= start) and (end is None or d <= end)
         ]
 
+        warnings: list[str] = []
+        if sorted_all_dates:
+            earliest_data = sorted_all_dates[0]
+            latest_data = sorted_all_dates[-1]
+            if start is not None and start < earliest_data:
+                warnings.append(
+                    f"Requested start date '{start}' is earlier than earliest "
+                    f"available data '{earliest_data}'. Simulation truncated to "
+                    f"available data; CAGR annualized over full requested period."
+                )
+            if end is not None and end > latest_data:
+                warnings.append(
+                    f"Requested end date '{end}' is later than latest "
+                    f"available data '{latest_data}'. Simulation truncated to "
+                    f"available data; CAGR annualized over full requested period."
+                )
+        if not trading_days and sorted_all_dates:
+            warnings.append(
+                f"No trading days found in requested range [{start}, {end}]. "
+                f"Available data coverage: "
+                f"[{sorted_all_dates[0]}, {sorted_all_dates[-1]}]."
+            )
+
         # Simulation state
         initial_corpus = float(self.config.corpus)
         cash: float = initial_corpus
@@ -548,4 +571,5 @@ class Backtest:
             rejections=rejections,
             open_positions=open_positions_list,
             initial_capital=initial_corpus,
+            warnings=warnings,
         )
