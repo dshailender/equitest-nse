@@ -267,7 +267,7 @@ export default function SweepPage() {
       )}
 
       {/* Grid Builder & Base Config Card */}
-      <div className="p-6 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm space-y-6">
+      <div className="p-4 sm:p-6 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm space-y-6">
         <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
           Dynamic Parameter Grid Builder
         </h2>
@@ -314,13 +314,13 @@ export default function SweepPage() {
 
         {/* Dynamic Grid Rows */}
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">
               Swept Factors & Candidate Values
             </span>
-            <div className="flex items-center space-x-2">
+            <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
               <select
-                className="text-xs px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800"
+                className="text-xs px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 w-full sm:w-auto max-w-full"
                 value={selectedParamToAdd}
                 onChange={(e) => setSelectedParamToAdd(e.target.value)}
               >
@@ -333,7 +333,7 @@ export default function SweepPage() {
               <button
                 type="button"
                 onClick={handleAddParam}
-                className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors"
+                className="w-full sm:w-auto text-center px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors"
               >
                 + Add Factor
               </button>
@@ -346,7 +346,7 @@ export default function SweepPage() {
                 key={entry.param}
                 className="p-3.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
               >
-                <div className="flex items-center space-x-3">
+                <div className="flex flex-wrap items-center gap-2">
                   <span className="font-mono text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-2 py-1 rounded">
                     {entry.param}
                   </span>
@@ -372,7 +372,7 @@ export default function SweepPage() {
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <input
                     type="text"
                     placeholder="Add value..."

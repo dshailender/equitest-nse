@@ -100,6 +100,7 @@ This document tracks requirement implementation, validation status, and associat
 | **REQ-8.3** | Production Multi-Stage Containerization & Compose | `backend/Dockerfile`, `frontend/Dockerfile`, `docker-compose.prod.yml` | Multi-stage build stages, non-root users (`appuser:1001`, `nextjs:1001`), curl healthcheck validation, `docker compose config` syntax verification | ✅ Verified |
 | **REQ-8.4** | Institutional Documentation Hub & In-App Viewer | `docs/ARCHITECTURE.md`, `docs/STRATEGY.md`, `docs/ASSUMPTIONS.md`, `docs/RUNBOOK.md`, `frontend/app/docs/page.tsx` | `frontend/tests/docs.test.tsx` (2 tests passing), in-app tabbed viewer across all sections, PRD §4 Open Questions and 5-step parameter walkthrough verified | ✅ Verified |
 | **REQ-8.5** | Full End-to-End Acceptance Suite & Traceability | `e2e/acceptance.spec.ts`, `TRACEABILITY.md`, `README.md` | `e2e/acceptance.spec.ts` (7 end-to-end acceptance tests verifying health, baseline backtest, extended runs, sweeps, reports, audit, TradingView diff, docs), 100% CI pass | ✅ Verified |
+| **AUD-D-001** | Mobile and Tablet Responsive Layout (Zero Horizontal Overflow at 375px & 768px) | `frontend/components/Navbar.tsx`, `frontend/app/layout.tsx`, `frontend/app/validation/page.tsx`, `frontend/app/sweep/page.tsx` | `e2e/responsive.spec.ts` (23 tests passing verifying zero horizontal overflow across all 11 routes and hamburger menu toggle) | ✅ Verified |
 
 ### Phase 9: PDF Report Export
 | Req ID | Requirement | Implementation Artifacts | Test & Verification Evidence | Status |

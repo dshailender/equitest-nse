@@ -115,7 +115,7 @@ export default function ValidationPage() {
 
       {/* Control Form */}
       <div className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-end">
           {/* Run Selection */}
           <div>
             <label htmlFor="run-select" className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">
@@ -165,7 +165,7 @@ export default function ValidationPage() {
           </div>
 
           {/* Quick Select Buttons */}
-          <div className="flex items-center gap-1.5">
+          <div className="flex flex-wrap items-center gap-1.5">
             {PRESET_SYMBOLS.map((sym) => (
               <button
                 key={sym}
@@ -187,7 +187,7 @@ export default function ValidationPage() {
         </div>
 
         {/* Filter Toggle */}
-        <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800 text-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800 text-sm">
           <label className="flex items-center gap-2 cursor-pointer text-slate-700 dark:text-slate-300 select-none">
             <input
               type="checkbox"
@@ -249,12 +249,12 @@ export default function ValidationPage() {
 
       {/* Cross-Check Data Table */}
       <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-        <div className="px-5 py-3.5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-          <div className="flex items-center gap-2">
+        <div className="px-5 py-3.5 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <span className="font-semibold text-sm text-slate-900 dark:text-slate-100">
               Cross-Check Series Table
             </span>
-            <span className="text-xs px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-mono">
+            <span className="text-xs px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-mono break-all">
               date,close,ema_20,ema_50,ema_150,ema_200,high_52w,entry,exit
             </span>
           </div>
