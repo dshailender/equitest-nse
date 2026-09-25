@@ -76,5 +76,46 @@ describe("DataStatusPage Component", () => {
       expect(screen.queryByTestId("universe-clean-badge")).not.toBeInTheDocument();
     });
   });
+
+  it("renders universe constituents table with company names, search, and pagination (AUD-B-001)", async () => {
+    render(
+      <Providers>
+        <DataStatusPage />
+      </Providers>
+    );
+
+    // Wait for universe table and constituents
+    await waitFor(() => {
+      expect(screen.getByTestId("universe-table")).toBeInTheDocument();
+      expect(screen.getByTestId("universe-row-MIDCAP_101")).toBeInTheDocument();
+    });
+
+    // Check company name, rank, and sector display
+    const row1 = screen.getByTestId("universe-row-MIDCAP_101");
+    expect(row1).toHaveTextContent("MIDCAP_101");
+    expect(row1).toHaveTextContent("Midcap Stock 101 Ltd");
+    expect(row1).toHaveTextContent("#101");
+    expect(row1).toHaveTextContent("Capital Goods");
+
+    // Search for a specific company name
+    const searchInput = screen.getByTestId("universe-search-input");
+    fireEvent.change(searchInput, { target: { value: "Stock 102" } });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("universe-row-MIDCAP_102")).toBeInTheDocument();
+      expect(screen.getByText("Midcap Stock 102 Ltd")).toBeInTheDocument();
+      expect(screen.queryByTestId("universe-row-MIDCAP_101")).not.toBeInTheDocument();
+    });
+
+    // Clear search filter
+    fireEvent.change(searchInput, { target: { value: "" } });
+    await waitFor(() => {
+      expect(screen.getByTestId("universe-row-MIDCAP_101")).toBeInTheDocument();
+    });
+
+    // Check pagination controls exist
+    expect(screen.getByTestId("universe-prev")).toBeInTheDocument();
+    expect(screen.getByTestId("universe-next")).toBeInTheDocument();
+  });
 });
 

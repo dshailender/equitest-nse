@@ -34,6 +34,7 @@ This document tracks requirement implementation, validation status, and associat
 | **REQ-1.1** | Universe Selection (NSE 101–750) | `backend/app/data/universe.py`, `data/fixtures/constituents.parquet` | `backend/tests/test_universe.py::test_universe_with_point_in_time_fixture` | ✅ Verified |
 | **REQ-1.2** | Base Data Ingestion (OHLCV) | `backend/app/data/ingest.py`, `backend/app/data/source.py` | `backend/tests/test_ingest.py`, `backend/tests/test_data_source.py` | ✅ Verified |
 | **REQ-1.3** | NIFTY Benchmark Ingestion | `backend/app/data/source.py`, `data/fixtures/NIFTY50.parquet` | `backend/tests/test_ingest.py`, `backend/tests/test_data_source.py` | ✅ Verified |
+| **AUD-B-001** | Human-Readable Stock Names in Universe API & UI | `backend/app/data/universe.py`, `backend/app/api/v1/schemas.py`, `frontend/app/data/page.tsx` | `backend/tests/test_universe.py::test_universe_company_names_metadata`, `frontend/tests/data.test.tsx` | ✅ Verified |
 
 ### Phase 2: Indicator & Signal Engine
 | Req ID | Requirement | Implementation Artifacts | Test & Verification Evidence | Status |

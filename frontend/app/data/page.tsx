@@ -40,6 +40,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
+  ConstituentDetail,
   CoverageItem,
   fetchCoverage,
   fetchPrices,
@@ -109,6 +110,46 @@ export default function DataStatusPage() {
   );
   const totalPages = Math.max(1, Math.ceil(filteredCoverage.length / pageSize));
   const paginatedCoverage = filteredCoverage.slice((page - 1) * pageSize, page * pageSize);
+
+  // Universe pagination & filter state
+  const [universePage, setUniversePage] = React.useState(1);
+  const universePageSize = 5;
+  const [universeSearch, setUniverseSearch] = React.useState("");
+
+  // Filter & paginate universe constituents
+  const allUniverseDetails: ConstituentDetail[] = React.useMemo(() => {
+    if (universeQuery.data?.details && universeQuery.data.details.length > 0) {
+      return universeQuery.data.details;
+    }
+    return (universeQuery.data?.tickers || []).map((sym, idx) => ({
+      symbol: sym,
+      name: sym,
+      rank: 101 + idx,
+      sector: "Diversified",
+    }));
+  }, [universeQuery.data]);
+
+  const filteredUniverse = React.useMemo(() => {
+    const q = universeSearch.toLowerCase().trim();
+    if (!q) return allUniverseDetails;
+    return allUniverseDetails.filter(
+      (item) =>
+        item.symbol.toLowerCase().includes(q) ||
+        item.name.toLowerCase().includes(q) ||
+        item.sector.toLowerCase().includes(q) ||
+        String(item.rank).includes(q)
+    );
+  }, [allUniverseDetails, universeSearch]);
+
+  const universeTotalPages = Math.max(1, Math.ceil(filteredUniverse.length / universePageSize));
+  const paginatedUniverse = filteredUniverse.slice(
+    (universePage - 1) * universePageSize,
+    universePage * universePageSize
+  );
+
+  React.useEffect(() => {
+    setUniversePage(1);
+  }, [universeDate, universeSearch]);
 
   // Auto-select first symbol if none selected
   React.useEffect(() => {
@@ -393,27 +434,98 @@ export default function DataStatusPage() {
                   <span>Effective Date: <code className="font-mono">{universeQuery.data.date}</code></span>
                 </div>
 
+                <div className="relative">
+                  <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-slate-400" />
+                  <input
+                    type="text"
+                    data-testid="universe-search-input"
+                    placeholder="Search constituent by symbol, name, sector, or rank..."
+                    value={universeSearch}
+                    onChange={(e) => setUniverseSearch(e.target.value)}
+                    className="w-full pl-8 pr-3 py-1.5 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs"
+                  />
+                </div>
+
                 <div
                   data-testid="universe-tickers"
-                  className="max-h-60 overflow-y-auto p-3 rounded-md bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex flex-wrap gap-1.5"
+                  className="border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden"
                 >
-                  {universeQuery.data.tickers.map((sym, idx) => (
-                    <span
-                      key={sym}
-                      onClick={() => setSelectedSymbol(sym)}
-                      className="px-2 py-0.5 rounded text-xs font-mono bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 cursor-pointer transition-colors"
-                      title={`Rank ${101 + idx}`}
-                    >
-                      {sym}
-                    </span>
-                  ))}
+                  <table data-testid="universe-table" className="w-full text-xs text-left">
+                    <thead className="bg-slate-100 dark:bg-slate-800/60 font-semibold text-slate-600 dark:text-slate-300 border-b border-slate-200 dark:border-slate-800">
+                      <tr>
+                        <th className="py-2.5 px-3 w-16">Rank</th>
+                        <th className="py-2.5 px-3">Symbol</th>
+                        <th className="py-2.5 px-3">Company Name</th>
+                        <th className="py-2.5 px-3">Sector</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800/40">
+                      {paginatedUniverse.length === 0 ? (
+                        <tr>
+                          <td colSpan={4} className="py-6 text-center text-slate-400">
+                            No constituents match &ldquo;{universeSearch}&rdquo;
+                          </td>
+                        </tr>
+                      ) : (
+                        paginatedUniverse.map((item) => (
+                          <tr
+                            key={item.symbol}
+                            data-testid={`universe-row-${item.symbol}`}
+                            onClick={() => setSelectedSymbol(item.symbol)}
+                            className="hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition-colors"
+                          >
+                            <td className="py-2 px-3 font-mono font-medium text-slate-500">
+                              #{item.rank}
+                            </td>
+                            <td className="py-2 px-3">
+                              <span className="font-mono font-semibold text-blue-600 dark:text-blue-400">
+                                {item.symbol}
+                              </span>
+                            </td>
+                            <td className="py-2 px-3 font-medium text-slate-900 dark:text-slate-100">
+                              <span>{item.name}</span>
+                            </td>
+                            <td className="py-2 px-3">
+                              <Badge variant="secondary" className="text-[10px] font-normal">
+                                {item.sector}
+                              </Badge>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             )}
           </CardContent>
 
-          <CardFooter className="border-t border-slate-100 dark:border-slate-800 pt-3 text-xs text-slate-400">
-            Strategy trade universe exclusively selects stocks from this active list.
+          <CardFooter className="flex items-center justify-between border-t border-slate-100 dark:border-slate-800 pt-3">
+            <span className="text-xs text-slate-500">
+              Page {universePage} of {universeTotalPages} ({filteredUniverse.length} constituents)
+            </span>
+            <div className="flex items-center space-x-1">
+              <Button
+                variant="outline"
+                size="sm"
+                data-testid="universe-prev"
+                disabled={universePage <= 1}
+                onClick={() => setUniversePage((p) => Math.max(1, p - 1))}
+                className="h-7 px-2 text-xs"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                data-testid="universe-next"
+                disabled={universePage >= universeTotalPages}
+                onClick={() => setUniversePage((p) => Math.min(universeTotalPages, p + 1))}
+                className="h-7 px-2 text-xs"
+              >
+                <ChevronRight className="w-3.5 h-3.5" />
+              </Button>
+            </div>
           </CardFooter>
         </Card>
       </div>

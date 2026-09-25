@@ -30,6 +30,26 @@ export const mockUniverseClean = {
   date: "2022-01-01",
   count: 650,
   tickers: ["MIDCAP_101", "MIDCAP_102", "MIDCAP_103"],
+  details: [
+    {
+      symbol: "MIDCAP_101",
+      name: "Midcap Stock 101 Ltd",
+      rank: 101,
+      sector: "Capital Goods",
+    },
+    {
+      symbol: "MIDCAP_102",
+      name: "Midcap Stock 102 Ltd",
+      rank: 102,
+      sector: "Healthcare",
+    },
+    {
+      symbol: "MIDCAP_103",
+      name: "Midcap Stock 103 Ltd",
+      rank: 103,
+      sector: "Consumer Goods",
+    },
+  ],
   survivorship_bias: false,
 };
 
@@ -37,6 +57,20 @@ export const mockUniverseBiased = {
   date: "2010-01-01",
   count: 650,
   tickers: ["FALLBACK_101", "FALLBACK_102"],
+  details: [
+    {
+      symbol: "FALLBACK_101",
+      name: "Fallback Stock 101 Ltd",
+      rank: 101,
+      sector: "Diversified",
+    },
+    {
+      symbol: "FALLBACK_102",
+      name: "Fallback Stock 102 Ltd",
+      rank: 102,
+      sector: "Diversified",
+    },
+  ],
   survivorship_bias: true,
 };
 

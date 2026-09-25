@@ -42,6 +42,14 @@ async def test_api_data_lifecycle(async_client: AsyncClient):
     assert univ_data["count"] == 650
     assert len(univ_data["tickers"]) == 650
     assert univ_data["survivorship_bias"] is False
+    assert "details" in univ_data
+    assert len(univ_data["details"]) == 650
+    first_item = univ_data["details"][0]
+    assert "symbol" in first_item
+    assert "name" in first_item
+    assert "rank" in first_item
+    assert "sector" in first_item
+    assert isinstance(first_item["name"], str) and len(first_item["name"]) > 0
 
     # 6. Prices endpoint returns correct schema
     price_resp = await async_client.get("/api/v1/prices/RELIANCE")

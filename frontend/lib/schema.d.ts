@@ -1013,6 +1013,30 @@ export interface components {
              */
             avg_loss?: number | null;
         };
+        /** ConstituentDetail */
+        ConstituentDetail: {
+            /**
+             * Symbol
+             * @description Equity ticker symbol
+             */
+            symbol: string;
+            /**
+             * Name
+             * @description Human-readable company name
+             */
+            name: string;
+            /**
+             * Rank
+             * @description Market capitalization rank (101 to 750)
+             */
+            rank: number;
+            /**
+             * Sector
+             * @description Industry or sector classification
+             * @default Diversified
+             */
+            sector: string;
+        };
         /** CoverageItem */
         CoverageItem: {
             /**
@@ -2187,6 +2211,11 @@ export interface components {
              * @description List of ticker symbols belonging to the universe
              */
             tickers: string[];
+            /**
+             * Details
+             * @description Constituent stock metadata including company name, rank, and sector
+             */
+            details?: components["schemas"]["ConstituentDetail"][];
             /**
              * Survivorship Bias
              * @description True if fallback current list was used due to missing point-in-time constituent records

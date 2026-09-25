@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlmodel import Session, col, func, select
 
 from app.api.v1.schemas import (
+    ConstituentDetail,
     CoverageItem,
     CoverageResponse,
     IngestRequest,
@@ -92,11 +93,12 @@ def api_get_universe(
     session: Annotated[Session, Depends(get_session)] = None,
 ) -> UniverseResponse:
     target_date = date or datetime.now(UTC).strftime("%Y-%m-%d")
-    tickers, survivorship_bias, _ = get_universe(target_date, session=session)
+    tickers, survivorship_bias, details = get_universe(target_date, session=session)
     return UniverseResponse(
         date=target_date,
         count=len(tickers),
         tickers=tickers,
+        details=[ConstituentDetail(**d) for d in details],
         survivorship_bias=survivorship_bias,
     )
 

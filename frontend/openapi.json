@@ -2115,6 +2115,38 @@
         ],
         "title": "CompareMetricItem"
       },
+      "ConstituentDetail": {
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "title": "Symbol",
+            "description": "Equity ticker symbol"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Human-readable company name"
+          },
+          "rank": {
+            "type": "integer",
+            "title": "Rank",
+            "description": "Market capitalization rank (101 to 750)"
+          },
+          "sector": {
+            "type": "string",
+            "title": "Sector",
+            "description": "Industry or sector classification",
+            "default": "Diversified"
+          }
+        },
+        "type": "object",
+        "required": [
+          "symbol",
+          "name",
+          "rank"
+        ],
+        "title": "ConstituentDetail"
+      },
       "CoverageItem": {
         "properties": {
           "symbol": {
@@ -3980,6 +4012,14 @@
             "type": "array",
             "title": "Tickers",
             "description": "List of ticker symbols belonging to the universe"
+          },
+          "details": {
+            "items": {
+              "$ref": "#/components/schemas/ConstituentDetail"
+            },
+            "type": "array",
+            "title": "Details",
+            "description": "Constituent stock metadata including company name, rank, and sector"
           },
           "survivorship_bias": {
             "type": "boolean",

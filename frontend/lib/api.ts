@@ -43,10 +43,19 @@ export const CoverageResponseSchema = z.object({
 export type CoverageResponse = z.infer<typeof CoverageResponseSchema>;
 
 // --- Universe Schemas ---
+export const ConstituentDetailSchema = z.object({
+  symbol: z.string(),
+  name: z.string(),
+  rank: z.number(),
+  sector: z.string().default("Diversified"),
+});
+export type ConstituentDetail = z.infer<typeof ConstituentDetailSchema>;
+
 export const UniverseResponseSchema = z.object({
   date: z.string(),
   count: z.number(),
   tickers: z.array(z.string()),
+  details: z.array(ConstituentDetailSchema).default([]),
   survivorship_bias: z.boolean(),
 });
 export type UniverseResponse = z.infer<typeof UniverseResponseSchema>;

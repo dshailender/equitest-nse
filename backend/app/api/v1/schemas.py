@@ -54,6 +54,16 @@ class CoverageResponse(BaseModel):
     )
 
 
+class ConstituentDetail(BaseModel):
+    symbol: str = Field(..., description="Equity ticker symbol")
+    name: str = Field(..., description="Human-readable company name")
+    rank: int = Field(..., description="Market capitalization rank (101 to 750)")
+    sector: str = Field(
+        default="Diversified",
+        description="Industry or sector classification",
+    )
+
+
 class UniverseResponse(BaseModel):
     date: str = Field(
         ..., description="Target date for universe constituent evaluation"
@@ -63,6 +73,12 @@ class UniverseResponse(BaseModel):
     )
     tickers: list[str] = Field(
         ..., description="List of ticker symbols belonging to the universe"
+    )
+    details: list[ConstituentDetail] = Field(
+        default_factory=list,
+        description=(
+            "Constituent stock metadata including company name, rank, and sector"
+        ),
     )
     survivorship_bias: bool = Field(
         ...,

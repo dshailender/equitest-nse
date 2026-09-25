@@ -300,6 +300,29 @@ Audited SHA: 63a8154cade19039f9f7ce45c8ccedfaa0d8ba13
 
 ---
 
+### AUD-E-002
+- **ID**: AUD-E-002
+- **Title**: Concurrent parameter sweep execution across Playwright workers causes SQLite lock contention and test timeout
+- **Domain**: E
+- **Category**: Concurrency / Performance
+- **Severity**: Minor
+- **Reproducibility**: Intermittent (under 8-worker parallel E2E test runs)
+- **Description**: When Playwright executes the full 18-test E2E suite with 8 parallel workers, `acceptance.spec.ts` (test 4) and `sweep.spec.ts` trigger concurrent 2D parameter sweeps simultaneously against the single background FastAPI instance backed by SQLite. Under heavy disk I/O and synchronous database writes, job completion polling occasionally exceeds the 45-second test locator timeout.
+- **Expected**: Concurrent sweeps should execute reliably or Playwright sweep tests should be isolated / backend should configure WAL mode and busy timeout for SQLite.
+- **Actual**: Intermittent timeout waiting for `text=Sweep Status: completed` when multiple sweep test suites run concurrently.
+- **Evidence**:
+  - `docs/audits/evidence/preflight-2026-09-25.txt`
+- **Suspected root cause**: SQLite default busy timeout and default rollback journal mode under concurrent background threads.
+- **Suggested fix**: Enable SQLite WAL mode (`PRAGMA journal_mode=WAL;`), configure `timeout=30.0` on SQLite engine connection, or serialize sweep tests in Playwright config.
+- **Acceptance criteria**:
+  - 8-worker Playwright E2E suite passes reliably without parameter sweep locator timeouts.
+- **Suggested conversation**: Phase 6 / 8 performance tuning
+- **Effort**: S
+- **Blocks**: None
+- **Blocked by**: None
+
+---
+
 ### AUD-F-001
 - **ID**: AUD-F-001
 - **Title**: YFinanceSource lacks get_coverage() implementation causing AttributeError when switched

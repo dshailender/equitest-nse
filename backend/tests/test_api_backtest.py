@@ -217,4 +217,3 @@ def test_api_backtest_pre_2020_fallback_execution(client):
     assert equity_res.status_code == 200
     eq_data = equity_res.json()
     assert eq_data["count"] > 200
-
