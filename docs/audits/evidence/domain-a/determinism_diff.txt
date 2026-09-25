@@ -1,0 +1,5 @@
+=== DETERMINISM ASSERTION BETWEEN RUN 1 AND RUN 2 ===
+Run 1 ID: run_36f96ad78102 | Final Capital: 482707.2 | Trades: 2
+Run 2 ID: run_a8e247a79039 | Final Capital: 482707.2 | Trades: 2
+Trades list byte-for-byte identical: True
+Equity curve points identical: True

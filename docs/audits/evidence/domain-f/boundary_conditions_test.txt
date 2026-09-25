@@ -1,0 +1,4 @@
+=== BOUNDARY CONDITIONS TEST ===
+(a) Single symbol run: trades=2, status=success
+(b) Single day run: trades=0, status=success
+(c) Sunday start/end: trades=0, equity points=0

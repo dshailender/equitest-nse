@@ -1,0 +1,142 @@
+=== FRONTEND RESPONSIVE OVERFLOW AUDIT ===
+Total overflow issues: 18
+[OVERFLOW] data at 375px: scrollWidth 892 > innerWidth 375 (diff +517px)
+[OVERFLOW] indicators at 375px: scrollWidth 892 > innerWidth 375 (diff +517px)
+[OVERFLOW] signals at 375px: scrollWidth 892 > innerWidth 375 (diff +517px)
+[OVERFLOW] risk at 375px: scrollWidth 892 > innerWidth 375 (diff +517px)
+[OVERFLOW] backtest at 375px: scrollWidth 892 > innerWidth 375 (diff +517px)
+[OVERFLOW] sweep at 375px: scrollWidth 892 > innerWidth 375 (diff +517px)
+[OVERFLOW] reports at 375px: scrollWidth 892 > innerWidth 375 (diff +517px)
+[OVERFLOW] validation at 375px: scrollWidth 892 > innerWidth 375 (diff +517px)
+[OVERFLOW] docs at 375px: scrollWidth 892 > innerWidth 375 (diff +517px)
+[OVERFLOW] data at 768px: scrollWidth 900 > innerWidth 768 (diff +132px)
+[OVERFLOW] indicators at 768px: scrollWidth 900 > innerWidth 768 (diff +132px)
+[OVERFLOW] signals at 768px: scrollWidth 900 > innerWidth 768 (diff +132px)
+[OVERFLOW] risk at 768px: scrollWidth 900 > innerWidth 768 (diff +132px)
+[OVERFLOW] backtest at 768px: scrollWidth 900 > innerWidth 768 (diff +132px)
+[OVERFLOW] sweep at 768px: scrollWidth 900 > innerWidth 768 (diff +132px)
+[OVERFLOW] reports at 768px: scrollWidth 900 > innerWidth 768 (diff +132px)
+[OVERFLOW] validation at 768px: scrollWidth 900 > innerWidth 768 (diff +132px)
+[OVERFLOW] docs at 768px: scrollWidth 900 > innerWidth 768 (diff +132px)
+
+Audit log:
+Starting Playwright Frontend & Responsiveness Audit...
+
+=== Testing Viewport: mobile_375 (375x667) ===
+[OVERFLOW] data at 375px: scrollWidth 892 > innerWidth 375 (diff +517px)
+[OVERFLOW] indicators at 375px: scrollWidth 892 > innerWidth 375 (diff +517px)
+[OVERFLOW] signals at 375px: scrollWidth 892 > innerWidth 375 (diff +517px)
+[OVERFLOW] risk at 375px: scrollWidth 892 > innerWidth 375 (diff +517px)
+[OVERFLOW] backtest at 375px: scrollWidth 892 > innerWidth 375 (diff +517px)
+[OVERFLOW] sweep at 375px: scrollWidth 892 > innerWidth 375 (diff +517px)
+[OVERFLOW] reports at 375px: scrollWidth 892 > innerWidth 375 (diff +517px)
+[OVERFLOW] validation at 375px: scrollWidth 892 > innerWidth 375 (diff +517px)
+[OVERFLOW] docs at 375px: scrollWidth 892 > innerWidth 375 (diff +517px)
+
+=== Testing Viewport: tablet_768 (768x1024) ===
+[OVERFLOW] data at 768px: scrollWidth 900 > innerWidth 768 (diff +132px)
+[OVERFLOW] indicators at 768px: scrollWidth 900 > innerWidth 768 (diff +132px)
+[OVERFLOW] signals at 768px: scrollWidth 900 > innerWidth 768 (diff +132px)
+[OVERFLOW] risk at 768px: scrollWidth 900 > innerWidth 768 (diff +132px)
+[OVERFLOW] backtest at 768px: scrollWidth 900 > innerWidth 768 (diff +132px)
+[OVERFLOW] sweep at 768px: scrollWidth 900 > innerWidth 768 (diff +132px)
+[OVERFLOW] reports at 768px: scrollWidth 900 > innerWidth 768 (diff +132px)
+[OVERFLOW] validation at 768px: scrollWidth 900 > innerWidth 768 (diff +132px)
+[OVERFLOW] docs at 768px: scrollWidth 900 > innerWidth 768 (diff +132px)
+
+=== Testing Viewport: laptop_1024 (1024x768) ===
+
+=== Testing Viewport: desktop_1440 (1440x900) ===
+Axe check for data: 5 violations found.
+Axe check for indicators: 4 violations found.
+Axe check for signals: 4 violations found.
+Axe check for risk: 1 violations found.
+Axe check for backtest: 2 violations found.
+Axe check for sweep: 3 violations found.
+Axe check for reports: 2 violations found.
+Axe check for validation: 2 violations found.
+Axe check for docs: 0 violations found.
+
+=== Testing Viewport: widescreen_1920 (1920x1080) ===
+
+=== Testing Keyboard Navigation & Focus Ring Visibility ===
+Keyboard Tab sequence on /backtest: [
+  {
+    "tag": "A",
+    "testId": null,
+    "text": "Home"
+  },
+  {
+    "tag": "A",
+    "testId": null,
+    "text": "Data Status"
+  },
+  {
+    "tag": "A",
+    "testId": null,
+    "text": "Indicators"
+  },
+  {
+    "tag": "A",
+    "testId": null,
+    "text": "Signals"
+  },
+  {
+    "tag": "A",
+    "testId": null,
+    "text": "Risk"
+  },
+  {
+    "tag": "A",
+    "testId": null,
+    "text": "Backtest"
+  },
+  {
+    "tag": "A",
+    "testId": null,
+    "text": "Sweep"
+  },
+  {
+    "tag": "A",
+    "testId": null,
+    "text": "Reports"
+  },
+  {
+    "tag": "A",
+    "testId": null,
+    "text": "Validation"
+  },
+  {
+    "tag": "A",
+    "testId": null,
+    "text": "Docs"
+  },
+  {
+    "tag": "A",
+    "testId": null,
+    "text": "API Health"
+  },
+  {
+    "tag": "INPUT",
+    "testId": "input-start-date",
+    "text": null
+  },
+  {
+    "tag": "INPUT",
+    "testId": "input-start-date",
+    "text": null
+  },
+  {
+    "tag": "INPUT",
+    "testId": "input-start-date",
+    "text": null
+  },
+  {
+    "tag": "INPUT",
+    "testId": "input-start-date",
+    "text": null
+  }
+]
+
+=== Testing Backend Offline / Error Handling on Frontend ===
+Offline error state screenshot saved to /home/shailender/projects/equitest-nse/docs/audits/evidence/domain-d/error_state_offline_backtest.png

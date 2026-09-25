@@ -1,0 +1,42 @@
+=== AUDIT PANEL PROVENANCE AUDIT ===
+Audit record status: 200
+Audit record loaded for run_36f96ad78102:
+{
+  "run_id": "run_36f96ad78102",
+  "git_sha": "63a8154cade19039f9f7ce45c8ccedfaa0d8ba13",
+  "config": {
+    "universe_start_rank": 101,
+    "universe_end_rank": 750,
+    "ema_spans": [
+      20,
+      50,
+      150,
+      200
+    ],
+    "regime_ema_spans": [
+      50,
+      200
+    ],
+    "high_52w_factor": 0.85,
+    "high_52w_lookback": 252,
+    "sl_pct": 0.07,
+    "risk_pct": 0.02,
+    "cost_bps": 10.0,
+    "capital": 500000.0,
+    "ranking_rule": "momentum",
+    "lot_size": 1,
+    "allow_crossover_equal": false,
+    "ema_short": 20,
+    "ema_long": 200
+  },
+  "data_hash": "73fc1e57f99a933a9890cb9733156d6c883f715397ee64cedd56a6b7fe99fc3c",
+  "versions": {
+    "python": "3.14.7",
+    "fastapi": "0.141.1",
+    "pandas": "3.0.6",
+    "numpy": "2.5.3",
+    "pydantic": "2.13.5",
+    "sqlmodel": "0.0.46"
+  },
+  "created_at": "2026-09-25T03:00:15.447120+00:00"
+}

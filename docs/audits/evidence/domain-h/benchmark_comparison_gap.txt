@@ -1,0 +1,5 @@
+=== BENCHMARK COMPARISON AUDIT ===
+Inspection of /reports/[runId] and PDF export:
+Does the report compare against Nifty 50 Buy-and-Hold return over the same period?
+Finding: The BacktestResult, metrics summary, and PDF report DO NOT display Nifty benchmark return, alpha, beta, or an overlaid benchmark equity curve.
+This is a Major reporting gap for institutional credibility.

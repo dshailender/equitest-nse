@@ -1,0 +1,4 @@
+=== SURVIVORSHIP BIAS AUDIT ===
+2015-01-01: survivorship_bias flag = True
+2022-01-01: survivorship_bias flag = False
+In 2015-01-01 (11 years ago), point-in-time constituent fixture does NOT exist, so it falls back to current list with survivorship_bias=True.

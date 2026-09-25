@@ -1,0 +1,7 @@
+=== TRADING DAYS AND HOLIDAY GAPS AUDIT ===
+Date spacing distribution between consecutive sessions:
+date
+1.0    1043
+3.0     261
+Gaps > 1 day correspond to weekends (3 days) and market holidays (2 or 4 days).
+Engine treats trading days as discrete chronological sessions (t_idx), ignoring non-trading calendar gaps.

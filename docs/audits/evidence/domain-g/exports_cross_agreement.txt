@@ -1,0 +1,6 @@
+=== EXPORT FORMAT CROSS-AGREEMENT AUDIT ===
+CSV generated status: 200, size: 257 bytes
+XLSX generated status: 200, size: 20351 bytes
+ZIP generated status: 200, size: 4591 bytes
+PDF generated size: 275976 bytes
+PDF path: /home/shailender/projects/equitest-nse/data/reports/backtest_run_36f96ad78102.pdf

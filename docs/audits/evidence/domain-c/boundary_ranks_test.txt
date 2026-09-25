@@ -1,0 +1,6 @@
+=== BOUNDARY RANKS TEST ===
+Count for 101-750: 650 (expected 650)
+Count for 100-750: 651 (expected 651)
+Count for 101-751: 650 (expected 651)
+First ticker for 101-750: MIDCAP_STOCK_101
+First ticker for 100-750: TOP_100

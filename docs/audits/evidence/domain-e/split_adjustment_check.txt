@@ -1,0 +1,4 @@
+=== CORPORATE ACTION ADJUSTMENT AUDIT ===
+RELIANCE rows: 1305, cols: ['date', 'open', 'high', 'low', 'close', 'adj_close', 'volume']
+Max close vs adj_close difference: 1106.49
+Rows with divergence (corporate actions): 630 / 1305

@@ -1,0 +1,5 @@
+=== POSITION SIZING VERIFICATION ===
+Rule: qty * entry * sl_pct <= risk_pct * corpus_at_entry (with rounding tolerance)
+Trade ALPHA on 2021-05-25: qty=656, entry=217.83, risk_taken=₹10002.75
+Trade ALPHA on 2021-11-02: qty=654, entry=211.83, risk_taken=₹9697.58
+Violations detected: 0

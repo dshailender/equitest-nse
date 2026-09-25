@@ -1,0 +1,4 @@
+=== TRADINGVIEW CROSS-CHECK VERIFICATION ===
+Validation endpoint status: 200
+Symbol: RELIANCE | Total rows: None
+Sample row: {'date': '2019-01-01', 'close': 757.01, 'ema_20': None, 'ema_50': None, 'ema_150': None, 'ema_200': None, 'high_52w': None, 'entry': False, 'exit': False}

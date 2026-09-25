@@ -1,0 +1,6 @@
+=== TRANSACTION COST MODEL AUDIT ===
+Raw Buy: 100.0 | Eff Buy with 10 bps slippage: 100.1 (Cost: 0.1000)
+Raw Sell: 110.0 | Eff Sell with 10 bps slippage: 109.89 (Cost: 0.1100)
+Breakdown analysis: The model applies a single lumped slippage parameter (10 bps per side = 0.10%).
+It does NOT explicitly itemize STT (0.1% on delivery sell), Exchange turnover charges (0.00345%), SEBI charges, Stamp duty (0.015% on buy), or 18% GST on brokerage+turnover.
+This is recorded as an open assumption in ASSUMPTIONS.md Open Question #6.

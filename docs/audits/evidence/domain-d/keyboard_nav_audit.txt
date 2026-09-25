@@ -1,0 +1,79 @@
+=== KEYBOARD NAVIGATION AUDIT ===
+Tab sequence through /backtest:
+[
+  {
+    "tag": "A",
+    "testId": null,
+    "text": "Home"
+  },
+  {
+    "tag": "A",
+    "testId": null,
+    "text": "Data Status"
+  },
+  {
+    "tag": "A",
+    "testId": null,
+    "text": "Indicators"
+  },
+  {
+    "tag": "A",
+    "testId": null,
+    "text": "Signals"
+  },
+  {
+    "tag": "A",
+    "testId": null,
+    "text": "Risk"
+  },
+  {
+    "tag": "A",
+    "testId": null,
+    "text": "Backtest"
+  },
+  {
+    "tag": "A",
+    "testId": null,
+    "text": "Sweep"
+  },
+  {
+    "tag": "A",
+    "testId": null,
+    "text": "Reports"
+  },
+  {
+    "tag": "A",
+    "testId": null,
+    "text": "Validation"
+  },
+  {
+    "tag": "A",
+    "testId": null,
+    "text": "Docs"
+  },
+  {
+    "tag": "A",
+    "testId": null,
+    "text": "API Health"
+  },
+  {
+    "tag": "INPUT",
+    "testId": "input-start-date",
+    "text": null
+  },
+  {
+    "tag": "INPUT",
+    "testId": "input-start-date",
+    "text": null
+  },
+  {
+    "tag": "INPUT",
+    "testId": "input-start-date",
+    "text": null
+  },
+  {
+    "tag": "INPUT",
+    "testId": "input-start-date",
+    "text": null
+  }
+]

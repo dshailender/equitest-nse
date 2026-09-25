@@ -1,0 +1,27 @@
+=== DATA COVERAGE AND CONTINUITY AUDIT ===
+Total symbols in SQLite database coverage: 5
+Symbol: HDFCBANK | First Date: 2019-01-01 | Last Date: 2024-01-01 | Rows: 1305
+Symbol: INFY | First Date: 2019-01-01 | Last Date: 2024-01-01 | Rows: 1305
+Symbol: MIDCAP_STOCK_101 | First Date: 2019-01-01 | Last Date: 2024-01-01 | Rows: 1305
+Symbol: RELIANCE | First Date: 2019-01-01 | Last Date: 2024-01-01 | Rows: 1305
+Symbol: TATAMOTORS | First Date: 2019-01-01 | Last Date: 2024-01-01 | Rows: 1305
+
+Parquet fixtures present in data/fixtures:
+File: HDFCBANK.parquet | Shape: (1305, 7) | Cols: ['date', 'open', 'high', 'low', 'close', 'adj_close', 'volume']
+   Date range: 2019-01-01 to 2024-01-01
+File: INFY.parquet | Shape: (1305, 7) | Cols: ['date', 'open', 'high', 'low', 'close', 'adj_close', 'volume']
+   Date range: 2019-01-01 to 2024-01-01
+File: MIDCAP_STOCK_101.parquet | Shape: (1305, 7) | Cols: ['date', 'open', 'high', 'low', 'close', 'adj_close', 'volume']
+   Date range: 2019-01-01 to 2024-01-01
+File: NIFTY50.parquet | Shape: (1305, 7) | Cols: ['date', 'open', 'high', 'low', 'close', 'adj_close', 'volume']
+   Date range: 2019-01-01 to 2024-01-01
+File: RELIANCE.parquet | Shape: (1305, 7) | Cols: ['date', 'open', 'high', 'low', 'close', 'adj_close', 'volume']
+   Date range: 2019-01-01 to 2024-01-01
+File: TATAMOTORS.parquet | Shape: (1305, 7) | Cols: ['date', 'open', 'high', 'low', 'close', 'adj_close', 'volume']
+   Date range: 2019-01-01 to 2024-01-01
+File: ^NSEI.parquet | Shape: (1305, 7) | Cols: ['date', 'open', 'high', 'low', 'close', 'adj_close', 'volume']
+   Date range: 2019-01-01 to 2024-01-01
+File: constituents.parquet | Shape: (2250, 3) | Cols: ['date', 'symbol', 'rank']
+   Date range: 2020-01-01 to 2024-01-01
+File: reliance_2020_2023.parquet | Shape: (1043, 7) | Cols: ['date', 'open', 'high', 'low', 'close', 'adj_close', 'volume']
+   Date range: 2020-01-01 to 2023-12-29

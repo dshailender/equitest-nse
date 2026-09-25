@@ -1,0 +1,21 @@
+=== STOCKS OUTSIDE UNIVERSE APPEARING ON FRONTEND & BACKEND ===
+Page /signals PRESET_SYMBOLS: ['RELIANCE', 'MIDCAP_STOCK_101', 'HDFCBANK', 'INFY', 'TATAMOTORS']
+Page /indicators PRESET_SYMBOLS: ['RELIANCE', 'HDFCBANK', 'INFY', 'TATAMOTORS', 'NIFTY50']
+Page /validation default symbol: RELIANCE
+Page /data coverage symbols: ['HDFCBANK', 'INFY', 'MIDCAP_STOCK_101', 'RELIANCE', 'TATAMOTORS']
+
+Cross-checking symbols against active universe (ranks 101 to 750):
+Symbol 'RELIANCE': in ranks 101-750? False
+   Violation: 'RELIANCE' is NOT in universe ranks 101–750 but is offered/displayed on UI!
+Symbol 'HDFCBANK': in ranks 101-750? False
+   Violation: 'HDFCBANK' is NOT in universe ranks 101–750 but is offered/displayed on UI!
+Symbol 'INFY': in ranks 101-750? False
+   Violation: 'INFY' is NOT in universe ranks 101–750 but is offered/displayed on UI!
+Symbol 'TATAMOTORS': in ranks 101-750? False
+   Violation: 'TATAMOTORS' is NOT in universe ranks 101–750 but is offered/displayed on UI!
+Symbol 'ALPHA': in ranks 101-750? False
+   Violation: 'ALPHA' is NOT in universe ranks 101–750 but is offered/displayed on UI!
+Symbol 'BETA': in ranks 101-750? False
+   Violation: 'BETA' is NOT in universe ranks 101–750 but is offered/displayed on UI!
+Symbol 'GAMMA': in ranks 101-750? False
+   Violation: 'GAMMA' is NOT in universe ranks 101–750 but is offered/displayed on UI!

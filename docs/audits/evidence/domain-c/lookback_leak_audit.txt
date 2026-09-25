@@ -1,0 +1,11 @@
+=== LOOKBACK LEAK & UNIVERSE FILTER IN BACKTEST ===
+In backend/app/api/v1/backtest.py line 115-119:
+Backtest is instantiated WITHOUT universe_provider parameter!
+Code inspection: backtest = Backtest(config=strat_config, prices=prices, nifty=nifty_df)
+In Backtest.run() line 352-356:
+   if self.universe_provider:
+       active_universe, _ = self.universe_provider(prev_date)
+   else:
+       active_universe_set = set(self.prices.keys())
+RESULT: The universe provider is NEVER called during the backtest run.
+The universe filter is fixed at run initiation, ignoring point-in-time constituent changes on session T-1!

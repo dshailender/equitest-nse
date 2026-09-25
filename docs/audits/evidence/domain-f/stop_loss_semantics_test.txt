@@ -1,0 +1,4 @@
+=== STOP-LOSS SEMANTICS AUDIT ===
+(a) stop_loss_price(200.0, 0.07) = 186.0 (expected 186.0) -> Correct
+(b) Intrabar low (185.0) <= SL (186.0) with Open (190.0): exit_price=186.0, reason='stop_loss' -> Correct
+(c) Gap down Open (180.0) <= SL (186.0): exit_price=180.0, reason='gap' -> Correct

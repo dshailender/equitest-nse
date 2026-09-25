@@ -1,0 +1,5 @@
+=== GAP-DOWN STOP-LOSS EXECUTION CHECK ===
+Synthetic test: Entry=100, SL=93.0, Open=90.0, Low=88.0
+Result: exit_price=90.0, exit_reason='gap'
+Did it exit at Open (90.0) instead of SL price (93.0)? True
+Reason matches 'stop_loss_gap_down'? False

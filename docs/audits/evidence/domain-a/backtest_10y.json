@@ -1,0 +1,21 @@
+{
+  "status": {
+    "run_id": "run_0c208ef0f5ee",
+    "status": "completed",
+    "created_at": "2026-09-25T03:00:17.687391+00:00",
+    "start_date": "2014-01-01",
+    "end_date": "2024-01-01",
+    "config_version": "1.0",
+    "sweep_id": null,
+    "initial_capital": 500000.0,
+    "final_capital": 482707.2,
+    "total_return_pct": -0.0346,
+    "cagr": -0.0183,
+    "total_trades": 2,
+    "win_rate": 0.0,
+    "max_drawdown_pct": 0.0383,
+    "error_message": null
+  },
+  "trades_count": 2,
+  "equity_points": 500
+}

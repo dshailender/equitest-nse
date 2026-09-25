@@ -1,0 +1,25 @@
+=== FINANCIAL ANALYST SANITY CHECK & 3-TRADE VERIFICATION ===
+Total trades executed in 5y run: 2
+Symbols traded: {'ALPHA'}
+Avg profit: 0.0000 (0.00%)
+Avg loss: -0.0607 (-6.08%)
+
+Manual verification of 3 trades:
+
+Trade #1:
+  Symbol: ALPHA
+  Entry Date: 2021-05-25 at Price: 217.83
+  Qty: 656
+  Exit Date: 2021-08-10 at Price: 194.42
+  Exit Reason: gap
+  PnL: -15356.96 (-10.75%)
+  Days held: 55
+
+Trade #2:
+  Symbol: ALPHA
+  Entry Date: 2021-11-02 at Price: 211.83
+  Qty: 654
+  Exit Date: 2022-02-23 at Price: 208.87
+  Exit Reason: exit_signal
+  PnL: -1935.84 (-1.40%)
+  Days held: 81

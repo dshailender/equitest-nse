@@ -1,0 +1,5 @@
+=== EMA WARM-UP & 200-BAR GUARD TEST ===
+First entry signal row index: 255
+Row count before bar 200: 200
+Any entry before row 200? False
+EMA-200 non-null count in first 199 bars: 0

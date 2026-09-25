@@ -1,0 +1,4 @@
+=== PDF DETERMINISM TEST ===
+PDF 1 byte size: 275976
+PDF 2 byte size: 275976
+Byte identical? True

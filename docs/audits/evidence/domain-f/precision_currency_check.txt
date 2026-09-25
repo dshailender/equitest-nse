@@ -1,0 +1,22 @@
+=== CURRENCY AND PRECISION AUDIT ===
+Metrics dict types:
+  total_trades: 2 (type: int)
+  win_trades: 0 (type: int)
+  loss_trades: 2 (type: int)
+  win_rate: 0.0 (type: float)
+  avg_profit: 0.0 (type: float)
+  avg_loss: -8646.4 (type: float)
+  total_return_pct: -0.0346 (type: float)
+  initial_capital: 500000.0 (type: float)
+  final_capital: 482707.2 (type: float)
+  net_profit: -17292.8 (type: float)
+  cagr: -0.0183 (type: float)
+  max_drawdown_pct: 0.0383 (type: float)
+  max_drawdown_amount: 19208.32 (type: float)
+  sharpe_ratio: -0.698 (type: float)
+  sortino_ratio: -0.6982 (type: float)
+  calmar_ratio: -0.4778 (type: float)
+  profit_factor: 0.0 (type: float)
+  expectancy: -8646.4 (type: float)
+  avg_days_held: 68.0 (type: float)
+to_decimal_dict() available: True

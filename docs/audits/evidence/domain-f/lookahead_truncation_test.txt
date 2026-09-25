@@ -1,0 +1,4 @@
+=== LOOK-AHEAD BIAS TRUNCATION TEST ===
+Cutoff Date D = 2021-03-31 | Closed Trades: 0 | Trades with entry_date > D: 0
+Cutoff Date D = 2021-06-30 | Closed Trades: 0 | Trades with entry_date > D: 0
+Cutoff Date D = 2021-09-30 | Closed Trades: 1 | Trades with entry_date > D: 0

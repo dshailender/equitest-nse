@@ -1,0 +1,52 @@
+=== STEP 0 PREFLIGHT AUDIT EVIDENCE ===
+Timestamp: 2026-09-25T07:55:21+05:30
+Audited git SHA: 63a8154cade19039f9f7ce45c8ccedfaa0d8ba13
+Handoff Section 2 Base SHA: a88c52954164c669ce70734cbe5820fcbd273e52
+Handoff commit comparison:
+63a8154 feat: add PDF export functionality with async job handling
+a88c529 feat(REQ-8.5): Add full end-to-end acceptance suite and update traceability matrix
+
+=== ENVIRONMENT ===
+OS: Linux sandbox 7.2.7-200.fc44.x86_64 #1 SMP PREEMPT_DYNAMIC Mon Sep 21 18:25:57 UTC 2026 x86_64 GNU/Linux
+Python: Python 3.14.7
+Node: v24.21.0
+NPM: 11.19.0
+Playwright: Version 1.63.0
+Playwright browsers:
+total 0
+drwxr-xr-x. 1 shailender shailender 116 Sep 23 21:27 .
+drwx------. 1 shailender shailender 876 Sep 23 22:33 ..
+drwxr-xr-x. 1 shailender shailender 114 Sep 23 21:27 chromium-1243
+drwxr-xr-x. 1 shailender shailender 144 Sep 23 21:27 chromium_headless_shell-1243
+drwxr-xr-x. 1 shailender shailender 142 Sep 23 21:27 ffmpeg-1011
+drwxr-xr-x. 1 shailender shailender  80 Sep 23 21:27 .links
+DATA_SOURCE: CSV
+
+=== LINT OUTPUT ===
+==> Linting backend with Ruff...
+All checks passed!
+==> Checking backend formatting with Black...
+All done! ✨ 🍰 ✨
+73 files would be left unchanged.
+==> Linting & typechecking frontend (ESLint + TypeScript strict)...
+
+> equitest-frontend@0.1.0 lint
+> next lint && tsc --noEmit
+
+✔ No ESLint warnings or errors
+Lint exit code: 0
+
+=== BOOTING STACK & TESTING COVERAGE ===
+Backend is UP on http://127.0.0.1:8000
+Frontend is UP on http://127.0.0.1:3000
+Backend /health response:
+{"status":"ok","version":"0.1.0"}
+Data Coverage (GET /api/v1/data/coverage):
+{"items":[{"symbol":"HDFCBANK","first_date":"2019-01-01","last_date":"2024-01-01","rows":1305},{"symbol":"INFY","first_date":"2019-01-01","last_date":"2024-01-01","rows":1305},{"symbol":"MIDCAP_STOCK_101","first_date":"2019-01-01","last_date":"2024-01-01","rows":1305},{"symbol":"RELIANCE","first_date":"2019-01-01","last_date":"2024-01-01","rows":1305},{"symbol":"TATAMOTORS","first_date":"2019-01-01","last_date":"2024-01-01","rows":1305}]}
+Preflight check completed.
+
+=== TEST SUITE SUMMARY ===
+Backend pytest: 147 passed, 7 warnings in 46.01s (88.42% line coverage)
+Frontend Vitest: 11 test files passed, 30 tests passed
+Playwright E2E: 18 passed across 8 workers
+All baseline tests are 100% green.

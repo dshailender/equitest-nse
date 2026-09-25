@@ -1,0 +1,3 @@
+=== TIMEZONE AUDIT ===
+All price dates, signals, and trade ledger dates use plain YYYY-MM-DD string representation without UTC offset conversions.
+Sample trade dates: ['2021-05-25', '2021-11-02']

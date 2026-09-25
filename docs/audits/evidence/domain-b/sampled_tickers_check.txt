@@ -1,0 +1,13 @@
+=== SAMPLED 10 TICKERS CROSS-CHECK ===
+Sampled 10 tickers on 2022-01-01: ['MIDCAP_STOCK_111', 'MIDCAP_STOCK_112', 'MIDCAP_STOCK_113', 'MIDCAP_STOCK_114', 'MIDCAP_STOCK_115', 'MIDCAP_STOCK_116', 'MIDCAP_STOCK_117', 'MIDCAP_STOCK_118', 'MIDCAP_STOCK_119', 'MIDCAP_STOCK_120']
+Checking if real symbols or synthetic tokens:
+Symbol: MIDCAP_STOCK_111 - Synthetic placeholder token, not real NSE stock symbol or human readable name.
+Symbol: MIDCAP_STOCK_112 - Synthetic placeholder token, not real NSE stock symbol or human readable name.
+Symbol: MIDCAP_STOCK_113 - Synthetic placeholder token, not real NSE stock symbol or human readable name.
+Symbol: MIDCAP_STOCK_114 - Synthetic placeholder token, not real NSE stock symbol or human readable name.
+Symbol: MIDCAP_STOCK_115 - Synthetic placeholder token, not real NSE stock symbol or human readable name.
+Symbol: MIDCAP_STOCK_116 - Synthetic placeholder token, not real NSE stock symbol or human readable name.
+Symbol: MIDCAP_STOCK_117 - Synthetic placeholder token, not real NSE stock symbol or human readable name.
+Symbol: MIDCAP_STOCK_118 - Synthetic placeholder token, not real NSE stock symbol or human readable name.
+Symbol: MIDCAP_STOCK_119 - Synthetic placeholder token, not real NSE stock symbol or human readable name.
+Symbol: MIDCAP_STOCK_120 - Synthetic placeholder token, not real NSE stock symbol or human readable name.

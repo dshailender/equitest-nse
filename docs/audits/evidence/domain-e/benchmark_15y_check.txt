@@ -1,0 +1,7 @@
+=== NIFTY BENCHMARK SERIES AUDIT ===
+NIFTY benchmark total rows: 1305
+NIFTY date range: 2019-01-01 to 2024-01-01
+Timespan in years: 5.00 years
+15 years available? False
+10 years available? False
+5 years available? False

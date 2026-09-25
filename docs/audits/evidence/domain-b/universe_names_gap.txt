@@ -1,0 +1,10 @@
+=== UNIVERSE RESPONSE SCHEMA INSPECTION ===
+Today (2026-09-25): count=650, survivorship_bias=False
+Sample tickers today (first 10): ['MIDCAP_STOCK_126', 'MIDCAP_STOCK_127', 'MIDCAP_STOCK_128', 'MIDCAP_STOCK_129', 'MIDCAP_STOCK_130', 'MIDCAP_STOCK_131', 'MIDCAP_STOCK_132', 'MIDCAP_STOCK_133', 'MIDCAP_STOCK_134', 'MIDCAP_STOCK_135']
+10 Years Ago (2016-09-25): count=650, survivorship_bias=True
+Sample tickers 10y ago (first 10): ['IDEA', 'YESBANK', 'SUZLON', 'ZOMATO', 'PAYTM', 'NYKAA', 'POLICYBZR', 'DELHIVERY', 'TATACHEM', 'TATACOMM']
+
+Field presence vs expected:
+Keys present: ['date', 'count', 'tickers', 'survivorship_bias']
+Expected fields per PO/Institutional Quant standard: 'tickers' (symbol), 'names' (company name, e.g. 'IDEA' -> 'Vodafone Idea Limited'), 'ranks', 'market_cap', 'sector'.
+Missing stock names: Human-readable stock names are 100% missing from API response. Only ticker strings are returned.
