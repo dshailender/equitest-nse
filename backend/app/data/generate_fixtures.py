@@ -161,6 +161,49 @@ def main():
     # 3. Constituents point-in-time
     const_df = generate_constituents()
     const_df.to_parquet(fixtures_dir / "constituents.parquet", index=False)
+
+    # 4. Pre-2020 Fallback Sample Midcaps (AUD-A-004)
+    sample_midcaps_subset = [
+        "IDEA",
+        "YESBANK",
+        "SUZLON",
+        "ZOMATO",
+        "PAYTM",
+        "NYKAA",
+        "POLICYBZR",
+        "DELHIVERY",
+        "TATACHEM",
+        "TATACOMM",
+        "TATAELXSI",
+        "FEDERALBNK",
+        "IDFCFIRSTB",
+        "BANDHANBNK",
+        "AUBANK",
+        "ASHOKLEY",
+        "BALKRISIND",
+        "MRF",
+        "APOLLOTYRE",
+        "BHARATFORG",
+        "ESCORTS",
+        "TIINDIA",
+        "EXIDEIND",
+        "AMARAJABAT",
+        "BOSCHLTD",
+    ]
+    for idx, sym in enumerate(sample_midcaps_subset):
+        price = 100.0 + float((idx * 37) % 500)
+        vol = 0.020 + float((idx * 5) % 15) * 0.001
+        seed = 4000 + idx
+        df = generate_ohlcv_series(
+            start_date="2019-01-01",
+            end_date="2024-01-01",
+            initial_price=price,
+            volatility=vol,
+            seed=seed,
+        )
+        validate_ohlcv_dataframe(df)
+        df.to_parquet(fixtures_dir / f"{sym}.parquet", index=False)
+
     print(f"Generated test parquet fixtures in {fixtures_dir}")
 
 

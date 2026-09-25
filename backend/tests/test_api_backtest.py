@@ -161,3 +161,60 @@ def test_api_backtest_multi_symbol_fixture_execution(client):
         len(symbols_traded) >= 15
     ), f"Expected >= 15 diverse symbols traded, got {len(symbols_traded)}"
     assert all(s.startswith("MIDCAP_STOCK_") for s in symbols_traded)
+
+
+def test_api_backtest_pre_2020_fallback_execution(client):
+    """AUD-A-004: Pre-2020 backtest runs in offline mode find valid constituent
+    price series and execute trades without returning empty series.
+    """
+    from pathlib import Path
+
+    repo_root = Path(__file__).resolve().parents[2]
+    fixtures_dir = repo_root / "data" / "fixtures"
+
+    # 1. Verify data/fixtures contains OHLCV parquet files for fallback sample midcaps
+    fallback_tickers = [
+        "IDEA",
+        "YESBANK",
+        "SUZLON",
+        "ZOMATO",
+        "PAYTM",
+        "NYKAA",
+        "POLICYBZR",
+        "DELHIVERY",
+        "TATACHEM",
+        "TATACOMM",
+    ]
+    for sym in fallback_tickers:
+        assert (
+            fixtures_dir / f"{sym}.parquet"
+        ).exists(), f"Missing offline fixture for fallback symbol {sym}"
+
+    # 2. Run backtest with start date prior to 2020-01-01 (triggering fallback)
+    payload = {
+        "start": "2019-01-01",
+        "end": "2020-12-31",
+    }
+    post_res = client.post("/api/v1/backtest/run", json=payload)
+    assert post_res.status_code == 202
+    run_id = post_res.json()["run_id"]
+
+    status_res = client.get(f"/api/v1/backtest/{run_id}")
+    assert status_res.status_code == 200
+    st = status_res.json()
+    assert st["status"] == "completed"
+    assert st["total_trades"] > 0
+
+    trades_res = client.get(f"/api/v1/backtest/{run_id}/trades")
+    assert trades_res.status_code == 200
+    trades_data = trades_res.json()
+    assert trades_data["count"] > 0
+    symbols_traded = {t["symbol"] for t in trades_data["trades"]}
+    # Verify trades were executed in authentic fallback tickers
+    assert any(s in fallback_tickers for s in symbols_traded)
+
+    equity_res = client.get(f"/api/v1/backtest/{run_id}/equity")
+    assert equity_res.status_code == 200
+    eq_data = equity_res.json()
+    assert eq_data["count"] > 200
+

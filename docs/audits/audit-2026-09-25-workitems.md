@@ -155,6 +155,29 @@ Audited SHA: 63a8154cade19039f9f7ce45c8ccedfaa0d8ba13
 
 ---
 
+### AUD-B-003
+- **ID**: AUD-B-003
+- **Title**: Deduplicate ticker symbol 'TATACOMM' in sample_midcaps fallback list
+- **Domain**: B
+- **Category**: Data Integrity
+- **Severity**: Minor
+- **Reproducibility**: Always
+- **Description**: In `backend/app/data/universe.py::get_default_fallback_constituents()`, the `sample_midcaps` list includes ticker symbol `"TATACOMM"` twice: once at line 27 and again at line 74. When constituent ranks are cycled across the list, this duplication leads to redundant constituent slot assignments and uneven cycle offsets.
+- **Expected**: `sample_midcaps` constituent list should only contain unique equity ticker symbols.
+- **Actual**: `"TATACOMM"` appears twice in the array (indices 9 and 56).
+- **Evidence**:
+  - `backend/app/data/universe.py:27` and `backend/app/data/universe.py:74`
+- **Suspected root cause**: Redundant entry in `sample_midcaps` list in `backend/app/data/universe.py:17-86`
+- **Suggested fix**: Remove the duplicate `"TATACOMM"` entry at line 74 and replace with a distinct midcap constituent or trim the list.
+- **Acceptance criteria**:
+  - `len(sample_midcaps) == len(set(sample_midcaps))`
+- **Suggested conversation**: Phase 1 universe enhancement
+- **Effort**: S
+- **Blocks**: None
+- **Blocked by**: None
+
+---
+
 ### AUD-C-001
 - **ID**: AUD-C-001
 - **Title**: Remove Large-Cap (Nifty 50) presets from /signals, /indicators, and /validation pages
