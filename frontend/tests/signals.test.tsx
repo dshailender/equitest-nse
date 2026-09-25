@@ -64,5 +64,27 @@ describe("SignalsPage Component", () => {
       );
     });
   });
+
+  it("preset symbols contain only active universe constituents (ranks 101-750) and exclude large-caps (AUD-C-001)", async () => {
+    render(<SignalsPage />);
+
+    const symbolSelect = screen.getByTestId("signal-symbol-select") as HTMLSelectElement;
+    expect(symbolSelect.value).toBe("BALKRISIND");
+
+    const optionValues = Array.from(symbolSelect.options).map((opt) => opt.value);
+    expect(optionValues).toEqual([
+      "BALKRISIND",
+      "FEDERALBNK",
+      "TATAELXSI",
+      "AUBANK",
+      "ASHOKLEY",
+    ]);
+
+    // Assert large caps are excluded
+    const largeCaps = ["RELIANCE", "HDFCBANK", "INFY", "TATAMOTORS"];
+    for (const sym of largeCaps) {
+      expect(optionValues).not.toContain(sym);
+    }
+  });
 });
 

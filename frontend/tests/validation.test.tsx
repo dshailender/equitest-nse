@@ -11,7 +11,7 @@ describe("ValidationPage Component (REQ-8.1)", () => {
       screen.getByText("TradingView Cross-Check Verification")
     ).toBeInTheDocument();
     expect(screen.getByTestId("run-select")).toBeInTheDocument();
-    expect(screen.getByTestId("symbol-input")).toHaveValue("RELIANCE");
+    expect(screen.getByTestId("symbol-input")).toHaveValue("BALKRISIND");
     expect(screen.getByTestId("btn-download-tv")).toBeInTheDocument();
 
     await waitFor(() => {
@@ -72,5 +72,23 @@ describe("ValidationPage Component (REQ-8.1)", () => {
     fireEvent.click(downloadBtn);
 
     expect(clickSpy).toHaveBeenCalled();
+  });
+
+  it("uses active universe constituents (ranks 101-750) and excludes large-caps (AUD-C-001)", async () => {
+    render(<ValidationPage />);
+    const input = screen.getByTestId("symbol-input");
+    expect(input).toHaveValue("BALKRISIND");
+
+    // Assert quick-select buttons contain only authentic midcap constituents
+    const quickSelectButtons = ["BALKRISIND", "FEDERALBNK", "TATAELXSI", "AUBANK", "ASHOKLEY"];
+    for (const sym of quickSelectButtons) {
+      expect(screen.getByRole("button", { name: sym })).toBeInTheDocument();
+    }
+
+    // Assert large caps and synthetic tokens are excluded from quick-select buttons
+    const largeCaps = ["RELIANCE", "HDFCBANK", "INFY", "TATAMOTORS", "ALPHA"];
+    for (const sym of largeCaps) {
+      expect(screen.queryByRole("button", { name: sym })).not.toBeInTheDocument();
+    }
   });
 });

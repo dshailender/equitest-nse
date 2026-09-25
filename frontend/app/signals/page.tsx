@@ -9,15 +9,15 @@ import {
 } from "../../lib/api";
 
 const PRESET_SYMBOLS = [
-  "RELIANCE",
-  "MIDCAP_STOCK_101",
-  "HDFCBANK",
-  "INFY",
-  "TATAMOTORS",
+  "BALKRISIND",
+  "FEDERALBNK",
+  "TATAELXSI",
+  "AUBANK",
+  "ASHOKLEY",
 ];
 
 export default function SignalsPage() {
-  const [symbol, setSymbol] = useState("MIDCAP_STOCK_101");
+  const [symbol, setSymbol] = useState("BALKRISIND");
   const [startDate, setStartDate] = useState("2020-01-01");
   const [endDate, setEndDate] = useState("2022-12-31");
   const [onlyEntries, setOnlyEntries] = useState(false);

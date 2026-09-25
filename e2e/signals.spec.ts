@@ -10,10 +10,10 @@ test.describe("Strategy Signals & Execution E2E Flow", () => {
       "Trading Signals & Strategy Rules"
     );
 
-    // 2. Select MIDCAP_STOCK_101 and set date range containing known entry signals
+    // 2. Select BALKRISIND and set date range containing known entry signals
     const symbolSelect = page.locator('[data-testid="signal-symbol-select"]');
     await expect(symbolSelect).toBeVisible();
-    await symbolSelect.selectOption("MIDCAP_STOCK_101");
+    await symbolSelect.selectOption("BALKRISIND");
 
     await page.fill('[data-testid="signal-start-date"]', "2020-06-01");
     await page.fill('[data-testid="signal-end-date"]', "2020-07-31");

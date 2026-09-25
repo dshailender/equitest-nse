@@ -11,10 +11,18 @@ import {
   getCrossCheckDownloadUrl,
 } from "../../lib/api";
 
+const PRESET_SYMBOLS = [
+  "BALKRISIND",
+  "FEDERALBNK",
+  "TATAELXSI",
+  "AUBANK",
+  "ASHOKLEY",
+];
+
 export default function ValidationPage() {
   const [runs, setRuns] = useState<BacktestStatusResponse[]>([]);
   const [selectedRunId, setSelectedRunId] = useState<string>("default");
-  const [symbol, setSymbol] = useState<string>("RELIANCE");
+  const [symbol, setSymbol] = useState<string>("BALKRISIND");
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [rows, setRows] = useState<CrossCheckPoint[]>([]);
@@ -141,7 +149,7 @@ export default function ValidationPage() {
                 value={symbol}
                 onChange={(e) => setSymbol(e.target.value.toUpperCase())}
                 data-testid="symbol-input"
-                placeholder="e.g. RELIANCE, ALPHA"
+                placeholder="e.g. BALKRISIND, FEDERALBNK"
                 className="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg uppercase tracking-wide focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <button
@@ -158,7 +166,7 @@ export default function ValidationPage() {
 
           {/* Quick Select Buttons */}
           <div className="flex items-center gap-1.5">
-            {["RELIANCE", "ALPHA", "INFY", "HDFCBANK"].map((sym) => (
+            {PRESET_SYMBOLS.map((sym) => (
               <button
                 key={sym}
                 type="button"

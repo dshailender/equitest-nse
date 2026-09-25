@@ -37,15 +37,15 @@ import {
 import { fetchIndicators, IndicatorItem } from "@/lib/api";
 
 const PRESET_SYMBOLS = [
-  "RELIANCE",
-  "HDFCBANK",
-  "INFY",
-  "TATAMOTORS",
-  "NIFTY50",
+  "BALKRISIND",
+  "FEDERALBNK",
+  "TATAELXSI",
+  "AUBANK",
+  "ASHOKLEY",
 ];
 
 export default function IndicatorsPage() {
-  const [selectedSymbol, setSelectedSymbol] = React.useState<string>("RELIANCE");
+  const [selectedSymbol, setSelectedSymbol] = React.useState<string>("BALKRISIND");
   const [startDate, setStartDate] = React.useState<string>("2021-01-01");
   const [endDate, setEndDate] = React.useState<string>("2023-12-31");
 

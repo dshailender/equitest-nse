@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 test.describe("Technical Indicators Preview E2E Flow", () => {
-  test("navigates to /indicators, loads RELIANCE chart, renders 4 EMAs, and toggles EMA-150", async ({
+  test("navigates to /indicators, loads BALKRISIND chart, renders 4 EMAs, and toggles EMA-150", async ({
     page,
   }) => {
     // 1. Navigate to /indicators
@@ -10,10 +10,10 @@ test.describe("Technical Indicators Preview E2E Flow", () => {
       "Technical Indicators & EMA Preview"
     );
 
-    // 2. Select RELIANCE and specify date range
+    // 2. Select BALKRISIND and specify date range
     const symbolSelect = page.locator('[data-testid="indicator-symbol-select"]');
     await expect(symbolSelect).toBeVisible();
-    await symbolSelect.selectOption("RELIANCE");
+    await symbolSelect.selectOption("BALKRISIND");
 
     await page.fill('[data-testid="indicator-start-date"]', "2021-01-01");
     await page.fill('[data-testid="indicator-end-date"]', "2022-12-31");
@@ -21,7 +21,7 @@ test.describe("Technical Indicators Preview E2E Flow", () => {
     // 3. Confirm chart container is visible
     const chartCard = page.locator('[data-testid="indicator-chart-card"]');
     await expect(chartCard).toBeVisible({ timeout: 15000 });
-    await expect(chartCard).toContainText("RELIANCE");
+    await expect(chartCard).toContainText("BALKRISIND");
 
     const chart = page.locator('[data-testid="indicator-chart"]');
     await expect(chart).toBeVisible({ timeout: 15000 });
