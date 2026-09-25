@@ -56,6 +56,55 @@ Audited SHA: 63a8154cade19039f9f7ce45c8ccedfaa0d8ba13
 
 ---
 
+### AUD-A-003
+- **ID**: AUD-A-003
+- **Title**: Local offline Parquet price fixtures only provide 1 midcap constituent (MIDCAP_STOCK_101)
+- **Domain**: A
+- **Category**: Data Completeness
+- **Severity**: Major
+- **Reproducibility**: Always
+- **Description**: When running in offline or fixture mode (`DATA_SOURCE=CSV`), the backtest simulation resolves all 650 constituent tickers for ranks 101–750 (`MIDCAP_STOCK_101` through `MIDCAP_STOCK_750`), but the local fixture directory `data/fixtures/` only contains historical price parquet data for a single midcap constituent: `MIDCAP_STOCK_101.parquet`. The remaining 649 tickers have no fixture price files on disk, limiting offline simulation execution across the 650-stock universe to this single stock.
+- **Expected**: Offline test and simulation environments should contain price parquet files for a representative sample of active midcap/smallcap constituents (e.g. 20–50 liquid stocks) to enable realistic multi-asset simulation, portfolio rebalancing, and concurrent position competition.
+- **Actual**: `data/fixtures/` contains price files for 4 large-caps (`HDFCBANK`, `INFY`, `RELIANCE`, `TATAMOTORS` — all excluded from trading by REQ-1.1), 1 benchmark index (`^NSEI`), and only 1 midcap constituent (`MIDCAP_STOCK_101`). All default offline backtests trade exclusively `MIDCAP_STOCK_101`.
+- **Evidence**:
+  - `data/fixtures/` directory listing showing only `MIDCAP_STOCK_101.parquet` among midcap constituents
+  - `backend/app/api/v1/backtest.py:101-109` price loading loop finding only 1 symbol on disk
+- **Suspected root cause**: `data/fixtures/` fixture set only generated price history for `MIDCAP_STOCK_101`
+- **Suggested fix**: Generate or ingest sample OHLCV price parquet fixtures for a representative subset of universe constituents (e.g. `MIDCAP_STOCK_101`..`150`) in `data/fixtures/`.
+- **Acceptance criteria**:
+  - `data/fixtures/` contains OHLCV price parquet files for multiple universe constituents.
+  - Backtest simulation with default parameters loads multiple symbols and executes trades across diverse midcap stocks.
+- **Suggested conversation**: Phase 1 data ingestion & fixture expansion
+- **Effort**: M
+- **Blocks**: None
+- **Blocked by**: None
+
+---
+
+### AUD-A-004
+- **ID**: AUD-A-004
+- **Title**: Pre-2020 universe fallback (sample_midcaps) lacks local Parquet price files
+- **Domain**: A
+- **Category**: Data Integrity
+- **Severity**: Major
+- **Reproducibility**: Always
+- **Description**: For backtest periods starting prior to 2020-01-01, `backend/app/data/universe.py::get_universe()` falls back to `sample_midcaps` (`IDEA`, `YESBANK`, `SUZLON`, `RCOM`, `JPPOWER`, etc.) because `constituents.parquet` only covers 2020-01-01 onwards. None of these fallback tickers exist as parquet files in `data/fixtures/`, causing offline backtests requested with start dates before 2020 to encounter 0 available price records for universe constituents, resulting in 0 trades.
+- **Expected**: Pre-2020 universe fallback constituents should have corresponding offline price parquet fixtures, or `constituents.parquet` point-in-time constituent coverage should be extended back to 2018 alongside matching price fixtures.
+- **Actual**: Simulations with `start < 2020-01-01` in offline mode encounter 0 price files on disk and execute 0 trades.
+- **Evidence**:
+  - `backend/app/data/universe.py:129-149` (pre-2020 fallback generating `sample_midcaps` tokens)
+  - Absence of `IDEA.parquet`, `YESBANK.parquet`, etc. in `data/fixtures/`
+- **Suspected root cause**: `backend/app/data/universe.py:129-149` and lack of pre-2020 price fixtures in `data/fixtures/`
+- **Suggested fix**: Provide offline price parquet fixtures for `sample_midcaps` tickers or extend `constituents.parquet` point-in-time constituent coverage back to 2018 alongside price fixtures.
+- **Acceptance criteria**:
+  - Pre-2020 backtest runs in offline mode find valid constituent price series and execute trades without returning empty series.
+- **Suggested conversation**: Phase 1 universe & data ingestion
+- **Effort**: M
+- **Blocks**: None
+- **Blocked by**: None
+
+---
+
 ### AUD-B-001
 - **ID**: AUD-B-001
 - **Title**: Add human-readable stock names to universe constituent API and UI views
