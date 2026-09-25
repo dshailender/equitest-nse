@@ -36,6 +36,7 @@ This document tracks requirement implementation, validation status, and associat
 | **REQ-1.3** | NIFTY Benchmark Ingestion | `backend/app/data/source.py`, `data/fixtures/NIFTY50.parquet` | `backend/tests/test_ingest.py`, `backend/tests/test_data_source.py` | ✅ Verified |
 | **AUD-B-001** | Human-Readable Stock Names in Universe API & UI | `backend/app/data/universe.py`, `backend/app/api/v1/schemas.py`, `frontend/app/data/page.tsx` | `backend/tests/test_universe.py::test_universe_company_names_metadata`, `frontend/tests/data.test.tsx` | ✅ Verified |
 | **AUD-B-002** | Authentic Historical NSE Constituents (Ranks 101–750) | `backend/app/data/universe.py`, `backend/app/data/constituents.py`, `data/fixtures/constituents.parquet` | `backend/tests/test_universe.py::test_universe_authentic_constituents_no_synthetic_tokens` | ✅ Verified |
+| **AUD-B-003** | Deduplicate Ticker Symbol 'TATACOMM' in sample_midcaps Fallback List | `backend/app/data/universe.py` | `backend/tests/test_universe.py::test_sample_midcaps_deduplicated` | ✅ Verified |
 
 ### Phase 2: Indicator & Signal Engine
 | Req ID | Requirement | Implementation Artifacts | Test & Verification Evidence | Status |

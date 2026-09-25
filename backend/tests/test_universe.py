@@ -154,3 +154,27 @@ def test_universe_authentic_constituents_no_synthetic_tokens():
         assert item["name"]
         assert item["sector"]
         assert 101 <= item["rank"] <= 750
+
+
+def test_sample_midcaps_deduplicated():
+    """Verify sample_midcaps list contains no duplicate tickers (AUD-B-003)."""
+    from app.data.universe import (
+        SAMPLE_MIDCAPS,
+        get_default_fallback_constituents,
+        sample_midcaps,
+    )
+
+    # 1. Acceptance criteria: len(sample_midcaps) == len(set(sample_midcaps))
+    assert len(sample_midcaps) == len(set(sample_midcaps))
+    assert len(SAMPLE_MIDCAPS) == len(set(SAMPLE_MIDCAPS))
+    assert sample_midcaps == SAMPLE_MIDCAPS
+
+    # 2. Specifically verify 'TATACOMM' appears exactly once
+    assert sample_midcaps.count("TATACOMM") == 1
+    assert SAMPLE_MIDCAPS.count("TATACOMM") == 1
+
+    # 3. Fallback constituent generator contains no duplicates and exactly one TATACOMM
+    fallback = get_default_fallback_constituents()
+    fallback_symbols = [item["symbol"] for item in fallback]
+    assert len(fallback_symbols) == len(set(fallback_symbols)) == 650
+    assert fallback_symbols.count("TATACOMM") == 1
