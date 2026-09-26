@@ -38,6 +38,7 @@ This document tracks requirement implementation, validation status, and associat
 | **AUD-B-002** | Authentic Historical NSE Constituents (Ranks 101–750) | `backend/app/data/universe.py`, `backend/app/data/constituents.py`, `data/fixtures/constituents.parquet`, `backend/app/data/ingest.py` | `backend/tests/test_universe.py::test_universe_authentic_constituents_no_synthetic_tokens`, `test_universe_db_session_point_in_time_and_synthetic_filtering`, `test_seed_universe_constituents`, `backend/tests/test_ingest.py::test_ingest_purges_synthetic_universe_constituents` | ✅ Verified |
 | **AUD-B-003** | Deduplicate Ticker Symbol 'TATACOMM' in sample_midcaps Fallback List | `backend/app/data/universe.py` | `backend/tests/test_universe.py::test_sample_midcaps_deduplicated` | ✅ Verified |
 | **AUD-E-001** | SQLite Coverage Database & 15+ Year Continuous OHLCV History (>= 650 symbols) | `backend/app/data/ingest.py`, `backend/app/db/session.py`, `backend/app/api/v1/data.py` | `backend/tests/test_data_coverage.py::test_data_coverage_15_years_and_constituents_count`, `test_seed_price_coverage_idempotency` | ✅ Verified |
+| **AUD-F-001** | YFinanceSource Coverage Inspection & PriceSource Polymorphic Contract | `backend/app/data/source.py` | `backend/tests/test_data_source.py::test_yfinance_source_get_coverage_acceptance_criteria`, `test_yfinance_source_get_coverage_with_data`, `test_csv_source_get_coverage` | ✅ Verified |
 
 ### Phase 2: Indicator & Signal Engine
 | Req ID | Requirement | Implementation Artifacts | Test & Verification Evidence | Status |

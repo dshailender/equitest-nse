@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
+from typing import Any
 
 import pandas as pd
 
@@ -24,6 +25,15 @@ class PriceSource(ABC):
 
         Returns DataFrame with columns:
         ['date', 'open', 'high', 'low', 'close', 'adj_close', 'volume']
+        """
+        pass
+
+    @abstractmethod
+    def get_coverage(self, symbol: str | None = None) -> list[dict[str, Any]]:
+        """Inspect available historical date ranges and session counts.
+
+        Returns a list of dicts with keys:
+        ['symbol', 'first_date', 'last_date', 'rows']
         """
         pass
 
@@ -108,6 +118,48 @@ class CSVSource(PriceSource):
     def get_index_prices(self, symbol: str, start: str, end: str) -> pd.DataFrame:
         return self._load_parquet(symbol, start, end)
 
+    def get_coverage(self, symbol: str | None = None) -> list[dict[str, Any]]:
+        """Inspect date ranges and session counts from parquet fixtures."""
+        if symbol:
+            df = self._load_parquet(symbol, "1970-01-01", "2099-12-31")
+            if df.empty:
+                return []
+            return [
+                {
+                    "symbol": symbol.upper(),
+                    "first_date": str(df["date"].min()),
+                    "last_date": str(df["date"].max()),
+                    "rows": int(len(df)),
+                }
+            ]
+
+        if not self.fixtures_dir.exists():
+            return []
+
+        results: list[dict[str, Any]] = []
+        seen_symbols: set[str] = set()
+        files = list(self.fixtures_dir.glob("*.parquet"))
+        tiny_dir = self.fixtures_dir / "tiny_universe"
+        if tiny_dir.is_dir():
+            files.extend(tiny_dir.glob("*.parquet"))
+
+        for p in sorted(files, key=lambda f: f.name):
+            stem = p.stem.upper()
+            if stem == "CONSTITUENTS" or stem in seen_symbols:
+                continue
+            df = self._load_parquet(p.stem, "1970-01-01", "2099-12-31")
+            if not df.empty:
+                seen_symbols.add(stem)
+                results.append(
+                    {
+                        "symbol": stem,
+                        "first_date": str(df["date"].min()),
+                        "last_date": str(df["date"].max()),
+                        "rows": int(len(df)),
+                    }
+                )
+        return results
+
 
 class YFinanceSource(PriceSource):
     """Source fetching live or historical data from Yahoo Finance."""
@@ -172,6 +224,28 @@ class YFinanceSource(PriceSource):
     def get_index_prices(self, symbol: str, start: str, end: str) -> pd.DataFrame:
         ticker = self._normalize_ticker(symbol, is_index=True)
         return self._fetch_from_yfinance(ticker, start, end)
+
+    def get_coverage(self, symbol: str | None = None) -> list[dict[str, Any]]:
+        """Inspect date ranges and session counts from Yahoo Finance."""
+        if not symbol:
+            return []
+
+        try:
+            df = self.get_equity_prices(symbol, "1970-01-01", "2099-12-31")
+            if df.empty:
+                df = self.get_index_prices(symbol, "1970-01-01", "2099-12-31")
+            if df.empty:
+                return []
+            return [
+                {
+                    "symbol": symbol.upper(),
+                    "first_date": str(df["date"].min()),
+                    "last_date": str(df["date"].max()),
+                    "rows": int(len(df)),
+                }
+            ]
+        except Exception:
+            return []
 
 
 def get_price_source(source_type: str | None = None) -> PriceSource:
