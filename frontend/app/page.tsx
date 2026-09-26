@@ -43,8 +43,8 @@ export default function HomePage() {
               Asynchronous API with structured JSON telemetry and OpenAPI contracts.
             </CardDescription>
           </CardHeader>
-          <CardContent className="text-xs text-slate-500">
-            Endpoint: <code className="bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">:8000/health</code>
+          <CardContent className="text-xs text-slate-600 dark:text-slate-400">
+            Endpoint: <code className="bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 px-1 py-0.5 rounded">:8000/health</code>
           </CardContent>
           <CardFooter className="pt-0">
             <Button asChild variant="outline" size="sm" className="w-full text-xs">
@@ -65,11 +65,11 @@ export default function HomePage() {
               Prepared for NSE 750 (excluding top 100), 4-EMA stacking and market regime filters.
             </CardDescription>
           </CardHeader>
-          <CardContent className="text-xs text-slate-500">
+          <CardContent className="text-xs text-slate-600 dark:text-slate-400">
             Look-ahead & survivorship bias mitigation ready.
           </CardContent>
           <CardFooter className="pt-0">
-            <Button variant="ghost" size="sm" disabled className="w-full text-xs text-slate-400">
+            <Button variant="ghost" size="sm" disabled className="w-full text-xs text-slate-600 dark:text-slate-400">
               Phase 1–3
             </Button>
           </CardFooter>
@@ -85,11 +85,11 @@ export default function HomePage() {
               Pytest (≥80% cov), Vitest component mocks with MSW, and Playwright E2E suites.
             </CardDescription>
           </CardHeader>
-          <CardContent className="text-xs text-slate-500">
+          <CardContent className="text-xs text-slate-600 dark:text-slate-400">
             CI automated verification on pull requests.
           </CardContent>
           <CardFooter className="pt-0">
-            <Button variant="ghost" size="sm" disabled className="w-full text-xs text-slate-400">
+            <Button variant="ghost" size="sm" disabled className="w-full text-xs text-slate-600 dark:text-slate-400">
               Verified
             </Button>
           </CardFooter>

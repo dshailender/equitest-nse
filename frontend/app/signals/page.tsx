@@ -122,61 +122,61 @@ export default function SignalsPage() {
       {/* Strategy Rules Reference Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
         <div className="p-3.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm">
-          <div className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider">
+          <div className="text-xs font-semibold text-blue-700 dark:text-blue-400 uppercase tracking-wider">
             REQ-3.1 Market Regime
           </div>
           <div className="text-sm font-medium mt-1 text-slate-900 dark:text-slate-100">
             NIFTY &gt; EMA 50 &amp; 200
           </div>
-          <div className="text-xs text-slate-500 mt-0.5">
+          <div className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
             0 trades taken if False
           </div>
         </div>
 
         <div className="p-3.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm">
-          <div className="text-xs font-semibold text-purple-600 dark:text-purple-400 uppercase tracking-wider">
+          <div className="text-xs font-semibold text-purple-700 dark:text-purple-400 uppercase tracking-wider">
             REQ-3.2 Trend Filter
           </div>
           <div className="text-sm font-medium mt-1 text-slate-900 dark:text-slate-100">
             20 &gt; 50 &gt; 150 &gt; 200
           </div>
-          <div className="text-xs text-slate-500 mt-0.5">
+          <div className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
             Strict ascending stack
           </div>
         </div>
 
         <div className="p-3.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm">
-          <div className="text-xs font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider">
+          <div className="text-xs font-semibold text-amber-800 dark:text-amber-400 uppercase tracking-wider">
             REQ-3.3 Price Filter
           </div>
           <div className="text-sm font-medium mt-1 text-slate-900 dark:text-slate-100">
             Close &gt; 0.85 × 52W High
           </div>
-          <div className="text-xs text-slate-500 mt-0.5">
+          <div className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
             Within 15% of 52W high
           </div>
         </div>
 
         <div className="p-3.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm">
-          <div className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
+          <div className="text-xs font-semibold text-emerald-800 dark:text-emerald-400 uppercase tracking-wider">
             REQ-3.4 Entry Trigger
           </div>
           <div className="text-sm font-medium mt-1 text-slate-900 dark:text-slate-100">
             Close(T) &gt; EMA20
           </div>
-          <div className="text-xs text-slate-500 mt-0.5">
+          <div className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
             Close(T-1) &lt; EMA20(T-1)
           </div>
         </div>
 
         <div className="p-3.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm">
-          <div className="text-xs font-semibold text-rose-600 dark:text-rose-400 uppercase tracking-wider">
+          <div className="text-xs font-semibold text-rose-700 dark:text-rose-400 uppercase tracking-wider">
             REQ-3.5 Exit Trigger
           </div>
           <div className="text-sm font-medium mt-1 text-slate-900 dark:text-slate-100">
             Close(T) &lt; EMA20
           </div>
-          <div className="text-xs text-slate-500 mt-0.5">
+          <div className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
             Execution on T+1 open
           </div>
         </div>
@@ -189,14 +189,19 @@ export default function SignalsPage() {
         </h2>
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2">
-            <label className="text-xs font-medium text-slate-600 dark:text-slate-400">
+            <label
+              htmlFor="screen-date-input"
+              className="text-xs font-medium text-slate-600 dark:text-slate-400"
+            >
               Evaluation Date:
             </label>
             <input
+              id="screen-date-input"
               type="date"
               value={screenDate}
               onChange={(e) => setScreenDate(e.target.value)}
               data-testid="screen-date-input"
+              aria-label="Evaluation Date"
               className="text-xs px-2.5 py-1.5 border border-slate-300 dark:border-slate-700 rounded bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
           </div>
@@ -255,7 +260,7 @@ export default function SignalsPage() {
                   </button>
                 ))
               ) : (
-                <span className="text-slate-500 italic">
+                <span className="text-slate-600 dark:text-slate-400 italic">
                   No symbols triggered entry signals on this date
                 </span>
               )}
@@ -269,13 +274,18 @@ export default function SignalsPage() {
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center gap-2">
-              <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+              <label
+                htmlFor="signal-symbol-select"
+                className="text-xs font-semibold text-slate-600 dark:text-slate-400"
+              >
                 Symbol:
               </label>
               <select
+                id="signal-symbol-select"
                 value={symbol}
                 onChange={(e) => setSymbol(e.target.value)}
                 data-testid="signal-symbol-select"
+                aria-label="Symbol"
                 className="text-xs px-2.5 py-1.5 border border-slate-300 dark:border-slate-700 rounded bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-mono font-medium focus:outline-none focus:ring-1 focus:ring-blue-500"
               >
                 {PRESET_SYMBOLS.map((s) => (
@@ -287,27 +297,37 @@ export default function SignalsPage() {
             </div>
 
             <div className="flex items-center gap-2">
-              <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+              <label
+                htmlFor="signal-start-date"
+                className="text-xs font-semibold text-slate-600 dark:text-slate-400"
+              >
                 Start:
               </label>
               <input
+                id="signal-start-date"
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
                 data-testid="signal-start-date"
+                aria-label="Start Date"
                 className="text-xs px-2 py-1.5 border border-slate-300 dark:border-slate-700 rounded bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
 
             <div className="flex items-center gap-2">
-              <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+              <label
+                htmlFor="signal-end-date"
+                className="text-xs font-semibold text-slate-600 dark:text-slate-400"
+              >
                 End:
               </label>
               <input
+                id="signal-end-date"
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
                 data-testid="signal-end-date"
+                aria-label="End Date"
                 className="text-xs px-2 py-1.5 border border-slate-300 dark:border-slate-700 rounded bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
@@ -377,20 +397,25 @@ export default function SignalsPage() {
         )}
 
         {loading ? (
-          <div className="p-8 text-center text-sm text-slate-500 animate-pulse">
+          <div className="p-8 text-center text-sm text-slate-600 dark:text-slate-400 animate-pulse">
             Computing technical indicators and strategy signals...
           </div>
         ) : filteredSignals.length === 0 ? (
-          <div className="p-8 text-center text-sm text-slate-500">
+          <div className="p-8 text-center text-sm text-slate-600 dark:text-slate-400">
             No signal rows match current criteria.
           </div>
         ) : (
-          <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
+          <div
+            className="overflow-x-auto max-h-[600px] overflow-y-auto"
+            tabIndex={0}
+            role="region"
+            aria-label="Signal evaluations table"
+          >
             <table
               className="w-full text-left border-collapse text-xs"
               data-testid="signals-table"
             >
-              <thead className="bg-slate-50 dark:bg-slate-800/80 sticky top-0 z-10 border-b border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 font-medium">
+              <thead className="bg-slate-50 dark:bg-slate-800/80 sticky top-0 z-10 border-b border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 font-medium">
                 <tr>
                   <th className="py-2.5 px-3">Date</th>
                   <th className="py-2.5 px-3">Close</th>
@@ -424,19 +449,19 @@ export default function SignalsPage() {
                       {item.entry ? (
                         <span
                           data-testid="entry-badge"
-                          className="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700"
+                          className="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-100 text-emerald-900 dark:bg-emerald-900/60 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700"
                         >
                           BUY / ENTRY
                         </span>
                       ) : item.exit ? (
                         <span
                           data-testid="exit-badge"
-                          className="px-2 py-0.5 rounded text-[11px] font-bold bg-rose-100 text-rose-800 dark:bg-rose-900/60 dark:text-rose-300 border border-rose-300 dark:border-rose-700"
+                          className="px-2 py-0.5 rounded text-[11px] font-bold bg-rose-100 text-rose-900 dark:bg-rose-900/60 dark:text-rose-300 border border-rose-300 dark:border-rose-700"
                         >
                           SELL / EXIT
                         </span>
                       ) : (
-                        <span className="text-slate-400 text-[11px]">
+                        <span className="text-slate-500 dark:text-slate-400 text-[11px]">
                           HOLD
                         </span>
                       )}

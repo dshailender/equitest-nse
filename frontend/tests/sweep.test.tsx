@@ -37,7 +37,7 @@ describe("SweepPage Component", () => {
 
     // Remove the newly added value "10"
     const valBadge = screen.getByText("10");
-    const removeBtn = within(valBadge).getByRole("button", { name: "×" });
+    const removeBtn = within(valBadge).getByRole("button", { name: /remove/i });
     fireEvent.click(removeBtn);
 
     // Back to 4 runs

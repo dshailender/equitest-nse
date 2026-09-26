@@ -95,7 +95,7 @@ export default function ValidationPage() {
           <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
             TradingView Cross-Check Verification
           </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
             Generate and export aligned OHLCV, 4 EMAs, 52W rolling high, and entry/exit signal series for visual diff against charting platforms.
           </p>
         </div>
@@ -105,7 +105,7 @@ export default function ValidationPage() {
             onClick={handleDownload}
             disabled={rows.length === 0}
             data-testid="btn-download-tv"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-sm font-medium shadow-sm transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-700 hover:bg-emerald-800 disabled:opacity-50 text-white text-sm font-medium shadow-sm transition-colors"
           >
             <Download className="w-4 h-4" />
             Download for TradingView Diff
@@ -118,7 +118,7 @@ export default function ValidationPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-end">
           {/* Run Selection */}
           <div>
-            <label htmlFor="run-select" className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">
+            <label htmlFor="run-select" className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1">
               Backtest Run Context
             </label>
             <select
@@ -139,7 +139,7 @@ export default function ValidationPage() {
 
           {/* Symbol Selection */}
           <div>
-            <label htmlFor="symbol-input" className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">
+            <label htmlFor="symbol-input" className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1">
               Symbol Ticker
             </label>
             <div className="relative">
@@ -154,9 +154,10 @@ export default function ValidationPage() {
               />
               <button
                 type="button"
+                aria-label="Refresh cross-check data"
                 onClick={() => handleFetch(selectedRunId, symbol)}
                 data-testid="btn-fetch-cross-check"
-                className="absolute right-1.5 top-1.5 p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500"
+                className="absolute right-1.5 top-1.5 p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400"
                 title="Refresh"
               >
                 <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
@@ -199,7 +200,7 @@ export default function ValidationPage() {
             <span className="font-medium text-xs">Show only sessions with Entry / Exit signals</span>
           </label>
 
-          <span className="text-xs text-slate-500">
+          <span className="text-xs text-slate-600 dark:text-slate-400">
             Showing <strong className="text-slate-900 dark:text-slate-100">{filteredRows.length}</strong> of {stats.count} trading sessions
           </span>
         </div>
@@ -208,35 +209,35 @@ export default function ValidationPage() {
       {/* Summary Stats Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-          <span className="text-xs font-medium text-slate-500 uppercase">Trading Sessions</span>
+          <span className="text-xs font-medium text-slate-600 dark:text-slate-400 uppercase">Trading Sessions</span>
           <p className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-1" data-testid="stat-sessions">
             {stats.count}
           </p>
-          <span className="text-xs text-slate-400 mt-0.5 block">{stats.firstDate} → {stats.lastDate}</span>
+          <span className="text-xs text-slate-600 dark:text-slate-400 mt-0.5 block">{stats.firstDate} → {stats.lastDate}</span>
         </div>
 
         <div className="p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-          <span className="text-xs font-medium text-slate-500 uppercase">Entry Signals</span>
+          <span className="text-xs font-medium text-slate-600 dark:text-slate-400 uppercase">Entry Signals</span>
           <p className="text-xl font-bold text-emerald-600 mt-1" data-testid="stat-entries">
             {stats.totalEntries}
           </p>
-          <span className="text-xs text-slate-400 mt-0.5 block">Cross above EMA-20</span>
+          <span className="text-xs text-slate-600 dark:text-slate-400 mt-0.5 block">Cross above EMA-20</span>
         </div>
 
         <div className="p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-          <span className="text-xs font-medium text-slate-500 uppercase">Exit Signals</span>
+          <span className="text-xs font-medium text-slate-600 dark:text-slate-400 uppercase">Exit Signals</span>
           <p className="text-xl font-bold text-rose-600 mt-1" data-testid="stat-exits">
             {stats.totalExits}
           </p>
-          <span className="text-xs text-slate-400 mt-0.5 block">Close below EMA-20</span>
+          <span className="text-xs text-slate-600 dark:text-slate-400 mt-0.5 block">Close below EMA-20</span>
         </div>
 
         <div className="p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-          <span className="text-xs font-medium text-slate-500 uppercase">Validation Context</span>
+          <span className="text-xs font-medium text-slate-600 dark:text-slate-400 uppercase">Validation Context</span>
           <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 mt-1 truncate" title={selectedRunId}>
             {selectedRunId === "default" ? "Baseline" : selectedRunId}
           </p>
-          <span className="text-xs text-slate-400 mt-0.5 block">{symbol} Series</span>
+          <span className="text-xs text-slate-600 dark:text-slate-400 mt-0.5 block">{symbol} Series</span>
         </div>
       </div>
 
@@ -260,32 +261,37 @@ export default function ValidationPage() {
           </div>
         </div>
 
-        <div className="overflow-x-auto max-h-[560px] overflow-y-auto">
+        <div
+          className="overflow-x-auto max-h-[560px] overflow-y-auto"
+          tabIndex={0}
+          role="region"
+          aria-label="TradingView cross-check data table"
+        >
           <table className="w-full text-left border-collapse text-xs" data-testid="table-cross-check">
             <thead className="bg-slate-50 dark:bg-slate-800/80 sticky top-0 z-10 border-b border-slate-200 dark:border-slate-700">
               <tr>
-                <th className="py-2.5 px-4 font-semibold text-slate-600 dark:text-slate-300">Date</th>
-                <th className="py-2.5 px-3 font-semibold text-slate-600 dark:text-slate-300 text-right">Close (₹)</th>
-                <th className="py-2.5 px-3 font-semibold text-slate-600 dark:text-slate-300 text-right">EMA 20</th>
-                <th className="py-2.5 px-3 font-semibold text-slate-600 dark:text-slate-300 text-right">EMA 50</th>
-                <th className="py-2.5 px-3 font-semibold text-slate-600 dark:text-slate-300 text-right">EMA 150</th>
-                <th className="py-2.5 px-3 font-semibold text-slate-600 dark:text-slate-300 text-right">EMA 200</th>
-                <th className="py-2.5 px-3 font-semibold text-slate-600 dark:text-slate-300 text-right">52W High</th>
-                <th className="py-2.5 px-3 font-semibold text-slate-600 dark:text-slate-300 text-center">Entry</th>
-                <th className="py-2.5 px-4 font-semibold text-slate-600 dark:text-slate-300 text-center">Exit</th>
+                <th className="py-2.5 px-4 font-semibold text-slate-700 dark:text-slate-300">Date</th>
+                <th className="py-2.5 px-3 font-semibold text-slate-700 dark:text-slate-300 text-right">Close (₹)</th>
+                <th className="py-2.5 px-3 font-semibold text-slate-700 dark:text-slate-300 text-right">EMA 20</th>
+                <th className="py-2.5 px-3 font-semibold text-slate-700 dark:text-slate-300 text-right">EMA 50</th>
+                <th className="py-2.5 px-3 font-semibold text-slate-700 dark:text-slate-300 text-right">EMA 150</th>
+                <th className="py-2.5 px-3 font-semibold text-slate-700 dark:text-slate-300 text-right">EMA 200</th>
+                <th className="py-2.5 px-3 font-semibold text-slate-700 dark:text-slate-300 text-right">52W High</th>
+                <th className="py-2.5 px-3 font-semibold text-slate-700 dark:text-slate-300 text-center">Entry</th>
+                <th className="py-2.5 px-4 font-semibold text-slate-700 dark:text-slate-300 text-center">Exit</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-mono">
               {loading ? (
                 <tr>
-                  <td colSpan={9} className="py-12 text-center text-slate-400">
+                  <td colSpan={9} className="py-12 text-center text-slate-600 dark:text-slate-400">
                     <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-2 text-blue-500" />
                     Computing indicators and signals...
                   </td>
                 </tr>
               ) : filteredRows.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="py-12 text-center text-slate-400 font-sans">
+                  <td colSpan={9} className="py-12 text-center text-slate-600 dark:text-slate-400 font-sans">
                     No records found matching filters.
                   </td>
                 </tr>
@@ -327,7 +333,7 @@ export default function ValidationPage() {
                       {row.entry ? (
                         <span
                           data-testid="badge-entry"
-                          className="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-600 text-white uppercase tracking-wider"
+                          className="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-700 text-white uppercase tracking-wider"
                         >
                           ENTRY
                         </span>

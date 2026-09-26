@@ -18,7 +18,7 @@ export default function DocsPage() {
             EquiTest NSE Documentation & Knowledge Base
           </h1>
         </div>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+        <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
           Complete engineering specifications, mathematical definitions, PRD §4 design decisions, and operational guides.
         </p>
       </div>
@@ -189,7 +189,7 @@ Audit Log & Parquet Fingerprint ◄──── Results Storage (dev.db & JSON B
                 <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 font-mono">
                   NIFTY Close &gt; EMA 50 AND NIFTY Close &gt; EMA 200
                 </p>
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
                   Evaluated on benchmark closing price. If False on session $T$, zero new trades are entered across the entire universe.
                 </p>
               </div>
@@ -199,7 +199,7 @@ Audit Log & Parquet Fingerprint ◄──── Results Storage (dev.db & JSON B
                 <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 font-mono">
                   EMA 20 &gt; EMA 50 &gt; EMA 150 &gt; EMA 200
                 </p>
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
                   Evaluated on stock adjusted close. All 4 EMAs must be strictly stacked in ascending order.
                 </p>
               </div>
@@ -209,7 +209,7 @@ Audit Log & Parquet Fingerprint ◄──── Results Storage (dev.db & JSON B
                 <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 font-mono">
                   Stock Close &gt; 0.85 * 52-Week Rolling High
                 </p>
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
                   Stock price must be within 15% of its 252-day rolling peak (excluding current bar).
                 </p>
               </div>
@@ -219,7 +219,7 @@ Audit Log & Parquet Fingerprint ◄──── Results Storage (dev.db & JSON B
                 <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 font-mono">
                   Close[T] &gt; EMA20[T] AND Close[T-1] &lt; EMA20[T-1]
                 </p>
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
                   Triggered on session $T$ close. Order executes on session $T+1$ Market Open with 10 bps slippage.
                 </p>
               </div>
@@ -229,7 +229,7 @@ Audit Log & Parquet Fingerprint ◄──── Results Storage (dev.db & JSON B
                 <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 font-mono">
                   Quantity = floor( (Corpus * 0.02) / (Entry * 0.07) )
                 </p>
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
                   Fixed 2% portfolio risk. Stop loss fixed at 7% below execution entry price.
                 </p>
               </div>

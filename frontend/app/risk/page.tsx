@@ -149,7 +149,7 @@ export default function RiskPage() {
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Risk & Position Sizing</h1>
-        <p className="text-sm text-slate-500 mt-1">
+        <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
           Derives exact share quantities and capital allocation from the 2% account risk rule and 7% hard stop loss (PRD §4).
         </p>
       </div>
@@ -285,25 +285,25 @@ export default function RiskPage() {
             <h2 className="text-lg font-semibold mb-4">Position Sizing Output</h2>
             <div className="grid grid-cols-2 gap-4">
               <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-800">
-                <span className="text-xs text-slate-500 font-medium block">Position Size (Quantity)</span>
+                <span className="text-xs text-slate-600 dark:text-slate-400 font-medium block">Position Size (Quantity)</span>
                 <span
                   data-testid="result-qty"
                   className="text-2xl font-bold text-blue-600 dark:text-blue-400 mt-1 block"
                 >
                   {result ? result.qty.toLocaleString("en-IN") : "—"}
                 </span>
-                <span className="text-xs text-slate-400 mt-0.5 block">Shares (Integer floored)</span>
+                <span className="text-xs text-slate-600 dark:text-slate-400 mt-0.5 block">Shares (Integer floored)</span>
               </div>
 
               <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-800">
-                <span className="text-xs text-slate-500 font-medium block">Capital Required</span>
+                <span className="text-xs text-slate-600 dark:text-slate-400 font-medium block">Capital Required</span>
                 <span
                   data-testid="result-capital"
                   className="text-2xl font-bold text-slate-900 dark:text-slate-100 mt-1 block"
                 >
                   {result ? formatINR(result.capital_required) : "—"}
                 </span>
-                <span className="text-xs text-slate-400 mt-0.5 block">
+                <span className="text-xs text-slate-600 dark:text-slate-400 mt-0.5 block">
                   {result && parseFloat(corpus) > 0
                     ? `${((result.capital_required / parseFloat(corpus)) * 100).toFixed(2)}% of account corpus`
                     : "—"}
@@ -311,27 +311,27 @@ export default function RiskPage() {
               </div>
 
               <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-800">
-                <span className="text-xs text-slate-500 font-medium block">Stop Loss Price Level</span>
+                <span className="text-xs text-slate-600 dark:text-slate-400 font-medium block">Stop Loss Price Level</span>
                 <span
                   data-testid="result-sl-price"
                   className="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1 block"
                 >
                   {result ? formatINR(result.sl_price) : "—"}
                 </span>
-                <span className="text-xs text-slate-400 mt-0.5 block">
+                <span className="text-xs text-slate-600 dark:text-slate-400 mt-0.5 block">
                   {slPct}% below entry price
                 </span>
               </div>
 
               <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-800">
-                <span className="text-xs text-slate-500 font-medium block">Corpus Risk Amount</span>
+                <span className="text-xs text-slate-600 dark:text-slate-400 font-medium block">Corpus Risk Amount</span>
                 <span
                   data-testid="result-risk-amount"
                   className="text-2xl font-bold text-slate-900 dark:text-slate-100 mt-1 block"
                 >
                   {result ? formatINR(result.risk_amount) : "—"}
                 </span>
-                <span className="text-xs text-slate-400 mt-0.5 block">
+                <span className="text-xs text-slate-600 dark:text-slate-400 mt-0.5 block">
                   {riskPct}% max account risk limit
                 </span>
               </div>

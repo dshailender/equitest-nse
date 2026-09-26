@@ -190,7 +190,7 @@ export default function BacktestPage() {
         <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
           Backtest Simulation Engine
         </h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+        <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
           Execute event-driven simulations with next-day open execution, 7% stop
           loss, 2% dynamic risk sizing, and portfolio capital constraints (Phase
           5).
@@ -209,24 +209,34 @@ export default function BacktestPage() {
             <form onSubmit={handleRun} className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
+                  <label
+                    htmlFor="input-start-date"
+                    className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1"
+                  >
                     Start Date
                   </label>
                   <input
+                    id="input-start-date"
                     type="date"
                     data-testid="input-start-date"
+                    aria-label="Start Date"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
                     className="w-full text-xs px-3 py-2 border rounded-lg border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
+                  <label
+                    htmlFor="input-end-date"
+                    className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1"
+                  >
                     End Date
                   </label>
                   <input
+                    id="input-end-date"
                     type="date"
                     data-testid="input-end-date"
+                    aria-label="End Date"
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
                     className="w-full text-xs px-3 py-2 border rounded-lg border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none"
@@ -235,12 +245,17 @@ export default function BacktestPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
+                <label
+                  htmlFor="input-corpus"
+                  className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1"
+                >
                   Starting Corpus (₹)
                 </label>
                 <input
+                  id="input-corpus"
                   type="number"
                   data-testid="input-corpus"
+                  aria-label="Starting Corpus"
                   value={corpus}
                   onChange={(e) => setCorpus(e.target.value)}
                   className="w-full text-xs px-3 py-2 border rounded-lg border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none"
@@ -249,26 +264,36 @@ export default function BacktestPage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
+                  <label
+                    htmlFor="input-risk"
+                    className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1"
+                  >
                     Risk per Trade (%)
                   </label>
                   <input
+                    id="input-risk"
                     type="number"
                     step="0.1"
                     data-testid="input-risk"
+                    aria-label="Risk per Trade (%)"
                     value={riskPct}
                     onChange={(e) => setRiskPct(e.target.value)}
                     className="w-full text-xs px-3 py-2 border rounded-lg border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
+                  <label
+                    htmlFor="input-sl"
+                    className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1"
+                  >
                     Stop Loss (%)
                   </label>
                   <input
+                    id="input-sl"
                     type="number"
                     step="0.1"
                     data-testid="input-sl"
+                    aria-label="Stop Loss (%)"
                     value={slPct}
                     onChange={(e) => setSlPct(e.target.value)}
                     className="w-full text-xs px-3 py-2 border rounded-lg border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none"
@@ -283,30 +308,34 @@ export default function BacktestPage() {
                 <div className="grid grid-cols-4 gap-1.5">
                   <input
                     type="number"
+                    aria-label="EMA 20"
                     value={ema20}
                     onChange={(e) => setEma20(e.target.value)}
-                    className="text-xs px-2 py-1.5 text-center border rounded border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800"
+                    className="text-xs px-2 py-1.5 text-center border rounded border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
                     placeholder="20"
                   />
                   <input
                     type="number"
+                    aria-label="EMA 50"
                     value={ema50}
                     onChange={(e) => setEma50(e.target.value)}
-                    className="text-xs px-2 py-1.5 text-center border rounded border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800"
+                    className="text-xs px-2 py-1.5 text-center border rounded border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
                     placeholder="50"
                   />
                   <input
                     type="number"
+                    aria-label="EMA 150"
                     value={ema150}
                     onChange={(e) => setEma150(e.target.value)}
-                    className="text-xs px-2 py-1.5 text-center border rounded border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800"
+                    className="text-xs px-2 py-1.5 text-center border rounded border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
                     placeholder="150"
                   />
                   <input
                     type="number"
+                    aria-label="EMA 200"
                     value={ema200}
                     onChange={(e) => setEma200(e.target.value)}
-                    className="text-xs px-2 py-1.5 text-center border rounded border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800"
+                    className="text-xs px-2 py-1.5 text-center border rounded border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
                     placeholder="200"
                   />
                 </div>
@@ -342,7 +371,7 @@ export default function BacktestPage() {
               Run History
             </h3>
             {pastRuns.length === 0 ? (
-              <p className="text-xs text-slate-400">No past runs recorded</p>
+              <p className="text-xs text-slate-600 dark:text-slate-400">No past runs recorded</p>
             ) : (
               <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
                 {pastRuns.map((r) => (
@@ -359,7 +388,7 @@ export default function BacktestPage() {
                       <div className="font-mono text-slate-800 dark:text-slate-200">
                         {r.run_id}
                       </div>
-                      <div className="text-[10px] text-slate-400">
+                      <div className="text-[10px] text-slate-600 dark:text-slate-400">
                         {r.created_at.slice(0, 16).replace("T", " ")}
                       </div>
                     </div>
@@ -396,7 +425,7 @@ export default function BacktestPage() {
               <div className="font-semibold text-sm text-slate-800 dark:text-slate-200">
                 Running Backtest Simulation...
               </div>
-              <div className="text-xs text-slate-500 font-mono">
+              <div className="text-xs text-slate-600 dark:text-slate-400 font-mono">
                 Job ID: {activeRunId}
               </div>
             </div>
@@ -405,7 +434,7 @@ export default function BacktestPage() {
               {/* Summary KPI Cards */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm">
-                  <span className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">
+                  <span className="text-[11px] font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider">
                     Final Capital
                   </span>
                   <div
@@ -420,7 +449,7 @@ export default function BacktestPage() {
                 </div>
 
                 <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm">
-                  <span className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">
+                  <span className="text-[11px] font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider">
                     Total Return
                   </span>
                   <div
@@ -436,7 +465,7 @@ export default function BacktestPage() {
                 </div>
 
                 <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm">
-                  <span className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">
+                  <span className="text-[11px] font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider">
                     Total Trades
                   </span>
                   <div
@@ -448,7 +477,7 @@ export default function BacktestPage() {
                 </div>
 
                 <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm">
-                  <span className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">
+                  <span className="text-[11px] font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider">
                     Win Rate
                   </span>
                   <div
@@ -546,6 +575,7 @@ export default function BacktestPage() {
                     <input
                       type="text"
                       placeholder="Filter symbol..."
+                      aria-label="Filter symbol"
                       value={searchSymbol}
                       onChange={(e) => setSearchSymbol(e.target.value)}
                       className="text-xs px-2.5 py-1.5 border rounded-lg border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 outline-none w-32"
@@ -553,6 +583,7 @@ export default function BacktestPage() {
 
                     <select
                       value={exitReasonFilter}
+                      aria-label="Filter exit reason"
                       onChange={(e) => setExitReasonFilter(e.target.value)}
                       className="text-xs px-2.5 py-1.5 border rounded-lg border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 outline-none"
                     >
@@ -564,13 +595,18 @@ export default function BacktestPage() {
                   </div>
                 </div>
 
-                <div className="overflow-x-auto">
+                <div
+                  className="overflow-x-auto"
+                  tabIndex={0}
+                  role="region"
+                  aria-label="Trades ledger table"
+                >
                   <table
                     data-testid="trades-table"
                     className="w-full text-left text-xs"
                   >
                     <thead>
-                      <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 font-medium">
+                      <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 font-medium">
                         <th className="py-2.5 px-3">Symbol</th>
                         <th className="py-2.5 px-3">Entry Date</th>
                         <th className="py-2.5 px-3">Entry Price</th>
@@ -589,7 +625,7 @@ export default function BacktestPage() {
                         <tr>
                           <td
                             colSpan={11}
-                            className="py-6 text-center text-slate-400"
+                            className="py-6 text-center text-slate-600 dark:text-slate-400"
                           >
                             No trades match filter criteria
                           </td>
@@ -659,7 +695,7 @@ export default function BacktestPage() {
                             <td className="py-2.5 px-3 text-right text-slate-600 dark:text-slate-400">
                               {t.days_held}
                             </td>
-                            <td className="py-2.5 px-3 text-right text-slate-500">
+                            <td className="py-2.5 px-3 text-right text-slate-600 dark:text-slate-400">
                               ₹{t.costs.toFixed(2)}
                             </td>
                           </tr>
@@ -671,7 +707,7 @@ export default function BacktestPage() {
               </div>
             </>
           ) : (
-            <div className="h-64 flex flex-col items-center justify-center bg-white dark:bg-slate-900 border border-dashed border-slate-300 dark:border-slate-800 rounded-xl p-8 text-center text-slate-400">
+            <div className="h-64 flex flex-col items-center justify-center bg-white dark:bg-slate-900 border border-dashed border-slate-300 dark:border-slate-800 rounded-xl p-8 text-center text-slate-600 dark:text-slate-400">
               <p className="text-sm">
                 Configure parameters and click &quot;Run Backtest&quot; to begin
                 simulation.

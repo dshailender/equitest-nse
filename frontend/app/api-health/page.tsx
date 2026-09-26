@@ -32,7 +32,7 @@ export default function ApiHealthPage() {
         <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
           API Health Diagnostic
         </h1>
-        <p className="text-sm text-slate-500 mt-1">
+        <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
           Validates connectivity to the FastAPI backend and verifies OpenAPI response contracts.
         </p>
       </div>
@@ -65,7 +65,7 @@ export default function ApiHealthPage() {
 
         <CardContent className="space-y-4">
           {isLoading && (
-            <div className="py-8 flex flex-col items-center justify-center space-y-2 text-slate-500">
+            <div className="py-8 flex flex-col items-center justify-center space-y-2 text-slate-600 dark:text-slate-400">
               <RefreshCw className="w-6 h-6 animate-spin text-blue-600" />
               <p className="text-sm">Connecting to backend service...</p>
             </div>
@@ -80,7 +80,7 @@ export default function ApiHealthPage() {
               <div className="text-xs space-y-1">
                 <p className="font-semibold">Failed to fetch backend health status</p>
                 <p>{error instanceof Error ? error.message : "Backend unreachable."}</p>
-                <p className="text-slate-500">
+                <p className="text-slate-600 dark:text-slate-400">
                   Ensure the FastAPI backend is running on port 8000.
                 </p>
               </div>
@@ -91,14 +91,14 @@ export default function ApiHealthPage() {
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-4">
                 <div className="p-4 rounded-lg bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-                  <span className="text-xs font-medium text-slate-500 block mb-1">
+                  <span className="text-xs font-medium text-slate-600 dark:text-slate-400 block mb-1">
                     Reported Status
                   </span>
                   <div className="flex items-center space-x-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                    <CheckCircle2 className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
                     <span
                       data-testid="health-status"
-                      className="font-mono font-bold text-lg text-emerald-600"
+                      className="font-mono font-bold text-lg text-emerald-700 dark:text-emerald-400"
                     >
                       {data.status}
                     </span>
@@ -106,7 +106,7 @@ export default function ApiHealthPage() {
                 </div>
 
                 <div className="p-4 rounded-lg bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-                  <span className="text-xs font-medium text-slate-500 block mb-1">
+                  <span className="text-xs font-medium text-slate-600 dark:text-slate-400 block mb-1">
                     System Version
                   </span>
                   <span
@@ -126,7 +126,7 @@ export default function ApiHealthPage() {
         </CardContent>
 
         <CardFooter className="flex justify-between border-t border-slate-100 dark:border-slate-800 pt-4">
-          <span className="text-xs text-slate-400">
+          <span className="text-xs text-slate-600 dark:text-slate-400">
             Validated by Zod schema • Typed by OpenAPI
           </span>
           <Button

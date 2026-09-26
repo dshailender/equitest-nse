@@ -53,19 +53,19 @@ function formatCurrency(val: number): string {
 
 function getCellColorClass(val: number | null | undefined): string {
   if (val === null || val === undefined) {
-    return "bg-slate-100/50 dark:bg-slate-800/20 text-slate-400";
+    return "bg-slate-100/50 dark:bg-slate-800/20 text-slate-600 dark:text-slate-400";
   }
   if (val === 0) {
     return "bg-slate-50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400";
   }
   if (val > 0) {
-    if (val >= 0.05) return "bg-emerald-600 text-white font-semibold";
-    if (val >= 0.02) return "bg-emerald-500/80 text-white font-medium";
+    if (val >= 0.05) return "bg-emerald-700 text-white font-semibold";
+    if (val >= 0.02) return "bg-emerald-800 text-white font-medium";
     if (val >= 0.01) return "bg-emerald-200 text-emerald-950 dark:bg-emerald-900/60 dark:text-emerald-200";
     return "bg-emerald-100 text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300";
   } else {
-    if (val <= -0.05) return "bg-rose-600 text-white font-semibold";
-    if (val <= -0.02) return "bg-rose-500/80 text-white font-medium";
+    if (val <= -0.05) return "bg-rose-700 text-white font-semibold";
+    if (val <= -0.02) return "bg-rose-800 text-white font-medium";
     if (val <= -0.01) return "bg-rose-200 text-rose-950 dark:bg-rose-900/60 dark:text-rose-200";
     return "bg-rose-100 text-rose-900 dark:bg-rose-950/40 dark:text-rose-300";
   }
@@ -190,10 +190,10 @@ export default function ReportDetailPage({
   if (error || !summary) {
     return (
       <div className="p-6 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 rounded-xl max-w-xl mx-auto my-12 text-center space-y-3">
-        <h2 className="text-base font-semibold text-red-700 dark:text-red-400">
+        <h1 className="text-base font-semibold text-red-800 dark:text-red-300">
           Failed to Load Report
-        </h2>
-        <p className="text-xs text-red-600 dark:text-red-300">{error || "Report not found"}</p>
+        </h1>
+        <p className="text-xs text-red-800 dark:text-red-200">{error || "Report not found"}</p>
         <Link
           href="/backtest"
           className="inline-block mt-2 px-4 py-2 bg-slate-800 text-white rounded-lg text-xs hover:bg-slate-700"
@@ -211,7 +211,7 @@ export default function ReportDetailPage({
       {/* Top Breadcrumb & Actions Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-5">
         <div>
-          <div className="flex items-center space-x-2 text-xs text-slate-500 mb-1">
+          <div className="flex items-center space-x-2 text-xs text-slate-600 dark:text-slate-400 mb-1">
             <Link href="/backtest" className="hover:text-blue-600 transition-colors">
               Backtest
             </Link>
@@ -223,7 +223,7 @@ export default function ReportDetailPage({
           <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
             Strategy Performance Report
           </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
             Generated on {new Date(summary.created_at).toLocaleString()} • Status:{" "}
             <span className="inline-block px-1.5 py-0.5 rounded text-[11px] font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
               {summary.status}
@@ -245,7 +245,7 @@ export default function ReportDetailPage({
           <button
             onClick={() => handleDownload("xlsx")}
             data-testid="btn-export-xlsx"
-            className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium rounded-lg shadow-sm transition-colors flex items-center space-x-1.5"
+            className="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-medium rounded-lg shadow-sm transition-colors flex items-center space-x-1.5"
           >
             <span>📊</span>
             <span>Export Excel</span>
@@ -263,12 +263,12 @@ export default function ReportDetailPage({
 
       {/* Core KPI Cards Grid */}
       <div>
-        <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3">
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-3">
           Core Performance KPIs
         </h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm">
-            <span className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">
+            <span className="text-[11px] font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider">
               Final Capital
             </span>
             <div
@@ -277,13 +277,13 @@ export default function ReportDetailPage({
             >
               {formatCurrency(m.final_capital)}
             </div>
-            <span className="text-[10px] text-slate-400">
+            <span className="text-[10px] text-slate-600 dark:text-slate-400">
               Start: {formatCurrency(m.initial_capital)}
             </span>
           </div>
 
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm">
-            <span className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">
+            <span className="text-[11px] font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider">
               Total Return
             </span>
             <div
@@ -294,13 +294,13 @@ export default function ReportDetailPage({
             >
               {(m.total_return_pct * 100).toFixed(2)}%
             </div>
-            <span className="text-[10px] text-slate-400">
+            <span className="text-[10px] text-slate-600 dark:text-slate-400">
               Net: {formatCurrency(m.net_profit)}
             </span>
           </div>
 
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm">
-            <span className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">
+            <span className="text-[11px] font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider">
               Total Trades
             </span>
             <div
@@ -309,13 +309,13 @@ export default function ReportDetailPage({
             >
               {m.total_trades}
             </div>
-            <span className="text-[10px] text-slate-400">
+            <span className="text-[10px] text-slate-600 dark:text-slate-400">
               {m.win_trades}W / {m.loss_trades}L
             </span>
           </div>
 
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm">
-            <span className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">
+            <span className="text-[11px] font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider">
               Win Rate
             </span>
             <div
@@ -324,11 +324,11 @@ export default function ReportDetailPage({
             >
               {(m.win_rate * 100).toFixed(2)}%
             </div>
-            <span className="text-[10px] text-slate-400">Closed round-trips</span>
+            <span className="text-[10px] text-slate-600 dark:text-slate-400">Closed round-trips</span>
           </div>
 
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm">
-            <span className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">
+            <span className="text-[11px] font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider">
               Avg Profit
             </span>
             <div
@@ -337,11 +337,11 @@ export default function ReportDetailPage({
             >
               {formatCurrency(m.avg_profit)}
             </div>
-            <span className="text-[10px] text-slate-400">Per winning trade</span>
+            <span className="text-[10px] text-slate-600 dark:text-slate-400">Per winning trade</span>
           </div>
 
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm">
-            <span className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">
+            <span className="text-[11px] font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider">
               Avg Loss
             </span>
             <div
@@ -350,19 +350,19 @@ export default function ReportDetailPage({
             >
               {formatCurrency(m.avg_loss)}
             </div>
-            <span className="text-[10px] text-slate-400">Per losing trade</span>
+            <span className="text-[10px] text-slate-600 dark:text-slate-400">Per losing trade</span>
           </div>
         </div>
       </div>
 
       {/* Advanced Risk & Return Metrics */}
       <div>
-        <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3">
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-3">
           Advanced Risk & Return Metrics
         </h2>
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 shadow-sm">
-            <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wider">
+            <span className="text-[10px] font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider">
               CAGR
             </span>
             <div
@@ -374,7 +374,7 @@ export default function ReportDetailPage({
           </div>
 
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 shadow-sm">
-            <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wider">
+            <span className="text-[10px] font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider">
               Max Drawdown
             </span>
             <div
@@ -386,7 +386,7 @@ export default function ReportDetailPage({
           </div>
 
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 shadow-sm">
-            <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wider">
+            <span className="text-[10px] font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider">
               Sharpe (rf=0)
             </span>
             <div
@@ -398,7 +398,7 @@ export default function ReportDetailPage({
           </div>
 
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 shadow-sm">
-            <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wider">
+            <span className="text-[10px] font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider">
               Sortino
             </span>
             <div
@@ -410,7 +410,7 @@ export default function ReportDetailPage({
           </div>
 
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 shadow-sm">
-            <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wider">
+            <span className="text-[10px] font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider">
               Calmar
             </span>
             <div
@@ -422,7 +422,7 @@ export default function ReportDetailPage({
           </div>
 
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 shadow-sm">
-            <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wider">
+            <span className="text-[10px] font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider">
               Profit Factor
             </span>
             <div
@@ -434,7 +434,7 @@ export default function ReportDetailPage({
           </div>
 
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 shadow-sm">
-            <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wider">
+            <span className="text-[10px] font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider">
               Expectancy
             </span>
             <div
@@ -446,7 +446,7 @@ export default function ReportDetailPage({
           </div>
 
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 shadow-sm">
-            <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wider">
+            <span className="text-[10px] font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider">
               Avg Days Held
             </span>
             <div
@@ -471,7 +471,7 @@ export default function ReportDetailPage({
               <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                 Underwater Drawdown Curve
               </h3>
-              <p className="text-[11px] text-slate-500">
+              <p className="text-[11px] text-slate-600 dark:text-slate-400">
                 Daily peak-to-trough equity decline percentage
               </p>
             </div>
@@ -526,7 +526,7 @@ export default function ReportDetailPage({
               <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                 Trade Return Distribution
               </h3>
-              <p className="text-[11px] text-slate-500">
+              <p className="text-[11px] text-slate-600 dark:text-slate-400">
                 Frequency histogram of closed trade PnL percentages
               </p>
             </div>
@@ -561,12 +561,17 @@ export default function ReportDetailPage({
           <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
             Monthly Returns Matrix & Heatmap
           </h3>
-          <p className="text-[11px] text-slate-500">
+          <p className="text-[11px] text-slate-600 dark:text-slate-400">
             Compounded month-by-month and year-to-date performance (%)
           </p>
         </div>
 
-        <div className="overflow-x-auto">
+        <div
+          className="overflow-x-auto"
+          tabIndex={0}
+          role="region"
+          aria-label="Monthly returns matrix"
+        >
           <table className="w-full text-center border-collapse text-xs">
             <thead>
               <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40">
@@ -574,7 +579,7 @@ export default function ReportDetailPage({
                   Year
                 </th>
                 {MONTH_COLS.map((col) => (
-                  <th key={col.key} className="py-2.5 px-2 font-medium text-slate-500">
+                  <th key={col.key} className="py-2.5 px-2 font-medium text-slate-600 dark:text-slate-400">
                     {col.label}
                   </th>
                 ))}
@@ -586,7 +591,7 @@ export default function ReportDetailPage({
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-mono">
               {monthly.length === 0 ? (
                 <tr>
-                  <td colSpan={14} className="py-8 text-slate-400 text-center font-sans">
+                  <td colSpan={14} className="py-8 text-slate-600 dark:text-slate-400 text-center font-sans">
                     No monthly performance data available
                   </td>
                 </tr>

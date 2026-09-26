@@ -165,7 +165,7 @@ export default function DataStatusPage() {
         <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
           Data Pipeline & Market Universe
         </h1>
-        <p className="text-sm text-slate-500 mt-1">
+        <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
           Ingest OHLCV data, inspect point-in-time universe constituents (NSE 101–750), and verify corporate action adjustments.
         </p>
       </div>
@@ -190,10 +190,14 @@ export default function DataStatusPage() {
         <CardContent className="space-y-4">
           <div className="flex flex-wrap items-center gap-4">
             <div className="flex items-center space-x-2">
-              <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+              <label
+                htmlFor="ingest-start"
+                className="text-xs font-semibold text-slate-600 dark:text-slate-400"
+              >
                 Start:
               </label>
               <input
+                id="ingest-start"
                 type="date"
                 data-testid="ingest-start"
                 value={startDate}
@@ -203,10 +207,14 @@ export default function DataStatusPage() {
             </div>
 
             <div className="flex items-center space-x-2">
-              <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+              <label
+                htmlFor="ingest-end"
+                className="text-xs font-semibold text-slate-600 dark:text-slate-400"
+              >
                 End:
               </label>
               <input
+                id="ingest-end"
                 type="date"
                 data-testid="ingest-end"
                 value={endDate}
@@ -278,6 +286,7 @@ export default function DataStatusPage() {
               <input
                 type="text"
                 placeholder="Search symbol..."
+                aria-label="Filter coverage symbols"
                 value={searchFilter}
                 onChange={(e) => {
                   setSearchFilter(e.target.value);
@@ -287,7 +296,12 @@ export default function DataStatusPage() {
               />
             </div>
 
-            <div className="border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden">
+            <div
+              tabIndex={0}
+              role="region"
+              aria-label="Stored data coverage table"
+              className="border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden"
+            >
               <table className="w-full text-xs text-left">
                 <thead className="bg-slate-100 dark:bg-slate-800/60 font-semibold text-slate-600 dark:text-slate-300 border-b border-slate-200 dark:border-slate-800">
                   <tr>
@@ -300,14 +314,14 @@ export default function DataStatusPage() {
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800/40">
                   {coverageQuery.isLoading ? (
                     <tr>
-                      <td colSpan={4} className="py-8 text-center text-slate-500">
+                      <td colSpan={4} className="py-8 text-center text-slate-600 dark:text-slate-400">
                         <RefreshCw className="w-4 h-4 animate-spin mx-auto mb-1 text-blue-600" />
                         Loading coverage data...
                       </td>
                     </tr>
                   ) : paginatedCoverage.length === 0 ? (
                     <tr>
-                      <td colSpan={4} className="py-8 text-center text-slate-500">
+                      <td colSpan={4} className="py-8 text-center text-slate-600 dark:text-slate-400">
                         No coverage found. Run ingestion to populate.
                       </td>
                     </tr>
@@ -344,7 +358,7 @@ export default function DataStatusPage() {
           </CardContent>
 
           <CardFooter className="flex items-center justify-between border-t border-slate-100 dark:border-slate-800 pt-3">
-            <span className="text-xs text-slate-500">
+            <span className="text-xs text-slate-600 dark:text-slate-400">
               Page {page} of {totalPages}
             </span>
             <div className="flex items-center space-x-1">
@@ -352,6 +366,7 @@ export default function DataStatusPage() {
                 variant="outline"
                 size="sm"
                 data-testid="coverage-prev"
+                aria-label="Previous coverage page"
                 disabled={page <= 1}
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 className="h-7 px-2 text-xs"
@@ -362,6 +377,7 @@ export default function DataStatusPage() {
                 variant="outline"
                 size="sm"
                 data-testid="coverage-next"
+                aria-label="Next coverage page"
                 disabled={page >= totalPages}
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 className="h-7 px-2 text-xs"
@@ -392,10 +408,14 @@ export default function DataStatusPage() {
           <CardContent className="space-y-4 flex-1">
             <div className="flex items-center space-x-3">
               <Calendar className="w-4 h-4 text-slate-400" />
-              <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+              <label
+                htmlFor="universe-date-input"
+                className="text-xs font-semibold text-slate-600 dark:text-slate-400"
+              >
                 Evaluation Date:
               </label>
               <input
+                id="universe-date-input"
                 type="date"
                 data-testid="universe-date-input"
                 value={universeDate}
@@ -429,7 +449,7 @@ export default function DataStatusPage() {
                   </div>
                 )}
 
-                <div className="flex items-center justify-between text-xs text-slate-500">
+                <div className="flex items-center justify-between text-xs text-slate-600 dark:text-slate-400">
                   <span>Constituents Count: <strong>{universeQuery.data.count}</strong></span>
                   <span>Effective Date: <code className="font-mono">{universeQuery.data.date}</code></span>
                 </div>
@@ -439,6 +459,7 @@ export default function DataStatusPage() {
                   <input
                     type="text"
                     data-testid="universe-search-input"
+                    aria-label="Filter universe constituents"
                     placeholder="Search constituent by symbol, name, sector, or rank..."
                     value={universeSearch}
                     onChange={(e) => setUniverseSearch(e.target.value)}
@@ -447,6 +468,9 @@ export default function DataStatusPage() {
                 </div>
 
                 <div
+                  tabIndex={0}
+                  role="region"
+                  aria-label="Universe constituents table"
                   data-testid="universe-tickers"
                   className="border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden"
                 >
@@ -462,7 +486,7 @@ export default function DataStatusPage() {
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800/40">
                       {paginatedUniverse.length === 0 ? (
                         <tr>
-                          <td colSpan={4} className="py-6 text-center text-slate-400">
+                          <td colSpan={4} className="py-6 text-center text-slate-600 dark:text-slate-400">
                             No constituents match &ldquo;{universeSearch}&rdquo;
                           </td>
                         </tr>
@@ -474,7 +498,7 @@ export default function DataStatusPage() {
                             onClick={() => setSelectedSymbol(item.symbol)}
                             className="hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition-colors"
                           >
-                            <td className="py-2 px-3 font-mono font-medium text-slate-500">
+                            <td className="py-2 px-3 font-mono font-medium text-slate-600 dark:text-slate-400">
                               #{item.rank}
                             </td>
                             <td className="py-2 px-3">
@@ -501,7 +525,7 @@ export default function DataStatusPage() {
           </CardContent>
 
           <CardFooter className="flex items-center justify-between border-t border-slate-100 dark:border-slate-800 pt-3">
-            <span className="text-xs text-slate-500">
+            <span className="text-xs text-slate-600 dark:text-slate-400">
               Page {universePage} of {universeTotalPages} ({filteredUniverse.length} constituents)
             </span>
             <div className="flex items-center space-x-1">
@@ -509,6 +533,7 @@ export default function DataStatusPage() {
                 variant="outline"
                 size="sm"
                 data-testid="universe-prev"
+                aria-label="Previous universe page"
                 disabled={universePage <= 1}
                 onClick={() => setUniversePage((p) => Math.max(1, p - 1))}
                 className="h-7 px-2 text-xs"
@@ -519,6 +544,7 @@ export default function DataStatusPage() {
                 variant="outline"
                 size="sm"
                 data-testid="universe-next"
+                aria-label="Next universe page"
                 disabled={universePage >= universeTotalPages}
                 onClick={() => setUniversePage((p) => Math.min(universeTotalPages, p + 1))}
                 className="h-7 px-2 text-xs"
@@ -616,13 +642,13 @@ export default function DataStatusPage() {
               </ResponsiveContainer>
             </div>
           ) : (
-            <div className="py-12 text-center text-xs text-slate-400">
+            <div className="py-12 text-center text-xs text-slate-600 dark:text-slate-400">
               No data available. Click Ingest above.
             </div>
           )}
         </CardContent>
 
-        <CardFooter className="border-t border-slate-100 dark:border-slate-800 pt-3 text-xs text-slate-500 flex justify-between">
+        <CardFooter className="border-t border-slate-100 dark:border-slate-800 pt-3 text-xs text-slate-600 dark:text-slate-400 flex justify-between">
           <span>All moving average indicators in Phase 2 are calculated on Adjusted Close.</span>
           <span>Dates strictly enforced $\le D$ (No Look-Ahead)</span>
         </CardFooter>

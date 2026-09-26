@@ -255,7 +255,7 @@ export default function SweepPage() {
         <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
           Parameter & Scenario Sweep
         </h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+        <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
           Explore sensitivity across strategy parameters, evaluate regimes, and compare scenario outcomes side-by-side.
         </p>
       </div>
@@ -275,37 +275,52 @@ export default function SweepPage() {
         {/* Base Dates & Capital */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pb-4 border-b border-slate-200 dark:border-slate-800">
           <div>
-            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
+            <label
+              htmlFor="sweep-start-date"
+              className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1"
+            >
               Start Date
             </label>
             <input
+              id="sweep-start-date"
               type="date"
+              aria-label="Start Date"
               data-testid="input-start-date"
-              className="w-full text-sm px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800"
+              className="w-full text-sm px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
             />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
+            <label
+              htmlFor="sweep-end-date"
+              className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1"
+            >
               End Date
             </label>
             <input
+              id="sweep-end-date"
               type="date"
+              aria-label="End Date"
               data-testid="input-end-date"
-              className="w-full text-sm px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800"
+              className="w-full text-sm px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
             />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
+            <label
+              htmlFor="sweep-capital"
+              className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1"
+            >
               Starting Capital (₹)
             </label>
             <input
+              id="sweep-capital"
               type="number"
+              aria-label="Starting Capital"
               data-testid="input-capital"
-              className="w-full text-sm px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800"
+              className="w-full text-sm px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100"
               value={initialCapital}
               onChange={(e) => setInitialCapital(e.target.value)}
             />
@@ -320,7 +335,8 @@ export default function SweepPage() {
             </span>
             <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
               <select
-                className="text-xs px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 w-full sm:w-auto max-w-full"
+                aria-label="Select factor to add"
+                className="text-xs px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 w-full sm:w-auto max-w-full"
                 value={selectedParamToAdd}
                 onChange={(e) => setSelectedParamToAdd(e.target.value)}
               >
@@ -354,20 +370,21 @@ export default function SweepPage() {
                     {entry.values.map((v) => (
                       <span
                         key={v}
-                        className="inline-flex items-center text-xs px-2 py-0.5 rounded-md bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 font-mono"
+                        className="inline-flex items-center text-xs px-2 py-0.5 rounded-md bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 font-mono text-slate-900 dark:text-slate-100"
                       >
                         {v}
                         <button
                           type="button"
+                          aria-label={`Remove value ${v} for ${entry.param}`}
                           onClick={() => handleRemoveValue(entry.param, v)}
-                          className="ml-1 text-slate-400 hover:text-rose-500 font-bold"
+                          className="ml-1 text-slate-500 hover:text-rose-500 font-bold"
                         >
                           ×
                         </button>
                       </span>
                     ))}
                     {entry.values.length === 0 && (
-                      <span className="text-xs text-slate-400 italic">No values added</span>
+                      <span className="text-xs text-slate-600 dark:text-slate-400 italic">No values added</span>
                     )}
                   </div>
                 </div>
@@ -376,7 +393,8 @@ export default function SweepPage() {
                   <input
                     type="text"
                     placeholder="Add value..."
-                    className="text-xs px-2 py-1 rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 w-24"
+                    aria-label={`Add value for ${entry.param}`}
+                    className="text-xs px-2 py-1 rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 w-24"
                     value={newValInputs[entry.param] || ""}
                     onChange={(e) =>
                       setNewValInputs({ ...newValInputs, [entry.param]: e.target.value })
@@ -397,8 +415,9 @@ export default function SweepPage() {
                   </button>
                   <button
                     type="button"
+                    aria-label={`Remove factor ${entry.param}`}
                     onClick={() => handleRemoveParam(entry.param)}
-                    className="text-xs text-rose-500 hover:text-rose-700 px-2 py-1"
+                    className="text-xs text-rose-600 hover:text-rose-700 px-2 py-1"
                   >
                     Remove
                   </button>
@@ -447,7 +466,7 @@ export default function SweepPage() {
               <span className="font-semibold text-sm capitalize">
                 Sweep Status: {sweepData.status}
               </span>
-              <span className="text-xs text-slate-500">
+              <span className="text-xs text-slate-600 dark:text-slate-400">
                 ({sweepData.completed_runs} / {sweepData.total_runs} completed)
               </span>
             </div>
@@ -470,7 +489,12 @@ export default function SweepPage() {
               <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">
                 Sensitivity Heatmap (CAGR % by {heatmapData.p1} vs {heatmapData.p2})
               </h3>
-              <div className="overflow-x-auto">
+              <div
+                className="overflow-x-auto"
+                tabIndex={0}
+                role="region"
+                aria-label="Sensitivity heatmap"
+              >
                 <table className="min-w-full text-center text-xs border border-slate-200 dark:border-slate-800">
                   <thead>
                     <tr className="bg-slate-100 dark:bg-slate-800">
@@ -509,7 +533,7 @@ export default function SweepPage() {
                                   ? "bg-emerald-500/20 text-emerald-700 dark:text-emerald-300"
                                   : isNeg
                                   ? "bg-rose-500/20 text-rose-700 dark:text-rose-300"
-                                  : "bg-slate-50 dark:bg-slate-800/40 text-slate-500"
+                                  : "bg-slate-50 dark:bg-slate-800/40 text-slate-600 dark:text-slate-400"
                               }`}
                             >
                               {hasVal ? `${isPos ? "+" : ""}${cagrPct}%` : "—"}
@@ -541,7 +565,12 @@ export default function SweepPage() {
               </button>
             </div>
 
-            <div className="overflow-x-auto">
+            <div
+              className="overflow-x-auto"
+              tabIndex={0}
+              role="region"
+              aria-label="Sweep runs breakdown table"
+            >
               <table
                 data-testid="sweep-runs-table"
                 className="min-w-full text-left text-xs divide-y divide-slate-200 dark:divide-slate-800"
@@ -573,6 +602,7 @@ export default function SweepPage() {
                         <td className="p-2.5">
                           <input
                             type="checkbox"
+                            aria-label={`Select run ${r.run_id} for comparison`}
                             data-testid={`checkbox-run-${r.run_id}`}
                             checked={isSelected}
                             onChange={() => handleToggleSelectRun(r.run_id)}
@@ -626,10 +656,10 @@ export default function SweepPage() {
                           <span
                             className={`px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider ${
                               r.status === "completed"
-                                ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
+                                ? "bg-emerald-100 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-300"
                                 : r.status === "running"
-                                ? "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300"
-                                : "bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300"
+                                ? "bg-blue-100 text-blue-900 dark:bg-blue-950 dark:text-blue-300"
+                                : "bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-slate-200"
                             }`}
                           >
                             {r.status}
@@ -658,7 +688,7 @@ export default function SweepPage() {
                 <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100">
                   Multi-Run Comparison ({selectedRunIds.length} runs)
                 </h3>
-                <p className="text-xs text-slate-500 mt-0.5">
+                <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
                   Overlaid daily equity curves and aligned parameter diffs.
                 </p>
               </div>
@@ -673,7 +703,7 @@ export default function SweepPage() {
             </div>
 
             {isComparing ? (
-              <div className="p-12 text-center text-sm text-slate-500">
+              <div className="p-12 text-center text-sm text-slate-600 dark:text-slate-400">
                 Loading comparison curves and metrics...
               </div>
             ) : compareData ? (
@@ -719,13 +749,18 @@ export default function SweepPage() {
                 </div>
 
                 {/* Aligned Metrics Diff Table */}
-                <div className="overflow-x-auto">
+                <div
+                  className="overflow-x-auto"
+                  tabIndex={0}
+                  role="region"
+                  aria-label="Run comparison metrics table"
+                >
                   <table className="min-w-full text-left text-xs divide-y divide-slate-200 dark:divide-slate-800 border border-slate-200 dark:border-slate-800">
                     <thead className="bg-slate-100 dark:bg-slate-800">
                       <tr>
-                        <th className="p-2.5 font-bold">Metric / Parameter</th>
+                        <th className="p-2.5 font-bold text-slate-900 dark:text-slate-100">Metric / Parameter</th>
                         {selectedRunIds.map((rid) => (
-                          <th key={rid} className="p-2.5 font-bold font-mono">
+                          <th key={rid} className="p-2.5 font-bold font-mono text-slate-900 dark:text-slate-100">
                             {rid}
                           </th>
                         ))}
@@ -733,7 +768,7 @@ export default function SweepPage() {
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-mono">
                       <tr>
-                        <td className="p-2 font-semibold text-slate-500">Final Capital</td>
+                        <td className="p-2 font-semibold text-slate-600 dark:text-slate-400">Final Capital</td>
                         {selectedRunIds.map((rid) => (
                           <td key={rid} className="p-2">
                             ₹{compareData.runs[rid]?.final_capital?.toLocaleString() ?? "—"}
@@ -741,7 +776,7 @@ export default function SweepPage() {
                         ))}
                       </tr>
                       <tr>
-                        <td className="p-2 font-semibold text-slate-500">Total Return %</td>
+                        <td className="p-2 font-semibold text-slate-600 dark:text-slate-400">Total Return %</td>
                         {selectedRunIds.map((rid) => {
                           const val = compareData.runs[rid]?.total_return_pct;
                           return (
@@ -749,9 +784,9 @@ export default function SweepPage() {
                               key={rid}
                               className={`p-2 font-bold ${
                                 val && val > 0
-                                  ? "text-emerald-600"
+                                  ? "text-emerald-700 dark:text-emerald-400"
                                   : val && val < 0
-                                  ? "text-rose-600"
+                                  ? "text-rose-700 dark:text-rose-400"
                                   : ""
                               }`}
                             >
@@ -761,7 +796,7 @@ export default function SweepPage() {
                         })}
                       </tr>
                       <tr>
-                        <td className="p-2 font-semibold text-slate-500">CAGR %</td>
+                        <td className="p-2 font-semibold text-slate-600 dark:text-slate-400">CAGR %</td>
                         {selectedRunIds.map((rid) => (
                           <td key={rid} className="p-2">
                             {compareData.runs[rid]?.cagr != null
@@ -771,7 +806,7 @@ export default function SweepPage() {
                         ))}
                       </tr>
                       <tr>
-                        <td className="p-2 font-semibold text-slate-500">Win Rate</td>
+                        <td className="p-2 font-semibold text-slate-600 dark:text-slate-400">Win Rate</td>
                         {selectedRunIds.map((rid) => (
                           <td key={rid} className="p-2">
                             {compareData.runs[rid]?.win_rate != null
@@ -781,7 +816,7 @@ export default function SweepPage() {
                         ))}
                       </tr>
                       <tr>
-                        <td className="p-2 font-semibold text-slate-500">Total Trades</td>
+                        <td className="p-2 font-semibold text-slate-600 dark:text-slate-400">Total Trades</td>
                         {selectedRunIds.map((rid) => (
                           <td key={rid} className="p-2">
                             {compareData.runs[rid]?.total_trades ?? "—"}
@@ -789,7 +824,7 @@ export default function SweepPage() {
                         ))}
                       </tr>
                       <tr>
-                        <td className="p-2 font-semibold text-slate-500">Max Drawdown %</td>
+                        <td className="p-2 font-semibold text-slate-600 dark:text-slate-400">Max Drawdown %</td>
                         {selectedRunIds.map((rid) => (
                           <td key={rid} className="p-2">
                             {compareData.runs[rid]?.max_drawdown_pct != null
@@ -803,7 +838,7 @@ export default function SweepPage() {
                       {/* Parameters Diffs */}
                       {["sl_pct", "risk_pct", "cost_bps", "ranking_rule"].map((paramKey) => (
                         <tr key={paramKey} className="bg-slate-50/50 dark:bg-slate-800/30">
-                          <td className="p-2 font-semibold text-slate-500">
+                          <td className="p-2 font-semibold text-slate-600 dark:text-slate-400">
                             param: {paramKey}
                           </td>
                           {selectedRunIds.map((rid) => (

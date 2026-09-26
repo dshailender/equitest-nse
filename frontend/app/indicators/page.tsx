@@ -99,11 +99,16 @@ export default function IndicatorsPage() {
           <div className="flex flex-wrap items-center gap-4">
             {/* Symbol Picker */}
             <div className="flex items-center space-x-2">
-              <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+              <label
+                htmlFor="symbol-select"
+                className="text-xs font-semibold text-slate-600 dark:text-slate-400"
+              >
                 Symbol:
               </label>
               <select
+                id="symbol-select"
                 data-testid="indicator-symbol-select"
+                aria-label="Select symbol"
                 value={selectedSymbol}
                 onChange={(e) => setSelectedSymbol(e.target.value)}
                 className="px-2.5 py-1.5 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-mono font-semibold"
@@ -118,12 +123,17 @@ export default function IndicatorsPage() {
 
             {/* Start Date */}
             <div className="flex items-center space-x-2">
-              <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+              <label
+                htmlFor="start-date"
+                className="text-xs font-semibold text-slate-600 dark:text-slate-400"
+              >
                 Start:
               </label>
               <input
+                id="start-date"
                 type="date"
                 data-testid="indicator-start-date"
+                aria-label="Start date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
                 className="px-2.5 py-1.5 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-mono"
@@ -132,12 +142,17 @@ export default function IndicatorsPage() {
 
             {/* End Date */}
             <div className="flex items-center space-x-2">
-              <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+              <label
+                htmlFor="end-date"
+                className="text-xs font-semibold text-slate-600 dark:text-slate-400"
+              >
                 End:
               </label>
               <input
+                id="end-date"
                 type="date"
                 data-testid="indicator-end-date"
+                aria-label="End date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
                 className="px-2.5 py-1.5 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-mono"
@@ -174,7 +189,7 @@ export default function IndicatorsPage() {
               className={`px-2.5 py-1 rounded text-xs font-medium border transition-colors flex items-center space-x-1.5 ${
                 showPrice
                   ? "bg-blue-50 text-blue-700 border-blue-300 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800"
-                  : "bg-slate-100 text-slate-400 border-slate-200 dark:bg-slate-800 dark:text-slate-500 dark:border-slate-700 line-through"
+                  : "bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700 line-through"
               }`}
             >
               <span className="w-2 h-2 rounded-full bg-blue-600" />
@@ -189,7 +204,7 @@ export default function IndicatorsPage() {
               className={`px-2.5 py-1 rounded text-xs font-medium border transition-colors flex items-center space-x-1.5 ${
                 showEma20
                   ? "bg-emerald-50 text-emerald-700 border-emerald-300 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800"
-                  : "bg-slate-100 text-slate-400 border-slate-200 dark:bg-slate-800 dark:text-slate-500 dark:border-slate-700 line-through"
+                  : "bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700 line-through"
               }`}
             >
               <span className="w-2 h-2 rounded-full bg-emerald-500" />
@@ -204,7 +219,7 @@ export default function IndicatorsPage() {
               className={`px-2.5 py-1 rounded text-xs font-medium border transition-colors flex items-center space-x-1.5 ${
                 showEma50
                   ? "bg-amber-50 text-amber-700 border-amber-300 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800"
-                  : "bg-slate-100 text-slate-400 border-slate-200 dark:bg-slate-800 dark:text-slate-500 dark:border-slate-700 line-through"
+                  : "bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700 line-through"
               }`}
             >
               <span className="w-2 h-2 rounded-full bg-amber-500" />
@@ -219,7 +234,7 @@ export default function IndicatorsPage() {
               className={`px-2.5 py-1 rounded text-xs font-medium border transition-colors flex items-center space-x-1.5 ${
                 showEma150
                   ? "bg-purple-50 text-purple-700 border-purple-300 dark:bg-purple-950/40 dark:text-purple-300 dark:border-purple-800"
-                  : "bg-slate-100 text-slate-400 border-slate-200 dark:bg-slate-800 dark:text-slate-500 dark:border-slate-700 line-through"
+                  : "bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700 line-through"
               }`}
             >
               <span className="w-2 h-2 rounded-full bg-purple-500" />
@@ -234,7 +249,7 @@ export default function IndicatorsPage() {
               className={`px-2.5 py-1 rounded text-xs font-medium border transition-colors flex items-center space-x-1.5 ${
                 showEma200
                   ? "bg-red-50 text-red-700 border-red-300 dark:bg-red-950/40 dark:text-red-300 dark:border-red-800"
-                  : "bg-slate-100 text-slate-400 border-slate-200 dark:bg-slate-800 dark:text-slate-500 dark:border-slate-700 line-through"
+                  : "bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700 line-through"
               }`}
             >
               <span className="w-2 h-2 rounded-full bg-red-500" />
@@ -249,7 +264,7 @@ export default function IndicatorsPage() {
               className={`px-2.5 py-1 rounded text-xs font-medium border transition-colors flex items-center space-x-1.5 ${
                 showHigh52w
                   ? "bg-indigo-50 text-indigo-700 border-indigo-300 dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-800"
-                  : "bg-slate-100 text-slate-400 border-slate-200 dark:bg-slate-800 dark:text-slate-500 dark:border-slate-700 line-through"
+                  : "bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700 line-through"
               }`}
             >
               <span className="w-2 h-2 rounded-full bg-indigo-500" />
@@ -401,13 +416,13 @@ export default function IndicatorsPage() {
               </ResponsiveContainer>
             </div>
           ) : (
-            <div className="py-16 text-center text-xs text-slate-400">
+            <div className="py-16 text-center text-xs text-slate-600 dark:text-slate-400">
               No indicator data available for the selected range.
             </div>
           )}
         </CardContent>
 
-        <CardFooter className="border-t border-slate-100 dark:border-slate-800 pt-3 text-xs text-slate-500 flex justify-between">
+        <CardFooter className="border-t border-slate-100 dark:border-slate-800 pt-3 text-xs text-slate-600 dark:text-slate-400 flex justify-between">
           <span>All EMAs computed via pandas .ewm(span, adjust=False) with min_periods warm-up.</span>
           <span>52W High lookback: 252 sessions (shifted by 1 to exclude bar N).</span>
         </CardFooter>
