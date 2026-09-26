@@ -1,0 +1,146 @@
+[
+  {
+    "id": "backtest_sweep_create",
+    "endpoint": "/api/v1/backtest/sweep",
+    "method": "POST",
+    "scenario": "Trigger parameter sweep permutation matrix",
+    "request": {
+      "url": "/api/v1/backtest/sweep",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "start": "2020-06-01",
+        "end": "2022-04-29",
+        "symbols": [
+          "ALPHA",
+          "BETA",
+          "GAMMA"
+        ],
+        "base_config": {
+          "corpus": 500000.0,
+          "cost_bps": 10.0
+        },
+        "param_grid": {
+          "sl_pct": [
+            0.05,
+            0.07
+          ],
+          "risk_pct": [
+            0.02
+          ]
+        }
+      }
+    },
+    "response": {
+      "status_code": 202,
+      "headers": {
+        "content-type": "application/json"
+      },
+      "body": {
+        "sweep_id": "sweep_48caf79932f7",
+        "total_runs": 2,
+        "run_ids": [
+          "run_b4d3a3367569",
+          "run_7fcde6d13d2f"
+        ],
+        "status": "pending",
+        "message": "Parameter sweep execution queued successfully"
+      }
+    }
+  },
+  {
+    "id": "backtest_sweep_status",
+    "endpoint": "/api/v1/backtest/sweep/{sweep_id}",
+    "method": "GET",
+    "scenario": "Get parameter sweep execution status and child runs",
+    "request": {
+      "url": "/api/v1/backtest/sweep/sweep_48caf79932f7",
+      "headers": {},
+      "body": null
+    },
+    "response": {
+      "status_code": 200,
+      "headers": {
+        "content-type": "application/json"
+      },
+      "body": {
+        "sweep_id": "sweep_48caf79932f7",
+        "status": "completed",
+        "created_at": "2026-09-26T08:58:09.457628+00:00",
+        "param_grid": {
+          "sl_pct": [
+            0.05,
+            0.07
+          ],
+          "risk_pct": [
+            0.02
+          ]
+        },
+        "total_runs": 2,
+        "completed_runs": 2,
+        "runs": [
+          {
+            "run_id": "run_b4d3a3367569",
+            "status": "completed",
+            "params": {
+              "sl_pct": 0.05,
+              "risk_pct": 0.02
+            },
+            "initial_capital": 500000.0,
+            "final_capital": 475810.37,
+            "total_return_pct": -0.0484,
+            "total_trades": 2,
+            "win_rate": 0.0,
+            "max_drawdown_pct": 0.0535,
+            "cagr": -0.0257,
+            "error_message": null
+          },
+          {
+            "run_id": "run_7fcde6d13d2f",
+            "status": "completed",
+            "params": {
+              "sl_pct": 0.07,
+              "risk_pct": 0.02
+            },
+            "initial_capital": 500000.0,
+            "final_capital": 482707.2,
+            "total_return_pct": -0.0346,
+            "total_trades": 2,
+            "win_rate": 0.0,
+            "max_drawdown_pct": 0.0383,
+            "cagr": -0.0183,
+            "error_message": null
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "backtest_compare_runs",
+    "endpoint": "/api/v1/backtest/compare",
+    "method": "GET",
+    "scenario": "Compare performance metrics and overlaid equity curves across runs",
+    "request": {
+      "url": "/api/v1/backtest/compare?run_ids=run_b4d3a3367569,run_7fcde6d13d2f",
+      "headers": {},
+      "body": null
+    },
+    "response": {
+      "status_code": 200,
+      "headers": {
+        "content-type": "application/json"
+      },
+      "body_summary": {
+        "run_ids": [
+          "run_b4d3a3367569",
+          "run_7fcde6d13d2f"
+        ],
+        "runs_keys": [
+          "run_b4d3a3367569",
+          "run_7fcde6d13d2f"
+        ]
+      }
+    }
+  }
+]

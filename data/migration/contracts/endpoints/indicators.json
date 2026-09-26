@@ -1,0 +1,207 @@
+[
+  {
+    "id": "indicators_symbol",
+    "endpoint": "/api/v1/indicators/{symbol}",
+    "method": "GET",
+    "scenario": "EMA (20, 50, 150, 200) and 52-week rolling high (INV-1, INV-8)",
+    "invariants": [
+      "INV-1",
+      "INV-8"
+    ],
+    "request": {
+      "url": "/api/v1/indicators/ALPHA",
+      "headers": {},
+      "body": null
+    },
+    "response": {
+      "status_code": 200,
+      "headers": {
+        "content-type": "application/json"
+      },
+      "body_summary": {
+        "symbol": "ALPHA",
+        "count": 500,
+        "sample_points": [
+          {
+            "date": "2022-04-28",
+            "open": 186.13,
+            "high": 187.99,
+            "low": 185.01,
+            "close": 186.5,
+            "adj_close": 186.5,
+            "volume": 100000.0,
+            "ema_20": 191.2464593286311,
+            "ema_50": 197.4681941194274,
+            "ema_150": 204.10091377690563,
+            "ema_200": 203.54327224571787,
+            "high_52w": 222.52,
+            "indicators": {
+              "ema_20": 191.2464593286311,
+              "ema_50": 197.4681941194274,
+              "ema_150": 204.10091377690563,
+              "ema_200": 203.54327224571787,
+              "high_52w": 222.52
+            }
+          },
+          {
+            "date": "2022-04-29",
+            "open": 185.63,
+            "high": 187.49,
+            "low": 184.51,
+            "close": 186.0,
+            "adj_close": 186.0,
+            "volume": 100000.0,
+            "ema_20": 190.74679653542813,
+            "ema_50": 197.01846101670475,
+            "ema_150": 203.8611665745625,
+            "ema_200": 203.3687123228749,
+            "high_52w": 222.52,
+            "indicators": {
+              "ema_20": 190.74679653542813,
+              "ema_50": 197.01846101670475,
+              "ema_150": 203.8611665745625,
+              "ema_200": 203.3687123228749,
+              "high_52w": 222.52
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "indicators_nifty",
+    "endpoint": "/api/v1/indicators/nifty",
+    "method": "GET",
+    "scenario": "NIFTY regime filter benchmark indicator series (INV-3)",
+    "invariants": [
+      "INV-3"
+    ],
+    "request": {
+      "url": "/api/v1/indicators/nifty",
+      "headers": {},
+      "body": null
+    },
+    "response": {
+      "status_code": 200,
+      "headers": {
+        "content-type": "application/json"
+      },
+      "body_summary": {
+        "symbol": "NIFTY50",
+        "count": 1305,
+        "sample_points": [
+          {
+            "date": "2023-12-29",
+            "open": 28758.45,
+            "high": 28945.13,
+            "low": 28247.75,
+            "close": 28667.53,
+            "adj_close": 28667.53,
+            "volume": 1113071.0,
+            "ema_20": null,
+            "ema_50": 28177.111792218886,
+            "ema_150": null,
+            "ema_200": 26455.122677222287,
+            "high_52w": null,
+            "indicators": {
+              "ema_50": 28177.111792218886,
+              "ema_200": 26455.122677222287
+            }
+          },
+          {
+            "date": "2024-01-01",
+            "open": 28846.19,
+            "high": 29205.02,
+            "low": 28640.18,
+            "close": 28832.81,
+            "adj_close": 28832.81,
+            "volume": 4992397.0,
+            "ema_20": null,
+            "ema_50": 28202.82544742599,
+            "ema_150": null,
+            "ema_200": 26478.781257548435,
+            "high_52w": null,
+            "indicators": {
+              "ema_50": 28202.82544742599,
+              "ema_200": 26478.781257548435
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "indicators_preview",
+    "endpoint": "/api/v1/indicators/preview",
+    "method": "POST",
+    "scenario": "Dynamic parameter EMA computation preview",
+    "request": {
+      "url": "/api/v1/indicators/preview",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "symbol": "ALPHA",
+        "emas": [
+          20,
+          50,
+          200
+        ]
+      }
+    },
+    "response": {
+      "status_code": 200,
+      "headers": {
+        "content-type": "application/json"
+      },
+      "body_summary": {
+        "symbol": "ALPHA",
+        "count": 500,
+        "sample_points": [
+          {
+            "date": "2022-04-28",
+            "open": 186.13,
+            "high": 187.99,
+            "low": 185.01,
+            "close": 186.5,
+            "adj_close": 186.5,
+            "volume": 100000.0,
+            "ema_20": 191.2464593286311,
+            "ema_50": 197.4681941194274,
+            "ema_150": 204.10091377690563,
+            "ema_200": 203.54327224571787,
+            "high_52w": 222.52,
+            "indicators": {
+              "ema_20": 191.2464593286311,
+              "ema_50": 197.4681941194274,
+              "ema_150": 204.10091377690563,
+              "ema_200": 203.54327224571787,
+              "high_52w": 222.52
+            }
+          },
+          {
+            "date": "2022-04-29",
+            "open": 185.63,
+            "high": 187.49,
+            "low": 184.51,
+            "close": 186.0,
+            "adj_close": 186.0,
+            "volume": 100000.0,
+            "ema_20": 190.74679653542813,
+            "ema_50": 197.01846101670475,
+            "ema_150": 203.8611665745625,
+            "ema_200": 203.3687123228749,
+            "high_52w": 222.52,
+            "indicators": {
+              "ema_20": 190.74679653542813,
+              "ema_50": 197.01846101670475,
+              "ema_150": 203.8611665745625,
+              "ema_200": 203.3687123228749,
+              "high_52w": 222.52
+            }
+          }
+        ]
+      }
+    }
+  }
+]

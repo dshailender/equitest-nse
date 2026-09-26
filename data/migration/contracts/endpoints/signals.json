@@ -1,0 +1,95 @@
+[
+  {
+    "id": "signals_symbol",
+    "endpoint": "/api/v1/signals/{symbol}",
+    "method": "GET",
+    "scenario": "Entry and exit signals with candidate ranking (INV-1, INV-5)",
+    "invariants": [
+      "INV-1",
+      "INV-5"
+    ],
+    "request": {
+      "url": "/api/v1/signals/ALPHA",
+      "headers": {},
+      "body": null
+    },
+    "response": {
+      "status_code": 200,
+      "headers": {
+        "content-type": "application/json"
+      },
+      "body_summary": {
+        "symbol": "ALPHA",
+        "count": 500,
+        "sample_points": [
+          {
+            "date": "2022-04-28",
+            "open": 186.13,
+            "high": 187.99,
+            "low": 185.01,
+            "close": 186.5,
+            "adj_close": 186.5,
+            "volume": 100000.0,
+            "ema_20": 191.2464593286311,
+            "ema_50": 197.4681941194274,
+            "ema_150": 204.10091377690563,
+            "ema_200": 203.54327224571787,
+            "high_52w": 222.52,
+            "regime_ok": true,
+            "trend_ok": false,
+            "near_52w_high": false,
+            "crossover": false,
+            "entry": false,
+            "exit": true
+          },
+          {
+            "date": "2022-04-29",
+            "open": 185.63,
+            "high": 187.49,
+            "low": 184.51,
+            "close": 186.0,
+            "adj_close": 186.0,
+            "volume": 100000.0,
+            "ema_20": 190.74679653542813,
+            "ema_50": 197.01846101670475,
+            "ema_150": 203.8611665745625,
+            "ema_200": 203.3687123228749,
+            "high_52w": 222.52,
+            "regime_ok": true,
+            "trend_ok": false,
+            "near_52w_high": false,
+            "crossover": false,
+            "entry": false,
+            "exit": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "signals_screen",
+    "endpoint": "/api/v1/signals/screen",
+    "method": "GET",
+    "scenario": "Point-in-time universe screening for entry candidates ranked by momentum (INV-5)",
+    "invariants": [
+      "INV-5"
+    ],
+    "request": {
+      "url": "/api/v1/signals/screen?date=2021-05-24",
+      "headers": {},
+      "body": null
+    },
+    "response": {
+      "status_code": 200,
+      "headers": {
+        "content-type": "application/json"
+      },
+      "body": {
+        "date": "2021-05-24",
+        "count": 0,
+        "symbols": [],
+        "survivorship_bias": false
+      }
+    }
+  }
+]

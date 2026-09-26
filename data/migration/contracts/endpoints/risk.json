@@ -1,0 +1,60 @@
+[
+  {
+    "id": "risk_position_sizing",
+    "endpoint": "/api/v1/risk/size",
+    "method": "POST",
+    "scenario": "Position sizing floored to lot size with 2% capital risk (INV-6)",
+    "invariants": [
+      "INV-6"
+    ],
+    "request": {
+      "url": "/api/v1/risk/size",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "corpus": 500000.0,
+        "entry": 200.0,
+        "sl_pct": 0.07,
+        "risk_pct": 0.02,
+        "lot_size": 1
+      }
+    },
+    "response": {
+      "status_code": 200,
+      "headers": {
+        "content-type": "application/json"
+      },
+      "body": {
+        "qty": 714,
+        "capital_required": 142800.0,
+        "sl_price": 186.0,
+        "risk_amount": 10000.0
+      }
+    }
+  },
+  {
+    "id": "risk_config",
+    "endpoint": "/api/v1/risk/config",
+    "method": "GET",
+    "scenario": "Risk configuration defaults",
+    "request": {
+      "url": "/api/v1/risk/config",
+      "headers": {},
+      "body": null
+    },
+    "response": {
+      "status_code": 200,
+      "headers": {
+        "content-type": "application/json"
+      },
+      "body": {
+        "corpus": 500000.0,
+        "risk_pct": 0.02,
+        "stop_loss_pct": 0.07,
+        "lot_size": 1,
+        "cost_bps": 10.0
+      }
+    }
+  }
+]

@@ -1,0 +1,49 @@
+[
+  {
+    "id": "universe_point_in_time",
+    "endpoint": "/api/v1/universe",
+    "method": "GET",
+    "scenario": "Point-in-time universe query (INV-2: Survivorship Bias Prevention, INV-3: Top 100 Exclusion)",
+    "invariants": [
+      "INV-2",
+      "INV-3"
+    ],
+    "request": {
+      "url": "/api/v1/universe?date=2021-06-01",
+      "headers": {},
+      "body": null
+    },
+    "response": {
+      "status_code": 200,
+      "headers": {
+        "content-type": "application/json"
+      },
+      "body_summary": {
+        "date": "2021-06-01",
+        "count": 650,
+        "survivorship_bias": false,
+        "sample_tickers": [
+          "IDEA",
+          "YESBANK",
+          "SUZLON",
+          "ZOMATO",
+          "PAYTM"
+        ],
+        "sample_details": [
+          {
+            "symbol": "IDEA",
+            "name": "Vodafone Idea Ltd",
+            "rank": 101,
+            "sector": "Telecommunication"
+          },
+          {
+            "symbol": "YESBANK",
+            "name": "Yes Bank Ltd",
+            "rank": 102,
+            "sector": "Financial Services"
+          }
+        ]
+      }
+    }
+  }
+]

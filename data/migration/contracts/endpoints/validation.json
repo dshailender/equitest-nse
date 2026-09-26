@@ -1,0 +1,54 @@
+[
+  {
+    "id": "validation_cross_check_json",
+    "endpoint": "/api/v1/validation/{run_id}/{symbol}",
+    "method": "GET",
+    "scenario": "TradingView cross-check time series comparison data (REQ-8.1)",
+    "request": {
+      "url": "/api/v1/validation/run_55cc1878c808/ALPHA",
+      "headers": {},
+      "body": null
+    },
+    "response": {
+      "status_code": 200,
+      "headers": {
+        "content-type": "application/json"
+      },
+      "body_summary": {
+        "run_id": "run_55cc1878c808",
+        "symbol": "ALPHA",
+        "count": 500,
+        "sample_point": {
+          "date": "2022-04-29",
+          "close": 186.0,
+          "ema_20": 190.74679653542813,
+          "ema_50": 197.01846101670475,
+          "ema_150": 203.8611665745625,
+          "ema_200": 203.3687123228749,
+          "high_52w": 222.52,
+          "entry": false,
+          "exit": true
+        }
+      }
+    }
+  },
+  {
+    "id": "validation_cross_check_csv",
+    "endpoint": "/api/v1/validation/{run_id}/{symbol}",
+    "method": "GET",
+    "scenario": "TradingView cross-check raw CSV attachment",
+    "request": {
+      "url": "/api/v1/validation/run_55cc1878c808/ALPHA?format=csv",
+      "headers": {},
+      "body": null
+    },
+    "response": {
+      "status_code": 200,
+      "headers": {
+        "content-type": "text/csv; charset=utf-8",
+        "content-disposition": "attachment; filename=\"ALPHA_cross_check_run_55cc1878c808.csv\""
+      },
+      "body": "date,close,ema_20,ema_50,ema_150,ema_200,high_52w,entry,exit\n2020-06-01,100.0,,,,,,False,False\n2020-06-02,100.5,,,,,,False,False\n2020-06-03,101.0,,,,,,False,False\n2020-06-04,101.5,,,,,,False,False\n2020-06-05,102.0,,,,,,False,False\n2020-06-08,102.5,,,,,,False,False\n2020-06-09,103.0,,,,,,False,False\n2020-06-10,103.5,,,,,,False,False\n2020-06-11,104.0,,,,,,False,False\n2020-06-12,104.5,,,,,,False,False\n2020-06-15,105.0,,,,,,False,False\n2020-06-16,105.5,,,,,,False,False\n2020-06-17,106.0,,,,,,False,Fal\n..."
+    }
+  }
+]

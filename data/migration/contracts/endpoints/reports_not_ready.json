@@ -1,0 +1,329 @@
+[
+  {
+    "id": "not_ready_unknown_run_nonexistent_99999",
+    "endpoint": "/api/v1/backtest/run_nonexistent_99999",
+    "method": "GET",
+    "scenario": "Unknown run_id returns 404: /api/v1/backtest/run_nonexistent_99999",
+    "request": {
+      "url": "/api/v1/backtest/run_nonexistent_99999",
+      "headers": {},
+      "body": null
+    },
+    "response": {
+      "status_code": 404,
+      "body": {
+        "detail": "Backtest run 'run_nonexistent_99999' not found"
+      }
+    }
+  },
+  {
+    "id": "not_ready_unknown_trades",
+    "endpoint": "/api/v1/backtest/run_nonexistent_99999/trades",
+    "method": "GET",
+    "scenario": "Unknown run_id returns 404: /api/v1/backtest/run_nonexistent_99999/trades",
+    "request": {
+      "url": "/api/v1/backtest/run_nonexistent_99999/trades",
+      "headers": {},
+      "body": null
+    },
+    "response": {
+      "status_code": 404,
+      "body": {
+        "detail": "Backtest run 'run_nonexistent_99999' not found"
+      }
+    }
+  },
+  {
+    "id": "not_ready_unknown_equity",
+    "endpoint": "/api/v1/backtest/run_nonexistent_99999/equity",
+    "method": "GET",
+    "scenario": "Unknown run_id returns 404: /api/v1/backtest/run_nonexistent_99999/equity",
+    "request": {
+      "url": "/api/v1/backtest/run_nonexistent_99999/equity",
+      "headers": {},
+      "body": null
+    },
+    "response": {
+      "status_code": 404,
+      "body": {
+        "detail": "Backtest run 'run_nonexistent_99999' not found"
+      }
+    }
+  },
+  {
+    "id": "not_ready_unknown_audit",
+    "endpoint": "/api/v1/backtest/run_nonexistent_99999/audit",
+    "method": "GET",
+    "scenario": "Unknown run_id returns 404: /api/v1/backtest/run_nonexistent_99999/audit",
+    "request": {
+      "url": "/api/v1/backtest/run_nonexistent_99999/audit",
+      "headers": {},
+      "body": null
+    },
+    "response": {
+      "status_code": 404,
+      "body": {
+        "detail": "Backtest run 'run_nonexistent_99999' not found"
+      }
+    }
+  },
+  {
+    "id": "not_ready_unknown_summary",
+    "endpoint": "/api/v1/reports/run_nonexistent_99999/summary",
+    "method": "GET",
+    "scenario": "Unknown run_id returns 404: /api/v1/reports/run_nonexistent_99999/summary",
+    "request": {
+      "url": "/api/v1/reports/run_nonexistent_99999/summary",
+      "headers": {},
+      "body": null
+    },
+    "response": {
+      "status_code": 404,
+      "body": {
+        "detail": "Backtest run 'run_nonexistent_99999' not found"
+      }
+    }
+  },
+  {
+    "id": "not_ready_unknown_monthly",
+    "endpoint": "/api/v1/reports/run_nonexistent_99999/monthly",
+    "method": "GET",
+    "scenario": "Unknown run_id returns 404: /api/v1/reports/run_nonexistent_99999/monthly",
+    "request": {
+      "url": "/api/v1/reports/run_nonexistent_99999/monthly",
+      "headers": {},
+      "body": null
+    },
+    "response": {
+      "status_code": 404,
+      "body": {
+        "detail": "Backtest run 'run_nonexistent_99999' not found"
+      }
+    }
+  },
+  {
+    "id": "not_ready_unknown_export?format=csv",
+    "endpoint": "/api/v1/reports/run_nonexistent_99999/export?format=csv",
+    "method": "GET",
+    "scenario": "Unknown run_id returns 404: /api/v1/reports/run_nonexistent_99999/export?format=csv",
+    "request": {
+      "url": "/api/v1/reports/run_nonexistent_99999/export?format=csv",
+      "headers": {},
+      "body": null
+    },
+    "response": {
+      "status_code": 404,
+      "body": {
+        "detail": "Backtest run 'run_nonexistent_99999' not found"
+      }
+    }
+  },
+  {
+    "id": "not_ready_unknown_export?format=pdf",
+    "endpoint": "/api/v1/reports/run_nonexistent_99999/export?format=pdf",
+    "method": "GET",
+    "scenario": "Unknown run_id returns 404: /api/v1/reports/run_nonexistent_99999/export?format=pdf",
+    "request": {
+      "url": "/api/v1/reports/run_nonexistent_99999/export?format=pdf",
+      "headers": {},
+      "body": null
+    },
+    "response": {
+      "status_code": 404,
+      "body": {
+        "detail": "Backtest run 'run_nonexistent_99999' not found"
+      }
+    }
+  },
+  {
+    "id": "not_ready_unknown_preview.png",
+    "endpoint": "/api/v1/reports/run_nonexistent_99999/preview.png",
+    "method": "GET",
+    "scenario": "Unknown run_id returns 404: /api/v1/reports/run_nonexistent_99999/preview.png",
+    "request": {
+      "url": "/api/v1/reports/run_nonexistent_99999/preview.png",
+      "headers": {},
+      "body": null
+    },
+    "response": {
+      "status_code": 404,
+      "body": {
+        "detail": "Backtest run 'run_nonexistent_99999' not found"
+      }
+    }
+  },
+  {
+    "id": "not_ready_unknown_ALPHA",
+    "endpoint": "/api/v1/validation/run_nonexistent_99999/ALPHA",
+    "method": "GET",
+    "scenario": "Unknown run_id returns 404: /api/v1/validation/run_nonexistent_99999/ALPHA",
+    "request": {
+      "url": "/api/v1/validation/run_nonexistent_99999/ALPHA",
+      "headers": {},
+      "body": null
+    },
+    "response": {
+      "status_code": 404,
+      "body": {
+        "detail": "Backtest run 'run_nonexistent_99999' not found"
+      }
+    }
+  },
+  {
+    "id": "not_ready_incomplete_reports_summary",
+    "endpoint": "/api/v1/reports/{run_id}/summary",
+    "method": "GET",
+    "scenario": "Incomplete/running run returns 400 for summary",
+    "request": {
+      "url": "/api/v1/reports/run_sim_pending_extract/summary",
+      "headers": {},
+      "body": null
+    },
+    "response": {
+      "status_code": 400,
+      "body": {
+        "detail": "Backtest run 'run_sim_pending_extract' has not completed or result blob is missing (current status: running)"
+      }
+    }
+  },
+  {
+    "id": "not_ready_incomplete_reports_monthly",
+    "endpoint": "/api/v1/reports/{run_id}/monthly",
+    "method": "GET",
+    "scenario": "Incomplete/running run returns 400 for monthly",
+    "request": {
+      "url": "/api/v1/reports/run_sim_pending_extract/monthly",
+      "headers": {},
+      "body": null
+    },
+    "response": {
+      "status_code": 400,
+      "body": {
+        "detail": "Backtest run 'run_sim_pending_extract' has not completed or result blob is missing (current status: running)"
+      }
+    }
+  },
+  {
+    "id": "not_ready_incomplete_reports_export",
+    "endpoint": "/api/v1/reports/{run_id}/export?format=csv",
+    "method": "GET",
+    "scenario": "Incomplete/running run returns 400 for export?format=csv",
+    "request": {
+      "url": "/api/v1/reports/run_sim_pending_extract/export?format=csv",
+      "headers": {},
+      "body": null
+    },
+    "response": {
+      "status_code": 400,
+      "body": {
+        "detail": "Backtest run 'run_sim_pending_extract' has not completed or result blob is missing (current status: running)"
+      }
+    }
+  },
+  {
+    "id": "not_ready_incomplete_export_pdf",
+    "endpoint": "/api/v1/reports/{run_id}/export?format=pdf",
+    "method": "GET",
+    "scenario": "Incomplete/running run returns 422 for synchronous PDF export",
+    "request": {
+      "url": "/api/v1/reports/run_sim_pending_extract/export?format=pdf",
+      "headers": {},
+      "body": null
+    },
+    "response": {
+      "status_code": 422,
+      "body": {
+        "detail": "Report data for run 'run_sim_pending_extract' is incomplete (status: running)"
+      }
+    }
+  },
+  {
+    "id": "not_ready_incomplete_export_pdf_async",
+    "endpoint": "/api/v1/reports/{run_id}/export/pdf/async",
+    "method": "POST",
+    "scenario": "Incomplete/running run returns 422 for async PDF export trigger",
+    "request": {
+      "url": "/api/v1/reports/run_sim_pending_extract/export/pdf/async",
+      "headers": {},
+      "body": null
+    },
+    "response": {
+      "status_code": 422,
+      "body": {
+        "detail": "Report data for run 'run_sim_pending_extract' is incomplete (status: running)"
+      }
+    }
+  },
+  {
+    "id": "not_ready_incomplete_preview_png",
+    "endpoint": "/api/v1/reports/{run_id}/preview.png",
+    "method": "GET",
+    "scenario": "Incomplete/running run returns 422 for preview PNG",
+    "request": {
+      "url": "/api/v1/reports/run_sim_pending_extract/preview.png",
+      "headers": {},
+      "body": null
+    },
+    "response": {
+      "status_code": 422,
+      "body": {
+        "detail": "Run 'run_sim_pending_extract' is incomplete (status: running)"
+      }
+    }
+  },
+  {
+    "id": "not_ready_incomplete_trades_empty",
+    "endpoint": "/api/v1/backtest/{run_id}/trades",
+    "method": "GET",
+    "scenario": "Incomplete run returns 200 with empty trades list",
+    "request": {
+      "url": "/api/v1/backtest/run_sim_pending_extract/trades",
+      "headers": {},
+      "body": null
+    },
+    "response": {
+      "status_code": 200,
+      "body": {
+        "run_id": "run_sim_pending_extract",
+        "count": 0,
+        "trades": []
+      }
+    }
+  },
+  {
+    "id": "not_ready_incomplete_equity_empty",
+    "endpoint": "/api/v1/backtest/{run_id}/equity",
+    "method": "GET",
+    "scenario": "Incomplete run returns 200 with empty equity list",
+    "request": {
+      "url": "/api/v1/backtest/run_sim_pending_extract/equity",
+      "headers": {},
+      "body": null
+    },
+    "response": {
+      "status_code": 200,
+      "body": {
+        "run_id": "run_sim_pending_extract",
+        "count": 0,
+        "equity_curve": []
+      }
+    }
+  },
+  {
+    "id": "not_ready_job_download_conflict_409",
+    "endpoint": "/api/v1/reports/jobs/{job_id}/download",
+    "method": "GET",
+    "scenario": "Attempting download on pending PDF job returns 409 Conflict",
+    "request": {
+      "url": "/api/v1/reports/jobs/90ae52d9-a77f-4ecf-86de-b0b63f23457d/download",
+      "headers": {},
+      "body": null
+    },
+    "response": {
+      "status_code": 409,
+      "body": {
+        "detail": "PDF job '90ae52d9-a77f-4ecf-86de-b0b63f23457d' is still generating"
+      }
+    }
+  }
+]

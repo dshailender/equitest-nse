@@ -1,0 +1,313 @@
+[
+  {
+    "id": "reports_summary_metrics",
+    "endpoint": "/api/v1/reports/{run_id}/summary",
+    "method": "GET",
+    "scenario": "Comprehensive performance analytics and return metrics (INV-10)",
+    "invariants": [
+      "INV-10"
+    ],
+    "request": {
+      "url": "/api/v1/reports/run_55cc1878c808/summary",
+      "headers": {},
+      "body": null
+    },
+    "response": {
+      "status_code": 200,
+      "headers": {
+        "content-type": "application/json"
+      },
+      "body": {
+        "run_id": "run_55cc1878c808",
+        "status": "completed",
+        "created_at": "2026-09-26T08:58:09.153348+00:00",
+        "config": {
+          "corpus": 500000.0,
+          "capital": 500000.0,
+          "risk_pct": 0.02,
+          "stop_loss_pct": 0.07,
+          "sl_pct": 0.07,
+          "lot_size": 1,
+          "cost_bps": 10.0,
+          "ema_spans": [
+            20,
+            50,
+            150,
+            200
+          ],
+          "regime_spans": [
+            50,
+            200
+          ],
+          "high_52w_factor": 0.85,
+          "high_52w_lookback": 252,
+          "allow_crossover_equal": false,
+          "ranking_rule": "momentum",
+          "universe_start_rank": 101,
+          "universe_end_rank": 750
+        },
+        "metrics": {
+          "total_trades": 2,
+          "win_trades": 0,
+          "loss_trades": 2,
+          "win_rate": 0.0,
+          "avg_profit": 0.0,
+          "avg_loss": -8646.4,
+          "total_return_pct": -0.0346,
+          "initial_capital": 500000.0,
+          "final_capital": 482707.2,
+          "net_profit": -17292.8,
+          "cagr": -0.0183,
+          "max_drawdown_pct": 0.0383,
+          "max_drawdown_amount": 19208.32,
+          "sharpe_ratio": -0.698,
+          "sortino_ratio": -0.6982,
+          "calmar_ratio": -0.4778,
+          "profit_factor": 0.0,
+          "expectancy": -8646.4,
+          "avg_days_held": 68.0
+        }
+      }
+    }
+  },
+  {
+    "id": "reports_monthly_matrix",
+    "endpoint": "/api/v1/reports/{run_id}/monthly",
+    "method": "GET",
+    "scenario": "Month x Year compounded returns matrix",
+    "request": {
+      "url": "/api/v1/reports/run_55cc1878c808/monthly",
+      "headers": {},
+      "body": null
+    },
+    "response": {
+      "status_code": 200,
+      "headers": {
+        "content-type": "application/json"
+      },
+      "body": {
+        "run_id": "run_55cc1878c808",
+        "years": [
+          {
+            "year": 2020,
+            "jan": null,
+            "feb": null,
+            "mar": null,
+            "apr": null,
+            "may": null,
+            "jun": 0.0,
+            "jul": 0.0,
+            "aug": 0.0,
+            "sep": 0.0,
+            "oct": 0.0,
+            "nov": 0.0,
+            "dec": 0.0,
+            "total": 0.0
+          },
+          {
+            "year": 2021,
+            "jan": 0.0,
+            "feb": 0.0,
+            "mar": 0.0,
+            "apr": 0.0,
+            "may": 0.0006,
+            "jun": 0.0014,
+            "jul": 0.0014,
+            "aug": -0.034,
+            "sep": 0.0,
+            "oct": 0.0,
+            "nov": 0.0014,
+            "dec": 0.0012,
+            "total": -0.0282
+          },
+          {
+            "year": 2022,
+            "jan": 0.0011,
+            "feb": -0.0077,
+            "mar": 0.0,
+            "apr": 0.0,
+            "may": null,
+            "jun": null,
+            "jul": null,
+            "aug": null,
+            "sep": null,
+            "oct": null,
+            "nov": null,
+            "dec": null,
+            "total": -0.0066
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "reports_export_csv",
+    "endpoint": "/api/v1/reports/{run_id}/export",
+    "method": "GET",
+    "scenario": "Export trade ledger as CSV attachment",
+    "request": {
+      "url": "/api/v1/reports/run_55cc1878c808/export?format=csv",
+      "headers": {},
+      "body": null
+    },
+    "response": {
+      "status_code": 200,
+      "headers": {
+        "content-type": "text/csv; charset=utf-8",
+        "content-disposition": "attachment; filename=\"run_55cc1878c808_trades.csv\""
+      },
+      "body": "symbol,entry_date,entry_price,qty,exit_date,exit_price,pnl,pnl_pct,exit_reason,days_held,costs\nALPHA,2021-05-25,217.83,656,2021-08-10,194.42,-15356.96,-0.1075,gap,55,268.96\nALPHA,2021-11-02,211.83,654,2022-02-23,208.87,-1935.84,-0.014,exit_signal,81,274.68\n"
+    }
+  },
+  {
+    "id": "reports_export_xlsx",
+    "endpoint": "/api/v1/reports/{run_id}/export",
+    "method": "GET",
+    "scenario": "Export metrics and trades workbook as Excel (.xlsx)",
+    "request": {
+      "url": "/api/v1/reports/run_55cc1878c808/export?format=xlsx",
+      "headers": {},
+      "body": null
+    },
+    "response": {
+      "status_code": 200,
+      "headers": {
+        "content-type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "content-disposition": "attachment; filename=\"run_55cc1878c808_report.xlsx\""
+      },
+      "is_binary": true,
+      "binary_sha256": "63c4a5ad83327b5ca324d2f1c832b6abb5efdd1ecd2aa12e7d6b3a27f93edb60",
+      "byte_size": 20351
+    }
+  },
+  {
+    "id": "reports_export_zip",
+    "endpoint": "/api/v1/reports/{run_id}/export",
+    "method": "GET",
+    "scenario": "Export multi-CSV bundle archive (.zip)",
+    "request": {
+      "url": "/api/v1/reports/run_55cc1878c808/export?format=zip",
+      "headers": {},
+      "body": null
+    },
+    "response": {
+      "status_code": 200,
+      "headers": {
+        "content-type": "application/zip",
+        "content-disposition": "attachment; filename=\"run_55cc1878c808_report.zip\""
+      },
+      "is_binary": true,
+      "binary_sha256": "149d614fc6b202a848080fbf91c84ed72c38a6f55f6629ed4b1d56339af6eae5",
+      "byte_size": 4591
+    }
+  },
+  {
+    "id": "reports_export_pdf_sync",
+    "endpoint": "/api/v1/reports/{run_id}/export",
+    "method": "GET",
+    "scenario": "Export print-ready tear sheet PDF for <=2000 trades",
+    "request": {
+      "url": "/api/v1/reports/run_55cc1878c808/export?format=pdf",
+      "headers": {},
+      "body": null
+    },
+    "response": {
+      "status_code": 200,
+      "headers": {
+        "content-type": "application/pdf",
+        "content-disposition": "attachment; filename=\"backtest_run_55cc1878c808.pdf\""
+      },
+      "is_binary": true,
+      "byte_size": 262859,
+      "starts_with_pdf_magic": true
+    }
+  },
+  {
+    "id": "reports_export_pdf_async",
+    "endpoint": "/api/v1/reports/{run_id}/export/pdf/async",
+    "method": "POST",
+    "scenario": "Explicit asynchronous PDF dispatch (REQ-9.4)",
+    "request": {
+      "url": "/api/v1/reports/run_55cc1878c808/export/pdf/async",
+      "headers": {},
+      "body": null
+    },
+    "response": {
+      "status_code": 202,
+      "headers": {
+        "content-type": "application/json",
+        "location": "/api/v1/reports/jobs/c6874ce7-c088-4d5e-bdf1-18afc37d58c6"
+      },
+      "body": {
+        "job_id": "c6874ce7-c088-4d5e-bdf1-18afc37d58c6",
+        "status": "pending",
+        "message": "PDF generation job started"
+      }
+    }
+  },
+  {
+    "id": "reports_job_status",
+    "endpoint": "/api/v1/reports/jobs/{job_id}",
+    "method": "GET",
+    "scenario": "Async PDF generation job status",
+    "request": {
+      "url": "/api/v1/reports/jobs/c6874ce7-c088-4d5e-bdf1-18afc37d58c6",
+      "headers": {},
+      "body": null
+    },
+    "response": {
+      "status_code": 200,
+      "headers": {
+        "content-type": "application/json"
+      },
+      "body": {
+        "job_id": "c6874ce7-c088-4d5e-bdf1-18afc37d58c6",
+        "status": "ready",
+        "file_path": "/home/shailender/projects/equitest-nse/data/reports/backtest_run_55cc1878c808.pdf",
+        "error": null,
+        "created_at": "2026-09-26T08:58:11.306598+00:00"
+      }
+    }
+  },
+  {
+    "id": "reports_job_download",
+    "endpoint": "/api/v1/reports/jobs/{job_id}/download",
+    "method": "GET",
+    "scenario": "Stream completed PDF report",
+    "request": {
+      "url": "/api/v1/reports/jobs/c6874ce7-c088-4d5e-bdf1-18afc37d58c6/download",
+      "headers": {},
+      "body": null
+    },
+    "response": {
+      "status_code": 200,
+      "headers": {
+        "content-type": "application/pdf",
+        "content-disposition": "attachment; filename=\"backtest_run_55cc1878c808.pdf\""
+      },
+      "is_binary": true,
+      "byte_size": 262852,
+      "starts_with_pdf_magic": true
+    }
+  },
+  {
+    "id": "reports_preview_png",
+    "endpoint": "/api/v1/reports/{run_id}/preview.png",
+    "method": "GET",
+    "scenario": "Render first page of PDF tear sheet as PNG preview",
+    "request": {
+      "url": "/api/v1/reports/run_55cc1878c808/preview.png",
+      "headers": {},
+      "body": null
+    },
+    "response": {
+      "status_code": 200,
+      "headers": {
+        "content-type": "image/png"
+      },
+      "is_binary": true,
+      "byte_size": 84418,
+      "starts_with_png_magic": true
+    }
+  }
+]

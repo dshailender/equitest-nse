@@ -1,0 +1,263 @@
+[
+  {
+    "id": "backtest_run_create",
+    "endpoint": "/api/v1/backtest/run",
+    "method": "POST",
+    "scenario": "Execute synchronous/background simulation run (INV-10)",
+    "invariants": [
+      "INV-1",
+      "INV-4",
+      "INV-6",
+      "INV-7",
+      "INV-10"
+    ],
+    "request": {
+      "url": "/api/v1/backtest/run",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "start": "2020-06-01",
+        "end": "2022-04-29",
+        "symbols": [
+          "ALPHA",
+          "BETA",
+          "GAMMA"
+        ],
+        "config": {
+          "corpus": 500000.0,
+          "risk_pct": 0.02,
+          "stop_loss_pct": 0.07,
+          "lot_size": 1,
+          "cost_bps": 10.0
+        }
+      }
+    },
+    "response": {
+      "status_code": 202,
+      "headers": {
+        "content-type": "application/json"
+      },
+      "body": {
+        "run_id": "run_55cc1878c808",
+        "status": "pending",
+        "message": "Backtest execution queued successfully"
+      }
+    }
+  },
+  {
+    "id": "backtest_status_completed",
+    "endpoint": "/api/v1/backtest/{run_id}",
+    "method": "GET",
+    "scenario": "Get completed backtest run status & performance metrics (INV-10)",
+    "invariants": [
+      "INV-10"
+    ],
+    "request": {
+      "url": "/api/v1/backtest/run_55cc1878c808",
+      "headers": {},
+      "body": null
+    },
+    "response": {
+      "status_code": 200,
+      "headers": {
+        "content-type": "application/json"
+      },
+      "body": {
+        "run_id": "run_55cc1878c808",
+        "status": "completed",
+        "created_at": "2026-09-26T08:58:09.153348+00:00",
+        "start_date": "2020-06-01",
+        "end_date": "2022-04-29",
+        "config_version": "1.0",
+        "sweep_id": null,
+        "initial_capital": 500000.0,
+        "final_capital": 482707.2,
+        "total_return_pct": -0.0346,
+        "cagr": -0.0183,
+        "total_trades": 2,
+        "win_rate": 0.0,
+        "max_drawdown_pct": 0.0383,
+        "error_message": null
+      }
+    }
+  },
+  {
+    "id": "backtest_trades_ledger",
+    "endpoint": "/api/v1/backtest/{run_id}/trades",
+    "method": "GET",
+    "scenario": "Retrieve complete executed trades ledger (INV-4, INV-7, INV-10)",
+    "invariants": [
+      "INV-4",
+      "INV-7",
+      "INV-10"
+    ],
+    "request": {
+      "url": "/api/v1/backtest/run_55cc1878c808/trades",
+      "headers": {},
+      "body": null
+    },
+    "response": {
+      "status_code": 200,
+      "headers": {
+        "content-type": "application/json"
+      },
+      "body": {
+        "run_id": "run_55cc1878c808",
+        "count": 2,
+        "trades": [
+          {
+            "symbol": "ALPHA",
+            "entry_date": "2021-05-25",
+            "entry_price": 217.83,
+            "qty": 656,
+            "exit_date": "2021-08-10",
+            "exit_price": 194.42,
+            "pnl": -15356.96,
+            "pnl_pct": -0.1075,
+            "exit_reason": "gap",
+            "days_held": 55,
+            "costs": 268.96
+          },
+          {
+            "symbol": "ALPHA",
+            "entry_date": "2021-11-02",
+            "entry_price": 211.83,
+            "qty": 654,
+            "exit_date": "2022-02-23",
+            "exit_price": 208.87,
+            "pnl": -1935.84,
+            "pnl_pct": -0.014,
+            "exit_reason": "exit_signal",
+            "days_held": 81,
+            "costs": 274.68
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "backtest_equity_curve",
+    "endpoint": "/api/v1/backtest/{run_id}/equity",
+    "method": "GET",
+    "scenario": "Retrieve chronological daily equity curve (INV-10)",
+    "invariants": [
+      "INV-10"
+    ],
+    "request": {
+      "url": "/api/v1/backtest/run_55cc1878c808/equity",
+      "headers": {},
+      "body": null
+    },
+    "response": {
+      "status_code": 200,
+      "headers": {
+        "content-type": "application/json"
+      },
+      "body_summary": {
+        "run_id": "run_55cc1878c808",
+        "count": 500,
+        "first_point": {
+          "date": "2020-06-01",
+          "equity": 500000.0,
+          "cash": 500000.0,
+          "positions_value": 0.0,
+          "open_positions": 0,
+          "daily_return": 0.0,
+          "drawdown": 0.0,
+          "drawdown_pct": 0.0
+        },
+        "last_point": {
+          "date": "2022-04-29",
+          "equity": 482707.2,
+          "cash": 482707.2,
+          "positions_value": 0.0,
+          "open_positions": 0,
+          "daily_return": 0.0,
+          "drawdown": 19208.32,
+          "drawdown_pct": 0.0383
+        }
+      }
+    }
+  },
+  {
+    "id": "backtest_list_history",
+    "endpoint": "/api/v1/backtest",
+    "method": "GET",
+    "scenario": "List historical executed backtest runs",
+    "request": {
+      "url": "/api/v1/backtest",
+      "headers": {},
+      "body": null
+    },
+    "response": {
+      "status_code": 200,
+      "headers": {
+        "content-type": "application/json"
+      },
+      "body_summary": {
+        "count": 2593,
+        "latest_run_id": "run_55cc1878c808"
+      }
+    }
+  },
+  {
+    "id": "backtest_audit_provenance",
+    "endpoint": "/api/v1/backtest/{run_id}/audit",
+    "method": "GET",
+    "scenario": "Retrieve cryptographic provenance record (INV-9)",
+    "invariants": [
+      "INV-9"
+    ],
+    "request": {
+      "url": "/api/v1/backtest/run_55cc1878c808/audit",
+      "headers": {},
+      "body": null
+    },
+    "response": {
+      "status_code": 200,
+      "headers": {
+        "content-type": "application/json"
+      },
+      "body": {
+        "run_id": "run_55cc1878c808",
+        "git_sha": "474137e1d91ceef20c1bbbdf59bd73d607c17467",
+        "config": {
+          "universe_start_rank": 101,
+          "universe_end_rank": 750,
+          "ema_spans": [
+            20,
+            50,
+            150,
+            200
+          ],
+          "regime_ema_spans": [
+            50,
+            200
+          ],
+          "high_52w_factor": 0.85,
+          "high_52w_lookback": 252,
+          "sl_pct": 0.07,
+          "risk_pct": 0.02,
+          "cost_bps": 10.0,
+          "capital": 500000.0,
+          "ranking_rule": "momentum",
+          "lot_size": 1,
+          "allow_crossover_equal": false,
+          "ema_short": 20,
+          "ema_long": 200
+        },
+        "data_hash": "73fc1e57f99a933a9890cb9733156d6c883f715397ee64cedd56a6b7fe99fc3c",
+        "versions": {
+          "python": "3.14.7",
+          "fastapi": "0.141.1",
+          "pandas": "3.0.6",
+          "numpy": "2.5.3",
+          "pydantic": "2.13.5",
+          "sqlmodel": "0.0.46"
+        },
+        "created_at": "2026-09-26T08:58:09.153348+00:00"
+      }
+    }
+  }
+]

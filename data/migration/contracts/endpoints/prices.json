@@ -1,0 +1,144 @@
+[
+  {
+    "id": "prices_symbol_range",
+    "endpoint": "/api/v1/prices/{symbol}",
+    "method": "GET",
+    "scenario": "Historical OHLCV for RELIANCE filtered chronologically",
+    "request": {
+      "url": "/api/v1/prices/RELIANCE?start=2021-01-01&end=2021-01-15",
+      "headers": {},
+      "body": null
+    },
+    "response": {
+      "status_code": 200,
+      "headers": {
+        "content-type": "application/json"
+      },
+      "body": {
+        "symbol": "RELIANCE",
+        "count": 11,
+        "prices": [
+          {
+            "date": "2021-01-01",
+            "open": 1712.92,
+            "high": 1743.2,
+            "low": 1698.1,
+            "close": 1720.8,
+            "adj_close": 860.4,
+            "volume": 2376158.0
+          },
+          {
+            "date": "2021-01-04",
+            "open": 1701.92,
+            "high": 1706.71,
+            "low": 1677.47,
+            "close": 1697.85,
+            "adj_close": 848.92,
+            "volume": 3220452.0
+          },
+          {
+            "date": "2021-01-05",
+            "open": 1650.24,
+            "high": 1660.73,
+            "low": 1620.11,
+            "close": 1643.37,
+            "adj_close": 821.68,
+            "volume": 3405640.0
+          },
+          {
+            "date": "2021-01-06",
+            "open": 1592.37,
+            "high": 1600.46,
+            "low": 1570.37,
+            "close": 1595.88,
+            "adj_close": 797.94,
+            "volume": 2810807.0
+          },
+          {
+            "date": "2021-01-07",
+            "open": 1603.63,
+            "high": 1627.17,
+            "low": 1577.68,
+            "close": 1597.9,
+            "adj_close": 798.95,
+            "volume": 1562417.0
+          },
+          {
+            "date": "2021-01-08",
+            "open": 1602.67,
+            "high": 1626.28,
+            "low": 1580.96,
+            "close": 1606.01,
+            "adj_close": 803.01,
+            "volume": 775899.0
+          },
+          {
+            "date": "2021-01-11",
+            "open": 1587.0,
+            "high": 1607.77,
+            "low": 1573.26,
+            "close": 1580.51,
+            "adj_close": 790.26,
+            "volume": 418774.0
+          },
+          {
+            "date": "2021-01-12",
+            "open": 1603.37,
+            "high": 1626.13,
+            "low": 1590.2,
+            "close": 1599.31,
+            "adj_close": 799.66,
+            "volume": 586626.0
+          },
+          {
+            "date": "2021-01-13",
+            "open": 1556.85,
+            "high": 1561.69,
+            "low": 1543.18,
+            "close": 1552.12,
+            "adj_close": 776.06,
+            "volume": 3123871.0
+          },
+          {
+            "date": "2021-01-14",
+            "open": 1543.42,
+            "high": 1561.77,
+            "low": 1532.77,
+            "close": 1550.89,
+            "adj_close": 775.45,
+            "volume": 4949617.0
+          },
+          {
+            "date": "2021-01-15",
+            "open": 1524.73,
+            "high": 1529.19,
+            "low": 1506.91,
+            "close": 1517.71,
+            "adj_close": 758.85,
+            "volume": 711868.0
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "prices_symbol_unknown_404",
+    "endpoint": "/api/v1/prices/{symbol}",
+    "method": "GET",
+    "scenario": "Unknown symbol price query yields 404",
+    "request": {
+      "url": "/api/v1/prices/UNKNOWN_SYMBOL_XYZ",
+      "headers": {},
+      "body": null
+    },
+    "response": {
+      "status_code": 404,
+      "headers": {
+        "content-type": "application/json"
+      },
+      "body": {
+        "detail": "No price data found for symbol 'UNKNOWN_SYMBOL_XYZ'"
+      }
+    }
+  }
+]

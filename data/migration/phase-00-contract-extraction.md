@@ -164,11 +164,11 @@ This guarantees that two runs with identical configurations produce identical `c
 - Verified state: every endpoint's behavior is frozen as a golden fixture.
 
 **Checklist for Phase 1 implementer to confirm before starting:**
-- [ ] `data/migration/contracts/` directory exists with golden fixtures
-- [ ] `backtest.completed` schema is formally specified
-- [ ] "Reports not ready" protocol is documented
-- [ ] Golden backtest (₹482,707.20) is captured as a contract fixture
-- [ ] Config JSON canonicalization rule is specified
+- [x] `data/migration/contracts/` directory exists with golden fixtures ([`contracts/endpoints/`](file:///home/shailender/projects/equitest-nse/data/migration/contracts/endpoints))
+- [x] `backtest.completed` schema is formally specified ([`backtest-completed-schema.json`](file:///home/shailender/projects/equitest-nse/data/migration/contracts/backtest-completed-schema.json))
+- [x] "Reports not ready" protocol is documented ([`reports-not-ready-protocol.md`](file:///home/shailender/projects/equitest-nse/data/migration/contracts/reports-not-ready-protocol.md))
+- [x] Golden backtest (₹482,707.20) is captured as a contract fixture ([`golden-backtest-run.json`](file:///home/shailender/projects/equitest-nse/data/migration/contracts/golden-backtest-run.json))
+- [x] Config JSON canonicalization rule is specified ([`messaging-infrastructure-contract.md`](file:///home/shailender/projects/equitest-nse/data/migration/contracts/messaging-infrastructure-contract.md#L73))
 
 ---
 

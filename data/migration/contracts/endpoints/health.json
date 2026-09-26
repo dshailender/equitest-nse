@@ -1,0 +1,44 @@
+[
+  {
+    "id": "health_root",
+    "endpoint": "/health",
+    "method": "GET",
+    "scenario": "Root service operational check",
+    "request": {
+      "url": "/health",
+      "headers": {},
+      "body": null
+    },
+    "response": {
+      "status_code": 200,
+      "headers": {
+        "content-type": "application/json"
+      },
+      "body": {
+        "status": "ok",
+        "version": "0.1.0"
+      }
+    }
+  },
+  {
+    "id": "health_api_v1",
+    "endpoint": "/api/v1/health",
+    "method": "GET",
+    "scenario": "API v1 service operational check",
+    "request": {
+      "url": "/api/v1/health",
+      "headers": {},
+      "body": null
+    },
+    "response": {
+      "status_code": 200,
+      "headers": {
+        "content-type": "application/json"
+      },
+      "body": {
+        "status": "ok",
+        "version": "0.1.0"
+      }
+    }
+  }
+]
