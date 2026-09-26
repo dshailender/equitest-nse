@@ -189,6 +189,20 @@ def ingest_market_data(
                 mask = (const_df["date"] >= start) & (const_df["date"] <= end)
                 filtered_const = const_df[mask]
 
+                # Purge any legacy synthetic rows for matching dates
+                matching_dates = sorted(filtered_const["date"].unique())
+                if matching_dates:
+                    from sqlalchemy import text
+
+                    dates_str = ", ".join(f"'{d}'" for d in matching_dates)
+                    session.execute(
+                        text(
+                            f"DELETE FROM universe_membership "
+                            f"WHERE date IN ({dates_str}) "
+                            f"AND (symbol LIKE 'MIDCAP_STOCK_%' OR symbol LIKE 'TOP_%')"
+                        )
+                    )
+
                 for _, r in filtered_const.iterrows():
                     d = str(r["date"])
                     s = str(r["symbol"])
@@ -352,3 +366,50 @@ def seed_price_coverage(raw_conn: Any = None) -> int:
     if should_close:
         raw_conn.close()
     return len(unique_symbols)
+
+
+def seed_universe_constituents(raw_conn: Any = None) -> int:
+    """Seeds SQLite database with authentic point-in-time universe constituents.
+
+    Purges any legacy synthetic constituents (MIDCAP_STOCK_*, TOP_*) and populates
+    all records from data/fixtures/constituents.parquet.
+    """
+    should_close = False
+    if raw_conn is None:
+        from app.db.session import engine
+
+        raw_conn = engine.raw_connection()
+        should_close = True
+    elif hasattr(raw_conn, "connection"):
+        raw_conn = raw_conn.connection
+
+    cursor = raw_conn.cursor()
+    # 1. Purge legacy synthetic records
+    cursor.execute(
+        "DELETE FROM universe_membership "
+        "WHERE symbol LIKE 'MIDCAP_STOCK_%' OR symbol LIKE 'TOP_%'"
+    )
+
+    # 2. Load constituents from parquet
+    base_dir = Path(__file__).resolve().parent.parent.parent.parent
+    constituents_file = base_dir / "data" / "fixtures" / "constituents.parquet"
+    inserted = 0
+    if constituents_file.exists():
+        df = pd.read_parquet(constituents_file)
+        if {"date", "symbol", "rank"}.issubset(df.columns):
+            df["date"] = pd.to_datetime(df["date"]).dt.strftime("%Y-%m-%d")
+            rows = [
+                (str(r["date"]), str(r["symbol"]), int(r["rank"]))
+                for _, r in df.iterrows()
+            ]
+            cursor.executemany(
+                "INSERT OR REPLACE INTO universe_membership (date, symbol, rank) "
+                "VALUES (?, ?, ?)",
+                rows,
+            )
+            inserted = len(rows)
+
+    raw_conn.commit()
+    if should_close:
+        raw_conn.close()
+    return inserted

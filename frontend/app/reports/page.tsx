@@ -307,7 +307,7 @@ export default function ReportsHubPage() {
                     <span
                       className={`text-sm font-bold flex items-center gap-1 mt-0.5 ${
                         (latestCompleted.total_return_pct ?? 0) >= 0
-                          ? "text-emerald-600 dark:text-emerald-400"
+                          ? "text-emerald-700 dark:text-emerald-400"
                           : "text-rose-600 dark:text-rose-400"
                       }`}
                     >
@@ -444,7 +444,7 @@ export default function ReportsHubPage() {
                         <td
                           className={`py-3 px-3 text-right font-semibold font-mono ${
                             (run.total_return_pct ?? 0) >= 0
-                              ? "text-emerald-600 dark:text-emerald-400"
+                              ? "text-emerald-700 dark:text-emerald-400"
                               : "text-rose-600 dark:text-rose-400"
                           }`}
                         >

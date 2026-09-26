@@ -178,3 +178,58 @@ def test_sample_midcaps_deduplicated():
     fallback_symbols = [item["symbol"] for item in fallback]
     assert len(fallback_symbols) == len(set(fallback_symbols)) == 650
     assert fallback_symbols.count("TATACOMM") == 1
+
+
+def test_universe_db_session_point_in_time_and_synthetic_filtering(
+    temp_db: Session,
+):
+    """Verify DB session resolves PIT date and filters synthetic tokens."""
+    from app.db.models import UniverseMembership
+
+    # Seed mix of authentic and legacy synthetic tokens for 2022-01-01
+    temp_db.add(
+        UniverseMembership(date="2022-01-01", symbol="MIDCAP_STOCK_101", rank=101)
+    )
+    temp_db.add(UniverseMembership(date="2022-01-01", symbol="TOP_1", rank=1))
+    temp_db.add(UniverseMembership(date="2022-01-01", symbol="TATAELXSI", rank=101))
+    temp_db.add(UniverseMembership(date="2022-01-01", symbol="FEDERALBNK", rank=102))
+    temp_db.commit()
+
+    # 1. Exact date resolution
+    tickers, bias, details = get_universe("2022-01-01", session=temp_db)
+    assert not bias
+    assert tickers == ["TATAELXSI", "FEDERALBNK"]
+    assert details[0]["name"] == "Tata Elxsi Ltd"
+    assert details[0]["sector"] == "Information Technology"
+    assert details[1]["name"] == "Federal Bank Ltd"
+    assert details[1]["sector"] == "Financial Services"
+
+    # 2. Point-in-time date resolution (2022-06-15 uses 2022-01-01 constituents)
+    tickers_pit, bias_pit, details_pit = get_universe("2022-06-15", session=temp_db)
+    assert not bias_pit
+    assert tickers_pit == ["TATAELXSI", "FEDERALBNK"]
+
+
+def test_seed_universe_constituents(temp_db: Session):
+    """Verify seed_universe_constituents purges synthetic records and seeds data."""
+    from app.data.ingest import seed_universe_constituents
+    from app.db.models import UniverseMembership
+
+    # Add synthetic records
+    temp_db.add(
+        UniverseMembership(date="2022-01-01", symbol="MIDCAP_STOCK_101", rank=101)
+    )
+    temp_db.add(UniverseMembership(date="2022-01-01", symbol="TOP_1", rank=1))
+    temp_db.commit()
+
+    raw_conn = temp_db.connection()
+    count = seed_universe_constituents(raw_conn)
+    assert count == 2250
+
+    # Ensure no synthetic records remain
+    cursor = raw_conn.connection.cursor()
+    cursor.execute(
+        "SELECT count(*) FROM universe_membership "
+        "WHERE symbol LIKE 'MIDCAP_STOCK_%' OR symbol LIKE 'TOP_%'"
+    )
+    assert cursor.fetchone()[0] == 0

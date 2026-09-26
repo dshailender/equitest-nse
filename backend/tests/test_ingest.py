@@ -73,3 +73,40 @@ def test_corporate_action_split_adjustment():
     assert (
         0.95 <= adj_ratio <= 1.05
     ), f"Expected continuous adjusted close, got ratio {adj_ratio}"
+
+
+def test_ingest_purges_synthetic_universe_constituents(temp_db: Session):
+    """Verify market data ingestion purges legacy synthetic universe constituents."""
+    # Seed legacy synthetic records into temp_db
+    temp_db.add(
+        UniverseMembership(date="2020-01-01", symbol="MIDCAP_STOCK_101", rank=101)
+    )
+    temp_db.add(UniverseMembership(date="2020-01-01", symbol="TOP_1", rank=1))
+    temp_db.commit()
+
+    source = CSVSource()
+    res = ingest_market_data(
+        session=temp_db,
+        start="2020-01-01",
+        end="2020-01-02",
+        symbols=["RELIANCE"],
+        source=source,
+    )
+    assert res["status"] == "completed"
+
+    # Confirm synthetic constituents were purged and authentic ones populated
+    synthetic_count = temp_db.exec(
+        select(func.count(UniverseMembership.symbol)).where(
+            UniverseMembership.symbol.like("MIDCAP_STOCK_%")  # type: ignore
+            | UniverseMembership.symbol.like("TOP_%")  # type: ignore
+        )
+    ).one()
+    assert synthetic_count == 0
+
+    # Ensure authentic records exist
+    total_count = temp_db.exec(
+        select(func.count(UniverseMembership.symbol)).where(
+            UniverseMembership.date == "2020-01-01"
+        )
+    ).one()
+    assert total_count == 750
