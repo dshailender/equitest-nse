@@ -85,10 +85,10 @@ export default function HomePage() {
       {/* Quantitative Core Invariants Bar */}
       <section className="space-y-4">
         <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">
             Institutional Research Guarantees
           </h2>
-          <span className="text-xs text-slate-500">PRD Mandated Invariants</span>
+          <span className="text-xs text-slate-600 dark:text-slate-400">PRD Mandated Invariants</span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -145,16 +145,16 @@ export default function HomePage() {
       {/* 4-Stage Quantitative Workflow Pipeline */}
       <section className="space-y-4">
         <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">
             End-to-End Quantitative Pipeline
           </h2>
-          <span className="text-xs text-slate-500">Signal to Settlement</span>
+          <span className="text-xs text-slate-600 dark:text-slate-400">Signal to Settlement</span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="relative p-5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm flex flex-col justify-between">
             <div className="space-y-2">
-              <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-xs">
+              <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 flex items-center justify-center font-bold text-xs">
                 01
               </div>
               <h4 className="font-semibold text-sm text-slate-900 dark:text-slate-100">
@@ -174,7 +174,7 @@ export default function HomePage() {
 
           <div className="relative p-5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm flex flex-col justify-between">
             <div className="space-y-2">
-              <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xs">
+              <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 flex items-center justify-center font-bold text-xs">
                 02
               </div>
               <h4 className="font-semibold text-sm text-slate-900 dark:text-slate-100">
@@ -194,7 +194,7 @@ export default function HomePage() {
 
           <div className="relative p-5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm flex flex-col justify-between">
             <div className="space-y-2">
-              <div className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-950 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold text-xs">
+              <div className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 flex items-center justify-center font-bold text-xs">
                 03
               </div>
               <h4 className="font-semibold text-sm text-slate-900 dark:text-slate-100">
@@ -214,7 +214,7 @@ export default function HomePage() {
 
           <div className="relative p-5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm flex flex-col justify-between">
             <div className="space-y-2">
-              <div className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-xs">
+              <div className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 flex items-center justify-center font-bold text-xs">
                 04
               </div>
               <h4 className="font-semibold text-sm text-slate-900 dark:text-slate-100">
@@ -237,10 +237,10 @@ export default function HomePage() {
       {/* Subsystem Modules Grid */}
       <section className="space-y-4">
         <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">
             Platform Subsystems
           </h2>
-          <span className="text-xs text-slate-500">Core Engines</span>
+          <span className="text-xs text-slate-600 dark:text-slate-400">Core Engines</span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
