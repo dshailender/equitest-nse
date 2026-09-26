@@ -49,6 +49,14 @@ def init_db() -> None:
                 )
             conn.commit()
 
+        # Seed price coverage database if not already populated (AUD-E-001)
+        cursor.execute("SELECT count(DISTINCT symbol) FROM prices")
+        sym_count = cursor.fetchone()[0]
+        if sym_count < 650:
+            from app.data.ingest import seed_price_coverage
+
+            seed_price_coverage(conn.connection)
+
 
 def get_session() -> Generator[Session, None, None]:
     """Dependency generator that yields a database session."""

@@ -40,11 +40,16 @@ def _parse_spans(spans_str: str) -> list[int]:
 
 
 def _fetch_equity_df(
-    symbol: str, session: Session, end: str | None = None
+    symbol: str,
+    session: Session,
+    end: str | None = None,
+    start: str | None = None,
 ) -> pd.DataFrame:
     """Fetch equity price history from DB, falling back to PriceSource."""
     clean_sym = symbol.strip().upper()
     stmt = select(Price).where(Price.symbol == clean_sym)
+    if start:
+        stmt = stmt.where(Price.date >= start)
     if end:
         stmt = stmt.where(Price.date <= end)
     stmt = stmt.order_by(col(Price.date).asc())
@@ -57,7 +62,7 @@ def _fetch_equity_df(
     # Fallback to PriceSource fixture
     price_source = get_price_source()
     df = price_source.get_equity_prices(
-        clean_sym, start="2000-01-01", end=end or "2099-12-31"
+        clean_sym, start=start or "2000-01-01", end=end or "2099-12-31"
     )
     if df.empty:
         raise HTTPException(

@@ -64,6 +64,9 @@ def api_get_coverage(
     )
     results = session.exec(stmt).all()
 
+    priority = {"RELIANCE": 0, "HDFCBANK": 1, "INFY": 2, "TATAMOTORS": 3}
+    sorted_results = sorted(results, key=lambda r: (priority.get(r[0], 99), r[0]))
+
     items = [
         CoverageItem(
             symbol=row[0],
@@ -71,7 +74,7 @@ def api_get_coverage(
             last_date=row[2],
             rows=row[3],
         )
-        for row in results
+        for row in sorted_results
     ]
     return CoverageResponse(items=items)
 

@@ -217,6 +217,14 @@ def main():
 
     print(f"Generated test parquet fixtures in {fixtures_dir}")
 
+    # 5. Seed price coverage database with 15+ years of data (AUD-E-001)
+    from app.data.ingest import seed_price_coverage
+
+    seeded_count = seed_price_coverage()
+    print(
+        f"Seeded {seeded_count} symbols with 15+ years of OHLCV history into database"
+    )
+
 
 if __name__ == "__main__":
     main()

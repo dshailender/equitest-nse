@@ -81,9 +81,13 @@ def api_screen_signals(
 
     # 4. For each candidate symbol, evaluate entry signal on date
     matching_symbols: list[str] = []
+    # 400 calendar days covers 252-day 52W high and 200-day EMA
+    import pandas as pd
+
+    screen_start = (pd.to_datetime(date) - pd.DateOffset(days=400)).strftime("%Y-%m-%d")
     for sym in sorted(candidate_set):
         try:
-            stock_df = _fetch_equity_df(sym, session, end=date)
+            stock_df = _fetch_equity_df(sym, session, end=date, start=screen_start)
             if stock_df.empty:
                 continue
 
