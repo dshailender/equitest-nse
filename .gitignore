@@ -67,5 +67,22 @@ Thumbs.db
 *.swp
 *.swo
 
+# Java & Maven
+target/
+**/target/
+*.class
+*.jar
+*.war
+*.ear
+hs_err_pid*
+replay_pid*
+.mvn/wrapper/maven-wrapper.jar
+.classpath
+.project
+.settings/
+*.iml
+*.ipr
+*.iws
+
 # Binaries vendored
 bin/make

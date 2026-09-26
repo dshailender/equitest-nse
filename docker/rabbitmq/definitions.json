@@ -1,0 +1,132 @@
+{
+  "rabbit_version": "3.13.0",
+  "vhosts": [
+    {
+      "name": "/"
+    }
+  ],
+  "permissions": [
+    {
+      "user": "guest",
+      "vhost": "/",
+      "configure": ".*",
+      "write": ".*",
+      "read": ".*"
+    }
+  ],
+  "topic_permissions": [],
+  "parameters": [],
+  "global_parameters": [],
+  "policies": [],
+  "queues": [
+    {
+      "name": "reports.backtest.completed.queue",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-dead-letter-exchange": "equitest.dlx",
+        "x-dead-letter-routing-key": "dead-letter"
+      }
+    },
+    {
+      "name": "validation.backtest.completed.queue",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-dead-letter-exchange": "equitest.dlx",
+        "x-dead-letter-routing-key": "dead-letter"
+      }
+    },
+    {
+      "name": "sweep.backtest.completed.queue",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-dead-letter-exchange": "equitest.dlx",
+        "x-dead-letter-routing-key": "dead-letter"
+      }
+    },
+    {
+      "name": "reports.pdf.jobs.queue",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-dead-letter-exchange": "equitest.dlx",
+        "x-dead-letter-routing-key": "dead-letter"
+      }
+    },
+    {
+      "name": "equitest.dead-letters",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {}
+    }
+  ],
+  "exchanges": [
+    {
+      "name": "equitest.events",
+      "vhost": "/",
+      "type": "topic",
+      "durable": true,
+      "auto_delete": false,
+      "internal": false,
+      "arguments": {}
+    },
+    {
+      "name": "equitest.dlx",
+      "vhost": "/",
+      "type": "direct",
+      "durable": true,
+      "auto_delete": false,
+      "internal": false,
+      "arguments": {}
+    }
+  ],
+  "bindings": [
+    {
+      "source": "equitest.events",
+      "vhost": "/",
+      "destination": "reports.backtest.completed.queue",
+      "destination_type": "queue",
+      "routing_key": "backtest.completed",
+      "arguments": {}
+    },
+    {
+      "source": "equitest.events",
+      "vhost": "/",
+      "destination": "validation.backtest.completed.queue",
+      "destination_type": "queue",
+      "routing_key": "backtest.completed",
+      "arguments": {}
+    },
+    {
+      "source": "equitest.events",
+      "vhost": "/",
+      "destination": "sweep.backtest.completed.queue",
+      "destination_type": "queue",
+      "routing_key": "backtest.completed",
+      "arguments": {}
+    },
+    {
+      "source": "equitest.events",
+      "vhost": "/",
+      "destination": "reports.pdf.jobs.queue",
+      "destination_type": "queue",
+      "routing_key": "reports.pdf.render",
+      "arguments": {}
+    },
+    {
+      "source": "equitest.dlx",
+      "vhost": "/",
+      "destination": "equitest.dead-letters",
+      "destination_type": "queue",
+      "routing_key": "dead-letter",
+      "arguments": {}
+    }
+  ]
+}

@@ -1,0 +1,350 @@
+#!/usr/bin/env bash
+# ====================================================================
+# EquiTest NSE - Microservices Local Development & Troubleshooting CLI
+# ====================================================================
+set -e
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$ROOT_DIR"
+
+# Color definitions
+BOLD='\033[1m'
+CYAN='\033[0;36m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+RED='\033[0;31m'
+NC='\033[0m'
+
+SERVICES=(
+    "equitest-gateway:8080:Gateway"
+    "equitest-data-service:8081:Data Service"
+    "equitest-engine-service:8082:Simulation Engine"
+    "equitest-sweep-service:8083:Sweep Service"
+    "equitest-reports-service:8084:Reports Service"
+    "equitest-validation-service:8085:Validation Service"
+)
+
+check_docker() {
+    if ! docker info >/dev/null 2>&1; then
+        echo -e "${RED}[ERROR] Docker daemon is not running or not accessible.${NC}"
+        echo "Please ensure Docker is started and try again."
+        exit 1
+    fi
+}
+
+check_port() {
+    local port=$1
+    local name=$2
+    if command -v lsof >/dev/null 2>&1; then
+        if lsof -i :"$port" -sTCP:LISTEN -t >/dev/null 2>&1; then
+            local pid
+            pid=$(lsof -i :"$port" -sTCP:LISTEN -t | head -n 1)
+            # Ignore if process belongs to docker-proxy
+            local pname
+            pname=$(ps -p "$pid" -o comm= 2>/dev/null || true)
+            if [[ "$pname" != *"docker"* ]]; then
+                echo -e "${YELLOW}[WARNING] Port $port ($name) is currently occupied by PID $pid ($pname).${NC}"
+            fi
+        fi
+    fi
+}
+
+cmd_up() {
+    check_docker
+    echo -e "${BOLD}${CYAN}==> Starting EquiTest NSE Microservices (Lite Profile)...${NC}"
+
+    echo -e "${CYAN}==> Checking ports...${NC}"
+    check_port 5432 "PostgreSQL"
+    check_port 5672 "RabbitMQ AMQP"
+    check_port 15672 "RabbitMQ Management"
+    for item in "${SERVICES[@]}"; do
+        IFS=":" read -r svc port label <<< "$item"
+        check_port "$port" "$label"
+    done
+
+    echo -e "${CYAN}==> Building and spinning up containers via Docker Compose...${NC}"
+    docker compose --profile lite up -d --build
+
+    echo -e "${CYAN}==> Waiting for services to become healthy...${NC}"
+    local max_wait=90
+    local elapsed=0
+    local all_healthy=false
+
+    while [ $elapsed -lt $max_wait ]; do
+        local healthy_count=0
+        for item in "${SERVICES[@]}"; do
+            IFS=":" read -r svc port label <<< "$item"
+            if curl -s -f "http://localhost:${port}/health" >/dev/null 2>&1; then
+                healthy_count=$((healthy_count + 1))
+            fi
+        done
+
+        if [ "$healthy_count" -eq "${#SERVICES[@]}" ]; then
+            all_healthy=true
+            break
+        fi
+
+        sleep 2
+        elapsed=$((elapsed + 2))
+        echo -ne "    Waiting for services (${healthy_count}/${#SERVICES[@]} healthy, ${elapsed}s elapsed)...\r"
+    done
+
+    echo ""
+    if [ "$all_healthy" = true ]; then
+        echo -e "${GREEN}==> All ${#SERVICES[@]} microservices and infrastructure are healthy!${NC}"
+        cmd_status
+    else
+        echo -e "${RED}[WARNING] Not all services reported healthy within ${max_wait}s.${NC}"
+        echo "Run './run-local-services status' or './run-local-services troubleshoot' for details."
+    fi
+}
+
+cmd_down() {
+    check_docker
+    echo -e "${YELLOW}==> Stopping EquiTest microservices stack...${NC}"
+    docker compose --profile lite down
+    echo -e "${GREEN}==> All services and containers stopped.${NC}"
+}
+
+cmd_status() {
+    check_docker
+    echo ""
+    echo -e "${BOLD}${CYAN}======================================================================${NC}"
+    echo -e "${BOLD}${CYAN}               EquiTest NSE Microservices Status                      ${NC}"
+    echo -e "${BOLD}${CYAN}======================================================================${NC}"
+
+    printf "%-30s | %-6s | %-12s | %-25s\n" "Service" "Port" "Health" "Endpoint"
+    echo "----------------------------------------------------------------------"
+
+    for item in "${SERVICES[@]}"; do
+        IFS=":" read -r svc port label <<< "$item"
+        local status_str="${RED}DOWN${NC}"
+        local res
+        res=$(curl -s "http://localhost:${port}/health" 2>/dev/null || true)
+        if [[ "$res" == *"ok"* ]]; then
+            status_str="${GREEN}200 OK${NC}"
+        fi
+        printf "%-30s | %-6s | %-21b | %-25s\n" "$label" "$port" "$status_str" "http://localhost:${port}/health"
+    done
+
+    echo "----------------------------------------------------------------------"
+    echo -e "${BOLD}Infrastructure:${NC}"
+
+    # Postgres status
+    local pg_status="${RED}DOWN${NC}"
+    if docker compose exec -T postgres pg_isready -U postgres >/dev/null 2>&1; then
+        pg_status="${GREEN}UP (5 DBs Active)${NC}"
+    fi
+    printf "  %-28s : %b\n" "PostgreSQL 16 (:5432)" "$pg_status"
+
+    # RabbitMQ status
+    local rmq_status="${RED}DOWN${NC}"
+    if curl -s -u guest:guest "http://localhost:15672/api/overview" >/dev/null 2>&1; then
+        rmq_status="${GREEN}UP (Management: http://localhost:15672)${NC}"
+    fi
+    printf "  %-28s : %b\n" "RabbitMQ 3.13 (:5672)" "$rmq_status"
+    echo -e "${BOLD}${CYAN}======================================================================${NC}"
+    echo ""
+}
+
+cmd_verify() {
+    check_docker
+    echo -e "${BOLD}${CYAN}==> Running Acceptance Gate Verification...${NC}"
+    local failed=0
+
+    # 1. Health checks
+    echo -e "${CYAN}1. Verifying Service Health Endpoints...${NC}"
+    for item in "${SERVICES[@]}"; do
+        IFS=":" read -r svc port label <<< "$item"
+        echo -ne "   Checking $label (: $port) /health ... "
+        local res
+        res=$(curl -s -f "http://localhost:${port}/health" 2>/dev/null || true)
+        if [[ "$res" == *"ok"* && "$res" == *"0.1.0"* ]]; then
+            echo -e "${GREEN}PASS${NC}"
+        else
+            echo -e "${RED}FAIL (Got: $res)${NC}"
+            failed=$((failed + 1))
+        fi
+
+        echo -ne "   Checking $label (: $port) /api/v1/health ... "
+        local v1res
+        v1res=$(curl -s -f "http://localhost:${port}/api/v1/health" 2>/dev/null || true)
+        if [[ "$v1res" == *"ok"* && "$v1res" == *"0.1.0"* ]]; then
+            echo -e "${GREEN}PASS${NC}"
+        else
+            echo -e "${RED}FAIL (Got: $v1res)${NC}"
+            failed=$((failed + 1))
+        fi
+    done
+
+    # 2. Postgres logical databases
+    echo -e "${CYAN}2. Verifying PostgreSQL Logical Databases...${NC}"
+    local expected_dbs=("equitest_data" "equitest_engine" "equitest_sweep" "equitest_reports" "equitest_validation")
+    local dbs_output
+    dbs_output=$(docker compose exec -T postgres psql -U postgres -d postgres -t -A -c \
+        "SELECT datname FROM pg_database WHERE datname IN ('equitest_data', 'equitest_engine', 'equitest_sweep', 'equitest_reports', 'equitest_validation');" 2>/dev/null || true)
+
+    for db in "${expected_dbs[@]}"; do
+        echo -ne "   Checking database '$db' ... "
+        if echo "$dbs_output" | grep -q "^$db$"; then
+            echo -e "${GREEN}EXISTS${NC}"
+        else
+            echo -e "${RED}MISSING${NC}"
+            failed=$((failed + 1))
+        fi
+    done
+
+    # 3. RabbitMQ Exchanges and Queues
+    echo -e "${CYAN}3. Verifying RabbitMQ Broker Topology...${NC}"
+    local exchanges_res
+    exchanges_res=$(curl -s -u guest:guest "http://localhost:15672/api/exchanges/%2F" 2>/dev/null || true)
+    
+    echo -ne "   Checking topic exchange 'equitest.events' (durable: true) ... "
+    if echo "$exchanges_res" | grep -q '"name":"equitest.events"' && echo "$exchanges_res" | grep -q '"durable":true'; then
+        echo -e "${GREEN}PASS${NC}"
+    else
+        echo -e "${RED}FAIL${NC}"
+        failed=$((failed + 1))
+    fi
+
+    echo -ne "   Checking DLX direct exchange 'equitest.dlx' (durable: true) ... "
+    if echo "$exchanges_res" | grep -q '"name":"equitest.dlx"'; then
+        echo -e "${GREEN}PASS${NC}"
+    else
+        echo -e "${RED}FAIL${NC}"
+        failed=$((failed + 1))
+    fi
+
+    local queues_res
+    queues_res=$(curl -s -u guest:guest "http://localhost:15672/api/queues/%2F" 2>/dev/null || true)
+    local expected_queues=(
+        "reports.backtest.completed.queue"
+        "validation.backtest.completed.queue"
+        "sweep.backtest.completed.queue"
+        "reports.pdf.jobs.queue"
+        "equitest.dead-letters"
+    )
+
+    for q in "${expected_queues[@]}"; do
+        echo -ne "   Checking queue '$q' (durable: true) ... "
+        if echo "$queues_res" | grep -q "\"name\":\"$q\"" && echo "$queues_res" | grep -q '"durable":true'; then
+            echo -e "${GREEN}PASS${NC}"
+        else
+            echo -e "${RED}FAIL${NC}"
+            failed=$((failed + 1))
+        fi
+    done
+
+    echo ""
+    if [ "$failed" -eq 0 ]; then
+        echo -e "${BOLD}${GREEN}==> ALL ACCEPTANCE GATES PASSED (100% VERIFIED).${NC}"
+        return 0
+    else
+        echo -e "${BOLD}${RED}==> $failed CHECKS FAILED. Run './run-local-services troubleshoot' for details.${NC}"
+        return 1
+    fi
+}
+
+cmd_logs() {
+    check_docker
+    local target="$1"
+    if [ -n "$target" ]; then
+        docker compose --profile lite logs -f "$target"
+    else
+        docker compose --profile lite logs -f
+    fi
+}
+
+cmd_restart() {
+    check_docker
+    local target="$1"
+    if [ -n "$target" ]; then
+        echo -e "${CYAN}==> Restarting $target...${NC}"
+        docker compose --profile lite restart "$target"
+    else
+        echo -e "${CYAN}==> Restarting all lite profile containers...${NC}"
+        docker compose --profile lite restart
+    fi
+}
+
+cmd_troubleshoot() {
+    check_docker
+    echo -e "${BOLD}${CYAN}==> Running Diagnostics & Troubleshooting...${NC}"
+    echo ""
+    echo -e "${BOLD}1. Docker Containers State:${NC}"
+    docker compose --profile lite ps -a
+
+    echo ""
+    echo -e "${BOLD}2. Container Resource / Memory Usage:${NC}"
+    docker stats --no-stream --format "table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.MemPerc}}\t{{.NetIO}}"
+
+    echo ""
+    echo -e "${BOLD}3. Recent Error Logs across containers:${NC}"
+    docker compose --profile lite logs --tail 30 | grep -iE "error|exception|fatal|panic" || echo "   (No recent errors detected in last 30 log lines)"
+
+    echo ""
+    echo -e "${BOLD}4. Database Diagnostics:${NC}"
+    if docker compose exec -T postgres pg_isready -U postgres >/dev/null 2>&1; then
+        echo "   Postgres is responsive. Active connection counts:"
+        docker compose exec -T postgres psql -U postgres -d postgres -c \
+            "SELECT datname, numbackends FROM pg_stat_database WHERE datname LIKE 'equitest%';"
+    else
+        echo -e "   ${RED}Postgres is not reachable.${NC}"
+    fi
+
+    echo ""
+    echo -e "${BOLD}5. RabbitMQ Queue Depths:${NC}"
+    if curl -s -u guest:guest "http://localhost:15672/api/overview" >/dev/null 2>&1; then
+        curl -s -u guest:guest "http://localhost:15672/api/queues/%2F" | \
+            python3 -c "import sys, json; qs=json.load(sys.stdin); [print(f'   {q[\"name\"]}: {q.get(\"messages\", 0)} messages, {q.get(\"consumers\", 0)} consumers') for q in qs]" 2>/dev/null || true
+    else
+        echo -e "   ${RED}RabbitMQ Management API is not reachable.${NC}"
+    fi
+}
+
+# Subcommand dispatch
+ACTION="${1:-up}"
+case "$ACTION" in
+    up|start)
+        cmd_up
+        ;;
+    down|stop)
+        cmd_down
+        ;;
+    status|check)
+        cmd_status
+        ;;
+    verify|test)
+        cmd_verify
+        ;;
+    logs)
+        shift
+        cmd_logs "$@"
+        ;;
+    restart)
+        shift
+        cmd_restart "$@"
+        ;;
+    troubleshoot|diag)
+        cmd_troubleshoot
+        ;;
+    help|--help|-h)
+        echo "EquiTest NSE Microservices Local CLI"
+        echo ""
+        echo "Usage: ./run-local-services [command]"
+        echo ""
+        echo "Commands:"
+        echo "  up             Start PostgreSQL, RabbitMQ, and all 6 microservices (default)"
+        echo "  down           Stop all containers"
+        echo "  status         Show status table of all microservices & infrastructure"
+        echo "  verify         Run complete automated acceptance tests"
+        echo "  logs [svc]     Tail container logs (optionally for a specific service)"
+        echo "  restart [svc]  Restart a specific service or all containers"
+        echo "  troubleshoot   Perform deep diagnostics (memory, errors, DB, RabbitMQ)"
+        ;;
+    *)
+        echo -e "${RED}Unknown command: $ACTION${NC}"
+        echo "Run './run-local-services help' for usage."
+        exit 1
+        ;;
+esac

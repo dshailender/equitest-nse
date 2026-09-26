@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   backend:
     build:
@@ -21,6 +19,9 @@ services:
       timeout: 5s
       retries: 3
       start_period: 5s
+    profiles:
+      - legacy
+      - backend-legacy
 
   frontend:
     build:
@@ -35,6 +36,9 @@ services:
       backend:
         condition: service_healthy
     restart: unless-stopped
+    profiles:
+      - legacy
+      - frontend-legacy
 
   postgres:
     image: postgres:16-alpine
@@ -47,9 +51,243 @@ services:
       - POSTGRES_DB=equitest
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/01-init-databases.sh:/docker-entrypoint-initdb.d/01-init-databases.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
     restart: unless-stopped
     profiles:
+      - lite
       - with-db
+      - all
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: equitest-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+      - ./docker/rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+      - ./docker/rabbitmq/definitions.json:/etc/rabbitmq/definitions.json:ro
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+    restart: unless-stopped
+    profiles:
+      - lite
+      - with-mq
+      - all
+
+  equitest-gateway:
+    build:
+      context: .
+      dockerfile: services/Dockerfile
+      args:
+        SERVICE: equitest-gateway
+        PORT: 8080
+    container_name: equitest-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - DATA_SERVICE_URL=http://equitest-data-service:8081
+      - ENGINE_SERVICE_URL=http://equitest-engine-service:8082
+      - SWEEP_SERVICE_URL=http://equitest-sweep-service:8083
+      - REPORTS_SERVICE_URL=http://equitest-reports-service:8084
+      - VALIDATION_SERVICE_URL=http://equitest-validation-service:8085
+      - JAVA_TOOL_OPTIONS=-Xmx256m -Xms64m -XX:+UseG1GC
+    depends_on:
+      equitest-data-service:
+        condition: service_healthy
+      equitest-engine-service:
+        condition: service_healthy
+      equitest-sweep-service:
+        condition: service_healthy
+      equitest-reports-service:
+        condition: service_healthy
+      equitest-validation-service:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 384M
+    restart: unless-stopped
+    profiles:
+      - lite
+      - services
+      - all
+
+  equitest-data-service:
+    build:
+      context: .
+      dockerfile: services/Dockerfile
+      args:
+        SERVICE: equitest-data-service
+        PORT: 8081
+    container_name: equitest-data-service
+    ports:
+      - "8081:8081"
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - JAVA_TOOL_OPTIONS=-Xmx256m -Xms64m -XX:+UseG1GC
+    depends_on:
+      postgres:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 384M
+    restart: unless-stopped
+    profiles:
+      - lite
+      - services
+      - all
+
+  equitest-engine-service:
+    build:
+      context: .
+      dockerfile: services/Dockerfile
+      args:
+        SERVICE: equitest-engine-service
+        PORT: 8082
+    container_name: equitest-engine-service
+    ports:
+      - "8082:8082"
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - JAVA_TOOL_OPTIONS=-Xmx256m -Xms64m -XX:+UseG1GC
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 384M
+    restart: unless-stopped
+    profiles:
+      - lite
+      - services
+      - all
+
+  equitest-sweep-service:
+    build:
+      context: .
+      dockerfile: services/Dockerfile
+      args:
+        SERVICE: equitest-sweep-service
+        PORT: 8083
+    container_name: equitest-sweep-service
+    ports:
+      - "8083:8083"
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - JAVA_TOOL_OPTIONS=-Xmx256m -Xms64m -XX:+UseG1GC
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 384M
+    restart: unless-stopped
+    profiles:
+      - lite
+      - services
+      - all
+
+  equitest-reports-service:
+    build:
+      context: .
+      dockerfile: services/Dockerfile
+      args:
+        SERVICE: equitest-reports-service
+        PORT: 8084
+    container_name: equitest-reports-service
+    ports:
+      - "8084:8084"
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - JAVA_TOOL_OPTIONS=-Xmx256m -Xms64m -XX:+UseG1GC
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 384M
+    restart: unless-stopped
+    profiles:
+      - lite
+      - services
+      - all
+
+  equitest-validation-service:
+    build:
+      context: .
+      dockerfile: services/Dockerfile
+      args:
+        SERVICE: equitest-validation-service
+        PORT: 8085
+    container_name: equitest-validation-service
+    ports:
+      - "8085:8085"
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - JAVA_TOOL_OPTIONS=-Xmx256m -Xms64m -XX:+UseG1GC
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 384M
+    restart: unless-stopped
+    profiles:
+      - lite
+      - services
+      - all
 
 volumes:
   postgres_data:
+  rabbitmq_data:

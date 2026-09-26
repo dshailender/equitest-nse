@@ -19,22 +19,46 @@ BLACK := $(VENV)/bin/black
 NPM := npm
 NPX := npx
 
-.PHONY: all help install openapi dev run-local test test-backend test-frontend test-e2e lint clean
+.PHONY: all help install openapi dev run-local test test-backend test-frontend test-e2e lint clean services-up services-down services-status services-verify services-test services-build
 
 help:
 	@echo "EquiTest NSE - Quantitative Backtesting Monorepo"
 	@echo ""
 	@echo "Available commands:"
-	@echo "  make run-local      Start backend on :8000 and frontend on :3000 (or run ./run-local)"
-	@echo "  make dev            Alias for make run-local"
-	@echo "  make install        Install Python venv & backend dependencies, frontend npm packages"
-	@echo "  make openapi        Generate OpenAPI JSON and TypeScript schema definitions"
-	@echo "  make lint           Run backend ruff/black checks and frontend eslint/tsc"
-	@echo "  make test           Run all test suites (backend, frontend, e2e)"
-	@echo "  make test-backend   Run backend pytest with >=80% coverage check"
-	@echo "  make test-frontend  Run frontend Vitest component tests with MSW"
-	@echo "  make test-e2e       Run Playwright E2E integration test"
-	@echo "  make clean          Clean temporary build, test, and cache files"
+	@echo "  make run-local        Start backend on :8000 and frontend on :3000 (or run ./run-local)"
+	@echo "  make dev              Alias for make run-local"
+	@echo "  make services-up      Spin up PostgreSQL, RabbitMQ, and 6 Spring Boot microservices"
+	@echo "  make services-down    Stop all microservice containers"
+	@echo "  make services-status  Display health and status of microservices & infrastructure"
+	@echo "  make services-verify  Run automated acceptance verification across microservices"
+	@echo "  make services-test    Run Maven unit tests across all microservice modules"
+	@echo "  make services-build   Package all microservice JARs"
+	@echo "  make install          Install Python venv & backend dependencies, frontend npm packages"
+	@echo "  make openapi          Generate OpenAPI JSON and TypeScript schema definitions"
+	@echo "  make lint             Run backend ruff/black checks and frontend eslint/tsc"
+	@echo "  make test             Run all test suites (backend, frontend, e2e)"
+	@echo "  make test-backend     Run backend pytest with >=80% coverage check"
+	@echo "  make test-frontend    Run frontend Vitest component tests with MSW"
+	@echo "  make test-e2e         Run Playwright E2E integration test"
+	@echo "  make clean            Clean temporary build, test, and cache files"
+
+services-up:
+	@./run-local-services up
+
+services-down:
+	@./run-local-services down
+
+services-status:
+	@./run-local-services status
+
+services-verify:
+	@./run-local-services verify
+
+services-test:
+	@./mvnw test
+
+services-build:
+	@./mvnw clean package -DskipTests
 
 install:
 	@echo "==> Setting up backend Python virtual environment..."
