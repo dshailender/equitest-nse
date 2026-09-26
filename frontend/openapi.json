@@ -2382,6 +2382,18 @@
             "type": "number",
             "title": "Drawdown Pct",
             "description": "Drawdown percentage from peak"
+          },
+          "benchmark_equity": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Benchmark Equity",
+            "description": "Benchmark normalized equity value in INR"
           }
         },
         "type": "object",
@@ -3107,6 +3119,36 @@
             "type": "number",
             "title": "Avg Days Held",
             "description": "Average holding duration in days (1 decimal place)"
+          },
+          "benchmark_return": {
+            "type": "number",
+            "title": "Benchmark Return",
+            "description": "Benchmark (NIFTY 50) total percentage return (4 decimal places)",
+            "default": 0.0
+          },
+          "benchmark_cagr": {
+            "type": "number",
+            "title": "Benchmark Cagr",
+            "description": "Benchmark (NIFTY 50) Compound Annual Growth Rate (4 decimal places)",
+            "default": 0.0
+          },
+          "alpha": {
+            "type": "number",
+            "title": "Alpha",
+            "description": "Annualized Strategy Alpha relative to NIFTY benchmark (4 decimal places)",
+            "default": 0.0
+          },
+          "beta": {
+            "type": "number",
+            "title": "Beta",
+            "description": "Strategy Beta relative to NIFTY benchmark (4 decimal places)",
+            "default": 0.0
+          },
+          "information_ratio": {
+            "type": "number",
+            "title": "Information Ratio",
+            "description": "Annualized Information Ratio relative to NIFTY benchmark (4 decimal places)",
+            "default": 0.0
           }
         },
         "type": "object",

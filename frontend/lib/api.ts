@@ -678,6 +678,7 @@ export const EquityPointSchema = z.object({
   daily_return: z.number(),
   drawdown: z.number(),
   drawdown_pct: z.number(),
+  benchmark_equity: z.number().nullable().optional(),
 });
 export type EquityPoint = z.infer<typeof EquityPointSchema>;
 
@@ -903,6 +904,11 @@ export const PerformanceMetricsSchema = z.object({
   profit_factor: z.number(),
   expectancy: z.number(),
   avg_days_held: z.number(),
+  benchmark_return: z.number().optional().default(0),
+  benchmark_cagr: z.number().optional().default(0),
+  alpha: z.number().optional().default(0),
+  beta: z.number().optional().default(0),
+  information_ratio: z.number().optional().default(0),
 });
 export type PerformanceMetrics = z.infer<typeof PerformanceMetricsSchema>;
 

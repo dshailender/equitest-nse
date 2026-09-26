@@ -1186,6 +1186,11 @@ export interface components {
              * @description Drawdown percentage from peak
              */
             drawdown_pct: number;
+            /**
+             * Benchmark Equity
+             * @description Benchmark normalized equity value in INR
+             */
+            benchmark_equity?: number | null;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -1637,6 +1642,36 @@ export interface components {
              * @description Average holding duration in days (1 decimal place)
              */
             avg_days_held: number;
+            /**
+             * Benchmark Return
+             * @description Benchmark (NIFTY 50) total percentage return (4 decimal places)
+             * @default 0
+             */
+            benchmark_return: number;
+            /**
+             * Benchmark Cagr
+             * @description Benchmark (NIFTY 50) Compound Annual Growth Rate (4 decimal places)
+             * @default 0
+             */
+            benchmark_cagr: number;
+            /**
+             * Alpha
+             * @description Annualized Strategy Alpha relative to NIFTY benchmark (4 decimal places)
+             * @default 0
+             */
+            alpha: number;
+            /**
+             * Beta
+             * @description Strategy Beta relative to NIFTY benchmark (4 decimal places)
+             * @default 0
+             */
+            beta: number;
+            /**
+             * Information Ratio
+             * @description Annualized Information Ratio relative to NIFTY benchmark (4 decimal places)
+             * @default 0
+             */
+            information_ratio: number;
         };
         /** PriceItem */
         PriceItem: {

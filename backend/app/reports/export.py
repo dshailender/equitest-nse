@@ -81,6 +81,23 @@ def generate_summary_csv(metrics: PerformanceMetrics) -> str:
         ("profit_factor", metrics.profit_factor, "Gross Profit / Gross Loss"),
         ("expectancy", metrics.expectancy, "Average trade monetary expectancy (INR)"),
         ("avg_days_held", metrics.avg_days_held, "Average holding duration in days"),
+        (
+            "benchmark_return",
+            metrics.benchmark_return,
+            "NIFTY Benchmark buy-and-hold total return",
+        ),
+        (
+            "benchmark_cagr",
+            metrics.benchmark_cagr,
+            "NIFTY Benchmark Compound Annual Growth Rate",
+        ),
+        ("alpha", metrics.alpha, "Strategy Jensen's Alpha vs Benchmark (rf=0)"),
+        ("beta", metrics.beta, "Strategy Systematic Beta vs Benchmark"),
+        (
+            "information_ratio",
+            metrics.information_ratio,
+            "Annualized Information Ratio vs Benchmark",
+        ),
     ]
     for key, val, desc in data:
         lines.append(f'{key},{val},"{desc}"')
@@ -208,6 +225,31 @@ def generate_report_xlsx(
         ("Profit Factor", metrics.profit_factor, "Gross Profit / Gross Loss"),
         ("Expectancy (INR)", metrics.expectancy, "Average trade monetary expectancy"),
         ("Avg Days Held", metrics.avg_days_held, "Average holding duration in days"),
+        (
+            "Benchmark Return (%)",
+            metrics.benchmark_return,
+            "NIFTY Benchmark buy-and-hold total return",
+        ),
+        (
+            "Benchmark CAGR (%)",
+            metrics.benchmark_cagr,
+            "NIFTY Benchmark Compound Annual Growth Rate",
+        ),
+        (
+            "Strategy Alpha (rf=0)",
+            metrics.alpha,
+            "Strategy Jensen's Alpha vs Benchmark",
+        ),
+        (
+            "Strategy Beta",
+            metrics.beta,
+            "Strategy Systematic Beta vs Benchmark",
+        ),
+        (
+            "Information Ratio",
+            metrics.information_ratio,
+            "Annualized Information Ratio vs Benchmark",
+        ),
     ]
     summary_rows.extend(list(summary_data))
 

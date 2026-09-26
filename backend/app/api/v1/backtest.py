@@ -662,10 +662,48 @@ def api_get_backtest_equity(
 
     result = BacktestResult.load(run_record.result_blob_path)
     points: list[EquityPoint] = []
+
+    # Attempt to resolve benchmark equity curve (AUD-H-001)
+    bench_map: dict[str, float] = {}
+    if not result.equity_curve.empty and "date" in result.equity_curve.columns:
+        if "benchmark_equity" in result.equity_curve.columns:
+            for _, pt in result.equity_curve.iterrows():
+                if pd.notna(pt.get("benchmark_equity")):
+                    bench_map[str(pt["date"])[:10]] = float(pt["benchmark_equity"])
+        else:
+            try:
+                from app.reports.metrics import resolve_benchmark_prices
+
+                start_str = str(result.equity_curve["date"].iloc[0])[:10]
+                end_str = str(result.equity_curve["date"].iloc[-1])[:10]
+                b_df = resolve_benchmark_prices(start_str, end_str)
+                if b_df is not None and not b_df.empty and "date" in b_df.columns:
+                    close_col = (
+                        "close"
+                        if "close" in b_df.columns
+                        else ("adj_close" if "adj_close" in b_df.columns else None)
+                    )
+                    if close_col:
+                        b_sorted = b_df.sort_values("date").reset_index(drop=True)
+                        b0 = float(b_sorted[close_col].iloc[0])
+                        if b0 > 0:
+                            for _, b_row in b_sorted.iterrows():
+                                d_key = str(b_row["date"])[:10]
+                                bench_map[d_key] = round(
+                                    result.initial_capital
+                                    * (float(b_row[close_col]) / b0),
+                                    2,
+                                )
+            except Exception:
+                pass
+
     for _, pt in result.equity_curve.iterrows():
+        d_str = str(pt["date"])
+        d_key = d_str[:10]
+        bench_val = bench_map.get(d_key)
         points.append(
             EquityPoint(
-                date=str(pt["date"]),
+                date=d_str,
                 equity=round(float(pt["equity"]), 2),
                 cash=round(float(pt["cash"]), 2),
                 positions_value=round(float(pt["positions_value"]), 2),
@@ -673,6 +711,9 @@ def api_get_backtest_equity(
                 daily_return=round(float(pt["daily_return"]), 4),
                 drawdown=round(float(pt["drawdown"]), 2),
                 drawdown_pct=round(float(pt["drawdown_pct"]), 4),
+                benchmark_equity=(
+                    round(float(bench_val), 2) if bench_val is not None else None
+                ),
             )
         )
 

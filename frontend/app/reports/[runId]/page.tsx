@@ -8,6 +8,7 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
+  Legend,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -83,7 +84,12 @@ export default function ReportDetailPage({
   const [summary, setSummary] = useState<ReportSummaryResponse | null>(null);
   const [monthly, setMonthly] = useState<MonthlyReturnRow[]>([]);
   const [equityCurve, setEquityCurve] = useState<
-    { date: string; drawdown_pct: number; equity: number }[]
+    {
+      date: string;
+      drawdown_pct: number;
+      equity: number;
+      benchmark_equity?: number | null;
+    }[]
   >([]);
   const [trades, setTrades] = useState<{ pnl_pct: number; pnl: number }[]>([]);
 
@@ -107,8 +113,11 @@ export default function ReportDetailPage({
 
         const mappedEq = (eqRes.equity_curve || []).map((pt) => ({
           date: pt.date,
-          drawdown_pct: pt.drawdown_pct != null ? -Math.abs(pt.drawdown_pct * 100) : 0,
+          drawdown_pct:
+            pt.drawdown_pct != null ? -Math.abs(pt.drawdown_pct * 100) : 0,
           equity: pt.equity,
+          benchmark_equity:
+            pt.benchmark_equity != null ? pt.benchmark_equity : null,
         }));
         setEquityCurve(mappedEq);
 
@@ -456,6 +465,177 @@ export default function ReportDetailPage({
               {m.avg_days_held.toFixed(1)}d
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Benchmark Comparison & Relative Analytics (AUD-H-001) */}
+      <div>
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-3">
+          Benchmark Comparison & Relative Analytics (NIFTY 50)
+        </h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 shadow-sm">
+            <span className="text-[10px] font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+              Benchmark Return
+            </span>
+            <div
+              data-testid="metric-benchmark-return"
+              className={`text-base font-bold mt-1 ${
+                (m.benchmark_return ?? 0) >= 0
+                  ? "text-emerald-600 dark:text-emerald-400"
+                  : "text-rose-600 dark:text-rose-400"
+              }`}
+            >
+              {((m.benchmark_return ?? 0) * 100).toFixed(2)}%
+            </div>
+            <span className="text-[10px] text-slate-600 dark:text-slate-400">
+              NIFTY 50 Buy &amp; Hold
+            </span>
+          </div>
+
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 shadow-sm">
+            <span className="text-[10px] font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+              Benchmark CAGR
+            </span>
+            <div
+              data-testid="metric-benchmark-cagr"
+              className={`text-base font-bold mt-1 ${
+                (m.benchmark_cagr ?? 0) >= 0
+                  ? "text-emerald-600 dark:text-emerald-400"
+                  : "text-rose-600 dark:text-rose-400"
+              }`}
+            >
+              {((m.benchmark_cagr ?? 0) * 100).toFixed(2)}%
+            </div>
+            <span className="text-[10px] text-slate-600 dark:text-slate-400">
+              Annualized geometric
+            </span>
+          </div>
+
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 shadow-sm">
+            <span className="text-[10px] font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+              Strategy Alpha
+            </span>
+            <div
+              data-testid="metric-alpha"
+              className={`text-base font-bold mt-1 ${
+                (m.alpha ?? 0) >= 0
+                  ? "text-emerald-600 dark:text-emerald-400"
+                  : "text-rose-600 dark:text-rose-400"
+              }`}
+            >
+              {((m.alpha ?? 0) * 100).toFixed(2)}%
+            </div>
+            <span className="text-[10px] text-slate-600 dark:text-slate-400">
+              Annualized Jensen&apos;s alpha
+            </span>
+          </div>
+
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 shadow-sm">
+            <span className="text-[10px] font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+              Strategy Beta
+            </span>
+            <div
+              data-testid="metric-beta"
+              className="text-base font-bold text-slate-900 dark:text-slate-100 mt-1"
+            >
+              {(m.beta ?? 0).toFixed(2)}
+            </div>
+            <span className="text-[10px] text-slate-600 dark:text-slate-400">
+              Sensitivity to NIFTY
+            </span>
+          </div>
+
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 shadow-sm">
+            <span className="text-[10px] font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+              Information Ratio
+            </span>
+            <div
+              data-testid="metric-information-ratio"
+              className="text-base font-bold text-slate-900 dark:text-slate-100 mt-1"
+            >
+              {(m.information_ratio ?? 0).toFixed(2)}
+            </div>
+            <span className="text-[10px] text-slate-600 dark:text-slate-400">
+              Active return / Tracking error
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Equity Curve vs NIFTY Benchmark Overlaid Chart (AUD-H-001) */}
+      <div
+        data-testid="chart-equity-curve"
+        className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm"
+      >
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+              Equity Curve vs NIFTY 50 Benchmark
+            </h3>
+            <p className="text-[11px] text-slate-600 dark:text-slate-400">
+              Portfolio equity progression overlaid with buy-and-hold NIFTY 50 benchmark
+            </p>
+          </div>
+          <div className="flex items-center space-x-4 text-xs font-medium">
+            <div className="flex items-center space-x-1.5">
+              <span className="inline-block w-3 h-0.5 bg-blue-600"></span>
+              <span className="text-slate-700 dark:text-slate-300">Strategy</span>
+            </div>
+            <div className="flex items-center space-x-1.5">
+              <span className="inline-block w-3 h-0.5 bg-amber-500 border-b border-dashed border-amber-500"></span>
+              <span className="text-slate-700 dark:text-slate-300">NIFTY 50 Benchmark</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="h-72 w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={equityCurve} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
+              <defs>
+                <linearGradient id="strategyEquityFill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#2563eb" stopOpacity={0.25} />
+                  <stop offset="95%" stopColor="#2563eb" stopOpacity={0.0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+              <XAxis
+                dataKey="date"
+                tick={{ fontSize: 10 }}
+                tickFormatter={(val) => (typeof val === "string" ? val.slice(0, 7) : val)}
+              />
+              <YAxis
+                tick={{ fontSize: 10 }}
+                tickFormatter={(val) => `₹${(val / 1000).toFixed(0)}k`}
+                domain={["auto", "auto"]}
+              />
+              <Tooltip
+                formatter={(val: number, name: string) => [
+                  formatCurrency(val),
+                  name === "equity" ? "Strategy Equity" : "NIFTY 50 Benchmark",
+                ]}
+                labelFormatter={(lbl) => `Date: ${lbl}`}
+              />
+              <Legend />
+              <Area
+                type="monotone"
+                dataKey="equity"
+                name="Strategy Equity"
+                stroke="#2563eb"
+                fill="url(#strategyEquityFill)"
+                strokeWidth={2}
+              />
+              <Area
+                type="monotone"
+                dataKey="benchmark_equity"
+                name="NIFTY 50 Benchmark"
+                stroke="#f59e0b"
+                strokeDasharray="4 4"
+                fill="none"
+                strokeWidth={2}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
         </div>
       </div>
 

@@ -609,6 +609,9 @@ class EquityPoint(BaseModel):
     daily_return: float = Field(..., description="Day-over-day return fraction")
     drawdown: float = Field(..., description="Drawdown from equity peak in INR")
     drawdown_pct: float = Field(..., description="Drawdown percentage from peak")
+    benchmark_equity: float | None = Field(
+        default=None, description="Benchmark normalized equity value in INR"
+    )
 
 
 class CompareMetricItem(BaseModel):
