@@ -2819,6 +2819,24 @@
                 "INFY"
               ]
             ]
+          },
+          "scope": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scope",
+            "description": "Optional ingestion scope ('smoke', 'midcap', 'full', 'custom').",
+            "examples": [
+              "smoke",
+              "midcap",
+              "full",
+              "custom"
+            ]
           }
         },
         "type": "object",

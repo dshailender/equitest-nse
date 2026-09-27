@@ -158,3 +158,61 @@ def test_seed_universe_constituents_code_fallback(temp_db: Session, monkeypatch,
     cursor.execute("SELECT count(*) FROM universe_membership")
     assert cursor.fetchone()[0] == 2250
 
+
+def test_ingest_scope_resolution(temp_db: Session):
+    """Verify scope parameter resolves to correct constituent symbol lists."""
+    import pandas as pd
+
+    from app.data.constituents import AUTHENTIC_NSE_CONSTITUENTS
+
+    class RecordingSource:
+        def __init__(self):
+            self.requested_symbols: list[str] = []
+
+        def get_equity_prices(self, symbol: str, start: str, end: str):
+            self.requested_symbols.append(symbol)
+            return pd.DataFrame()
+
+        def get_index_prices(self, symbol: str, start: str, end: str):
+            return pd.DataFrame()
+
+    # 1. Default (no symbols, no scope) -> smoke symbols
+    src1 = RecordingSource()
+    ingest_market_data(temp_db, "2020-01-01", "2020-01-02", source=src1)
+    assert src1.requested_symbols == ["RELIANCE", "HDFCBANK", "INFY", "TATAMOTORS"]
+
+    # 2. scope == "smoke" -> smoke symbols
+    src2 = RecordingSource()
+    ingest_market_data(
+        temp_db, "2020-01-01", "2020-01-02", scope="smoke", source=src2
+    )
+    assert src2.requested_symbols == ["RELIANCE", "HDFCBANK", "INFY", "TATAMOTORS"]
+
+    # 3. scope == "midcap" -> AUTHENTIC_NSE_CONSTITUENTS[:150]
+    src3 = RecordingSource()
+    ingest_market_data(
+        temp_db, "2020-01-01", "2020-01-02", scope="midcap", source=src3
+    )
+    assert src3.requested_symbols == AUTHENTIC_NSE_CONSTITUENTS[:150]
+    assert len(src3.requested_symbols) == 150
+
+    # 4. scope == "full" -> AUTHENTIC_NSE_CONSTITUENTS
+    src4 = RecordingSource()
+    ingest_market_data(temp_db, "2020-01-01", "2020-01-02", scope="full", source=src4)
+    assert src4.requested_symbols == AUTHENTIC_NSE_CONSTITUENTS
+    assert len(src4.requested_symbols) == 650
+
+    # 5. scope == "custom" with explicit symbols
+    src5 = RecordingSource()
+    ingest_market_data(
+        temp_db,
+        "2020-01-01",
+        "2020-01-02",
+        symbols=["TCS", "WIPRO"],
+        scope="custom",
+        source=src5,
+    )
+    assert src5.requested_symbols == ["TCS", "WIPRO"]
+
+
+

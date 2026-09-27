@@ -1403,6 +1403,15 @@ export interface components {
              *     ]
              */
             symbols?: string[] | null;
+            /**
+             * Scope
+             * @description Optional ingestion scope ('smoke', 'midcap', 'full', 'custom').
+             * @example smoke
+             * @example midcap
+             * @example full
+             * @example custom
+             */
+            scope?: string | null;
         };
         /** IngestResponse */
         IngestResponse: {

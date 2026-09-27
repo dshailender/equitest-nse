@@ -83,3 +83,18 @@ async def test_prices_no_lookahead_leak(async_client: AsyncClient):
         assert (
             bar["date"] <= cutoff_date
         ), f"Look-ahead leak detected: bar date {bar['date']} > {cutoff_date}"
+
+
+@pytest.mark.asyncio
+async def test_api_ingest_with_scope(async_client: AsyncClient):
+    """Verify POST /api/v1/data/ingest handles scope parameter correctly."""
+    resp = await async_client.post(
+        "/api/v1/data/ingest",
+        json={"start": "2020-01-01", "end": "2020-01-05", "scope": "smoke"},
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["status"] in ["completed", "partial"]
+    assert "job_id" in data
+    assert data["symbols_ingested"] >= 0
+

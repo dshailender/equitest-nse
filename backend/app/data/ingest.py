@@ -1,6 +1,5 @@
 import logging
 import uuid
-from pathlib import Path
 from typing import Any
 
 import numpy as np
@@ -86,6 +85,7 @@ def ingest_market_data(
     end: str,
     symbols: list[str] | None = None,
     source: PriceSource | None = None,
+    scope: str | None = None,
 ) -> dict[str, Any]:
     """Ingests equity and index OHLCV prices into the database idempotently.
 
@@ -94,8 +94,19 @@ def ingest_market_data(
     job_id = str(uuid.uuid4())
     price_source = source or get_price_source()
 
-    if not symbols:
-        # Default symbols for initial ingestion / dev
+    if scope == "smoke" or (not symbols and not scope):
+        symbols = ["RELIANCE", "HDFCBANK", "INFY", "TATAMOTORS"]
+    elif scope == "midcap":
+        from app.data.constituents import AUTHENTIC_NSE_CONSTITUENTS
+
+        symbols = AUTHENTIC_NSE_CONSTITUENTS[:150]
+    elif scope == "full":
+        from app.data.constituents import AUTHENTIC_NSE_CONSTITUENTS
+
+        symbols = AUTHENTIC_NSE_CONSTITUENTS
+    elif scope == "custom" or symbols is not None:
+        symbols = symbols or []
+    else:
         symbols = ["RELIANCE", "HDFCBANK", "INFY", "TATAMOTORS"]
 
     symbols_ingested = 0

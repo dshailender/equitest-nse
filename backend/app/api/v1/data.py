@@ -38,6 +38,7 @@ def api_ingest_data(
         start=req.start,
         end=req.end,
         symbols=req.symbols,
+        scope=req.scope,
     )
     return IngestResponse(**result)
 

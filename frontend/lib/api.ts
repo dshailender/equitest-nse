@@ -2,7 +2,10 @@ import { z } from "zod";
 import type { components, paths } from "./schema";
 
 export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+  process.env.NEXT_PUBLIC_API_URL ||
+  (typeof window !== "undefined"
+    ? "http://localhost:8000"
+    : (process.env.INTERNAL_API_URL || "http://backend:8000"));
 
 // --- Health Schema ---
 export const HealthResponseSchema = z.object({
@@ -16,6 +19,7 @@ export const IngestRequestSchema = z.object({
   start: z.string(),
   end: z.string(),
   symbols: z.array(z.string()).optional(),
+  scope: z.string().optional(),
 });
 export type IngestRequest = z.infer<typeof IngestRequestSchema>;
 
@@ -120,10 +124,11 @@ export async function fetchHealth(): Promise<HealthResponse> {
 export async function triggerIngest(
   start: string,
   end: string,
-  symbols?: string[]
+  symbols?: string[],
+  scope?: string
 ): Promise<IngestResponse> {
   const url = `${API_BASE_URL}/api/v1/data/ingest`;
-  const body: IngestRequest = { start, end, symbols };
+  const body: IngestRequest = { start, end, symbols, scope };
 
   const response = await fetch(url, {
     method: "POST",

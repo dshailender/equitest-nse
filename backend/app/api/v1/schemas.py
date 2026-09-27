@@ -19,6 +19,12 @@ class IngestRequest(BaseModel):
         description="Optional list of ticker symbols. Defaults to active universe.",
         examples=[["RELIANCE", "HDFCBANK", "INFY"]],
     )
+    scope: str | None = Field(
+        default=None,
+        description="Optional ingestion scope ('smoke', 'midcap', 'full', 'custom').",
+        examples=["smoke", "midcap", "full", "custom"],
+    )
+
 
 
 class IngestResponse(BaseModel):
