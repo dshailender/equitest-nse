@@ -29,7 +29,7 @@ from app.api.v1.schemas import (
     TradeItem,
 )
 from app.core.config import get_backtests_dir, get_fixtures_dir
-from app.data.source import get_price_source
+from app.data.source import CSVSource, get_price_source
 from app.data.universe import get_universe
 from app.db.models import BacktestRun, BacktestSweep, IndexPrice, Price
 from app.db.session import engine, get_session
@@ -66,11 +66,11 @@ def _execute_backtest_task(run_id: str, payload: dict) -> None:
             else:
                 strat_config = StrategyConfig()
 
-            # Load NIFTY benchmark (DB first, fallback to price_source)
+            # Load NIFTY benchmark (DB first if not CSVSource, fallback to price_source)
             price_source = get_price_source()
             raw_conn = getattr(session.connection(), "connection", None)
             nifty_df = pd.DataFrame()
-            if raw_conn is not None:
+            if not isinstance(price_source, CSVSource) and raw_conn is not None:
                 try:
                     nifty_df = pd.read_sql_query(
                         "SELECT date, open, high, low, close, adj_close, volume "
@@ -86,13 +86,20 @@ def _execute_backtest_task(run_id: str, payload: dict) -> None:
                     .where(IndexPrice.symbol.in_(("^NSEI", "NIFTY", "NIFTY50")))
                     .order_by(col(IndexPrice.date).asc())
                 )
-                idx_rows = session.exec(idx_stmt).all()
+                idx_rows = session.exec(idx_stmt).all() if not isinstance(price_source, CSVSource) else []
                 if idx_rows:
                     nifty_df = pd.DataFrame([r.model_dump() for r in idx_rows])
                 else:
                     nifty_df = price_source.get_index_prices(
                         "^NSEI", start="2000-01-01", end="2099-12-31"
                     )
+
+            if nifty_df.empty:
+                for cand in ["^NSEI.parquet", "NIFTY50.parquet"]:
+                    cand_path = get_fixtures_dir() / cand
+                    if cand_path.exists():
+                        nifty_df = pd.read_parquet(cand_path)
+                        break
 
             # Determine symbols list
             symbols_requested = req.symbols
@@ -118,10 +125,10 @@ def _execute_backtest_task(run_id: str, payload: dict) -> None:
                 if tiny_nifty_path.exists():
                     nifty_df = pd.read_parquet(tiny_nifty_path)
 
-            # Load equity prices (DB batch first, fallback to price_source)
+            # Load equity prices (DB batch first if not CSVSource, fallback to price_source)
             prices: dict[str, pd.DataFrame] = {}
             missing_symbols = list(symbols_to_load)
-            if raw_conn is not None and symbols_to_load:
+            if not isinstance(price_source, CSVSource) and raw_conn is not None and symbols_to_load:
                 try:
                     placeholders = ",".join("?" for _ in symbols_to_load)
                     batch_df = pd.read_sql_query(
@@ -138,20 +145,26 @@ def _execute_backtest_task(run_id: str, payload: dict) -> None:
                     pass
 
             for sym in missing_symbols:
-                sym_stmt = (
-                    select(Price)
-                    .where(Price.symbol == sym)
-                    .order_by(col(Price.date).asc())
-                )
-                p_rows = session.exec(sym_stmt).all()
-                if p_rows:
-                    prices[sym] = pd.DataFrame([r.model_dump() for r in p_rows])
-                else:
-                    df = price_source.get_equity_prices(
-                        sym, start="2000-01-01", end="2099-12-31"
+                if not isinstance(price_source, CSVSource):
+                    sym_stmt = (
+                        select(Price)
+                        .where(Price.symbol == sym)
+                        .order_by(col(Price.date).asc())
                     )
-                    if not df.empty:
-                        prices[sym] = df
+                    p_rows = session.exec(sym_stmt).all()
+                    if p_rows:
+                        prices[sym] = pd.DataFrame([r.model_dump() for r in p_rows])
+                        continue
+
+                df = price_source.get_equity_prices(
+                    sym, start="2000-01-01", end="2099-12-31"
+                )
+                if not df.empty:
+                    prices[sym] = df
+                elif (get_fixtures_dir() / f"{sym}.parquet").exists():
+                    prices[sym] = pd.read_parquet(
+                        get_fixtures_dir() / f"{sym}.parquet"
+                    )
 
             # Prepare dynamic point-in-time universe provider (AUD-C-002)
             if symbols_requested:
