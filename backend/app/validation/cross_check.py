@@ -8,6 +8,7 @@ from pathlib import Path
 import pandas as pd
 from sqlmodel import Session
 
+from app.core.config import get_fixtures_dir
 from app.data.source import get_price_source
 from app.db.models import BacktestRun
 from app.strategy.config import StrategyConfig
@@ -80,8 +81,7 @@ def generate_cross_check_dataframe(
 
     # 1. Load equity prices
     price_source = get_price_source()
-    repo_root = Path(__file__).resolve().parents[3]
-    fix_dir = repo_root / "data" / "fixtures"
+    fix_dir = get_fixtures_dir()
 
     stock_df = price_source.get_equity_prices(
         symbol, start="2000-01-01", end="2099-12-31"

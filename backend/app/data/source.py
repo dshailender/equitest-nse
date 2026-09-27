@@ -4,7 +4,7 @@ from typing import Any
 
 import pandas as pd
 
-from app.core.config import settings
+from app.core.config import get_fixtures_dir, settings
 
 
 class PriceSource(ABC):
@@ -45,9 +45,7 @@ class CSVSource(PriceSource):
         if fixtures_dir:
             self.fixtures_dir = Path(fixtures_dir)
         else:
-            # Locate root /data/fixtures relative to backend
-            base = Path(__file__).resolve().parent.parent.parent.parent
-            self.fixtures_dir = base / "data" / "fixtures"
+            self.fixtures_dir = get_fixtures_dir()
 
     def _load_parquet(self, symbol: str, start: str, end: str) -> pd.DataFrame:
         # Normalize symbol name for file lookup (strip ^ and .NS if present)
@@ -252,5 +250,5 @@ def get_price_source(source_type: str | None = None) -> PriceSource:
     """Factory returning configured PriceSource instance."""
     stype = (source_type or settings.DATA_SOURCE).strip().upper()
     if stype in ["CSV", "PARQUET", "FIXTURE", "FIXTURES"]:
-        return CSVSource()
+        return CSVSource(fixtures_dir=get_fixtures_dir())
     return YFinanceSource()

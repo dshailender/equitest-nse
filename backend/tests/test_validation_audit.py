@@ -170,3 +170,72 @@ def test_simulation_execution_generates_audit():
     assert data["run_id"] == run_id
     assert data["git_sha"] is not None
     assert len(data["data_hash"]) == 64
+
+
+def test_data_hash_cache_fallback(monkeypatch, tmp_path):
+    """Verify compute_data_snapshot_hash falls back to cache directory when fixtures missing."""
+    empty_fixtures = tmp_path / "empty_fixtures"
+    empty_fixtures.mkdir()
+    monkeypatch.setenv("FIXTURES_DIR", str(empty_fixtures))
+
+    cache_dir = tmp_path / "cache" / "yfinance"
+    cache_dir.mkdir(parents=True)
+    monkeypatch.setenv("REPO_ROOT", str(tmp_path))
+    (tmp_path / "data" / "cache" / "yfinance").mkdir(parents=True)
+    cache_file = tmp_path / "data" / "cache" / "yfinance" / "RELIANCE.NS.csv"
+    cache_file.write_text("date,close\n2022-01-01,2000.0\n")
+
+    h1 = compute_data_snapshot_hash(["RELIANCE"])
+    h2 = compute_data_snapshot_hash(["RELIANCE"])
+    assert len(h1) == 64
+    assert h1 == h2
+
+
+def test_data_hash_db_fallback(monkeypatch, tmp_path):
+    """Verify compute_data_snapshot_hash falls back to database when fixtures and cache missing."""
+    import uuid
+
+    sym = f"DB_HASH_{uuid.uuid4().hex[:6]}"
+    empty_fixtures = tmp_path / "empty_fixtures"
+    empty_fixtures.mkdir()
+    monkeypatch.setenv("FIXTURES_DIR", str(empty_fixtures))
+    monkeypatch.setenv("REPO_ROOT", str(tmp_path))  # empty cache
+
+    from app.db.models import Price
+    with Session(engine) as session:
+        price_rec = Price(
+            symbol=sym,
+            date="2022-01-01",
+            open=100.0,
+            high=105.0,
+            low=95.0,
+            close=102.0,
+            adj_close=102.0,
+            volume=1000.0,
+        )
+        session.add(price_rec)
+        session.commit()
+
+        try:
+            h1 = compute_data_snapshot_hash([sym])
+            h2 = compute_data_snapshot_hash([sym])
+            assert len(h1) == 64
+            assert h1 == h2
+        finally:
+            session.delete(price_rec)
+            session.commit()
+
+
+def test_data_hash_deterministic_fallback(monkeypatch, tmp_path):
+    """Verify compute_data_snapshot_hash produces deterministic SHA-256 when no data exists."""
+    empty_fixtures = tmp_path / "empty_fixtures"
+    empty_fixtures.mkdir()
+    monkeypatch.setenv("FIXTURES_DIR", str(empty_fixtures))
+    monkeypatch.setenv("REPO_ROOT", str(tmp_path))
+
+    h1 = compute_data_snapshot_hash(["UNKNOWN_SYMBOL_999"])
+    h2 = compute_data_snapshot_hash(["UNKNOWN_SYMBOL_999"])
+    assert len(h1) == 64
+    assert h1 == h2
+    assert h1 != "no_fixtures_directory"
+

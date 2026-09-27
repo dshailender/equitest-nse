@@ -28,6 +28,7 @@ from app.api.v1.schemas import (
     SweepStatusResponse,
     TradeItem,
 )
+from app.core.config import get_backtests_dir, get_fixtures_dir
 from app.data.source import get_price_source
 from app.data.universe import get_universe
 from app.db.models import BacktestRun, BacktestSweep
@@ -69,8 +70,6 @@ def _execute_backtest_task(run_id: str, payload: dict) -> None:
                 "^NSEI", start="2000-01-01", end="2099-12-31"
             )
 
-            repo_root = Path(__file__).resolve().parents[4]
-
             # Determine symbols list
             symbols_requested = req.symbols
             if symbols_requested:
@@ -89,9 +88,7 @@ def _execute_backtest_task(run_id: str, payload: dict) -> None:
             is_tiny = any(s in ("ALPHA", "BETA", "GAMMA") for s in symbols_to_load)
             if is_tiny:
                 tiny_nifty_path = (
-                    repo_root
-                    / "data"
-                    / "fixtures"
+                    get_fixtures_dir()
                     / "tiny_universe"
                     / "NIFTY_TINY.parquet"
                 )
@@ -134,7 +131,9 @@ def _execute_backtest_task(run_id: str, payload: dict) -> None:
             result = backtest.run(start=req.start, end=req.end)
 
             # Persist result blob
-            blob_path = repo_root / "data" / "backtests" / f"{run_id}.json"
+            backtests_dir = get_backtests_dir()
+            backtests_dir.mkdir(parents=True, exist_ok=True)
+            blob_path = backtests_dir / f"{run_id}.json"
             result.save(blob_path)
 
             # Record audit provenance

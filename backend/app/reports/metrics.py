@@ -136,11 +136,10 @@ def resolve_benchmark_prices(start_date: str, end_date: str) -> pd.DataFrame | N
     """Attempts to load NIFTY benchmark index prices for the date range."""
     # 1. Check if tiny universe NIFTY_TINY fixture applies
     try:
-        from pathlib import Path
+        from app.core.config import get_fixtures_dir
 
-        repo_root = Path(__file__).resolve().parent.parent.parent.parent
         tiny_nifty = (
-            repo_root / "data" / "fixtures" / "tiny_universe" / "NIFTY_TINY.parquet"
+            get_fixtures_dir() / "tiny_universe" / "NIFTY_TINY.parquet"
         )
         if (
             tiny_nifty.exists()
@@ -166,10 +165,9 @@ def resolve_benchmark_prices(start_date: str, end_date: str) -> pd.DataFrame | N
 
     # 3. Direct Parquet fixture fallback
     try:
-        from pathlib import Path
+        from app.core.config import get_fixtures_dir
 
-        repo_root = Path(__file__).resolve().parent.parent.parent.parent
-        nifty_fixture = repo_root / "data" / "fixtures" / "^NSEI.parquet"
+        nifty_fixture = get_fixtures_dir() / "^NSEI.parquet"
         if nifty_fixture.exists():
             df = pd.read_parquet(nifty_fixture)
             if "date" in df.columns:

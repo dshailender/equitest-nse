@@ -3,6 +3,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from app.core.config import get_fixtures_dir
 from app.data.constituents import AUTHENTIC_NSE_CONSTITUENTS, TOP_100_CONSTITUENTS
 from app.data.ingest import validate_ohlcv_dataframe
 from app.data.universe import get_symbol_metadata
@@ -98,9 +99,7 @@ def generate_constituents() -> pd.DataFrame:
 
 
 def main():
-    fixtures_dir = (
-        Path(__file__).resolve().parent.parent.parent.parent / "data" / "fixtures"
-    )
+    fixtures_dir = get_fixtures_dir()
     fixtures_dir.mkdir(parents=True, exist_ok=True)
 
     # 1. NIFTY 50 Benchmark Index

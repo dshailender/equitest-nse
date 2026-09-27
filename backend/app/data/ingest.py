@@ -1,3 +1,4 @@
+import logging
 import uuid
 from pathlib import Path
 from typing import Any
@@ -6,8 +7,11 @@ import numpy as np
 import pandas as pd
 from sqlmodel import Session, select
 
+from app.core.config import get_fixtures_dir
 from app.data.source import PriceSource, get_price_source
 from app.db.models import IndexPrice, Price, UniverseMembership
+
+logger = logging.getLogger(__name__)
 
 
 class InvariantViolationError(ValueError):
@@ -103,6 +107,9 @@ def ingest_market_data(
         try:
             df = price_source.get_equity_prices(sym, start, end)
             if df.empty:
+                msg = f"No price data available for symbol '{sym}' from source '{price_source.__class__.__name__}' (date range: {start} to {end})"
+                logger.warning(msg)
+                errors.append(msg)
                 continue
 
             validate_ohlcv_dataframe(df)
@@ -142,7 +149,11 @@ def ingest_market_data(
     index_symbol = "^NSEI"
     try:
         index_df = price_source.get_index_prices(index_symbol, start, end)
-        if not index_df.empty:
+        if index_df.empty:
+            msg = f"No price data available for benchmark index '{index_symbol}' from source '{price_source.__class__.__name__}' (date range: {start} to {end})"
+            logger.warning(msg)
+            errors.append(msg)
+        else:
             validate_ohlcv_dataframe(index_df)
 
             existing_idx_stmt = select(IndexPrice.date).where(
@@ -175,49 +186,63 @@ def ingest_market_data(
     except Exception as exc:
         errors.append(f"Failed ingesting index {index_symbol}: {exc}")
 
-    # 3. Ingest Universe Membership if constituents fixture exists
-    base = Path(__file__).resolve().parent.parent.parent.parent
-    constituents_file = base / "data" / "fixtures" / "constituents.parquet"
-    if constituents_file.exists():
-        try:
+    # 3. Ingest Universe Membership if constituents fixture exists (or generate from code)
+    fixtures_dir = get_fixtures_dir()
+    constituents_file = fixtures_dir / "constituents.parquet"
+    try:
+        if constituents_file.exists():
             const_df = pd.read_parquet(constituents_file)
-            cols = {"date", "symbol", "rank"}
-            if cols.issubset(const_df.columns):
-                const_df["date"] = pd.to_datetime(const_df["date"]).dt.strftime(
-                    "%Y-%m-%d"
-                )
-                mask = (const_df["date"] >= start) & (const_df["date"] <= end)
-                filtered_const = const_df[mask]
+        else:
+            from app.data.generate_fixtures import generate_constituents
 
-                # Purge any legacy synthetic rows for matching dates
-                matching_dates = sorted(filtered_const["date"].unique())
-                if matching_dates:
-                    from sqlalchemy import text
+            const_df = generate_constituents()
 
-                    dates_str = ", ".join(f"'{d}'" for d in matching_dates)
-                    session.execute(
-                        text(
-                            f"DELETE FROM universe_membership "
-                            f"WHERE date IN ({dates_str}) "
-                            f"AND (symbol LIKE 'MIDCAP_STOCK_%' OR symbol LIKE 'TOP_%')"
-                        )
+        cols = {"date", "symbol", "rank"}
+        if cols.issubset(const_df.columns):
+            const_df["date"] = pd.to_datetime(const_df["date"]).dt.strftime(
+                "%Y-%m-%d"
+            )
+            mask = (const_df["date"] >= start) & (const_df["date"] <= end)
+            filtered_const = const_df[mask]
+
+            # Purge any legacy synthetic rows for matching dates
+            matching_dates = sorted(filtered_const["date"].unique())
+            if matching_dates:
+                from sqlalchemy import text
+
+                dates_str = ", ".join(f"'{d}'" for d in matching_dates)
+                session.execute(
+                    text(
+                        f"DELETE FROM universe_membership "
+                        f"WHERE date IN ({dates_str}) "
+                        f"AND (symbol LIKE 'MIDCAP_STOCK_%' OR symbol LIKE 'TOP_%')"
                     )
+                )
 
-                for _, r in filtered_const.iterrows():
-                    d = str(r["date"])
-                    s = str(r["symbol"])
-                    existing = session.get(UniverseMembership, (d, s))
-                    if not existing:
-                        session.add(
-                            UniverseMembership(date=d, symbol=s, rank=int(r["rank"]))
-                        )
-                session.commit()
-        except Exception as exc:
-            errors.append(f"Failed ingesting universe constituents: {exc}")
+            for _, r in filtered_const.iterrows():
+                d = str(r["date"])
+                s = str(r["symbol"])
+                existing = session.get(UniverseMembership, (d, s))
+                if not existing:
+                    session.add(
+                        UniverseMembership(date=d, symbol=s, rank=int(r["rank"]))
+                    )
+            session.commit()
+    except Exception as exc:
+        errors.append(f"Failed ingesting universe constituents: {exc}")
+
+    if rows_ingested > 0 and not errors:
+        status = "completed"
+    elif rows_ingested > 0 and errors:
+        status = "partial"
+    elif rows_ingested == 0 and errors:
+        status = "failed"
+    else:
+        status = "completed"
 
     return {
         "job_id": job_id,
-        "status": "completed" if not errors else "partial",
+        "status": status,
         "symbols_ingested": symbols_ingested,
         "rows_ingested": rows_ingested,
         "errors": errors,
@@ -266,8 +291,7 @@ def seed_price_coverage(raw_conn: Any = None) -> int:
     except Exception:
         pass
 
-    base_dir = Path(__file__).resolve().parent.parent.parent.parent
-    fixtures_dir = base_dir / "data" / "fixtures"
+    fixtures_dir = get_fixtures_dir()
 
     for idx, sym in enumerate(unique_symbols):
         parquet_candidate = fixtures_dir / f"{sym}.parquet"
@@ -390,24 +414,29 @@ def seed_universe_constituents(raw_conn: Any = None) -> int:
         "WHERE symbol LIKE 'MIDCAP_STOCK_%' OR symbol LIKE 'TOP_%'"
     )
 
-    # 2. Load constituents from parquet
-    base_dir = Path(__file__).resolve().parent.parent.parent.parent
-    constituents_file = base_dir / "data" / "fixtures" / "constituents.parquet"
+    # 2. Load constituents from parquet or generate if fixture does not exist
+    fixtures_dir = get_fixtures_dir()
+    constituents_file = fixtures_dir / "constituents.parquet"
     inserted = 0
     if constituents_file.exists():
         df = pd.read_parquet(constituents_file)
-        if {"date", "symbol", "rank"}.issubset(df.columns):
-            df["date"] = pd.to_datetime(df["date"]).dt.strftime("%Y-%m-%d")
-            rows = [
-                (str(r["date"]), str(r["symbol"]), int(r["rank"]))
-                for _, r in df.iterrows()
-            ]
-            cursor.executemany(
-                "INSERT OR REPLACE INTO universe_membership (date, symbol, rank) "
-                "VALUES (?, ?, ?)",
-                rows,
-            )
-            inserted = len(rows)
+    else:
+        from app.data.generate_fixtures import generate_constituents
+
+        df = generate_constituents()
+
+    if {"date", "symbol", "rank"}.issubset(df.columns):
+        df["date"] = pd.to_datetime(df["date"]).dt.strftime("%Y-%m-%d")
+        rows = [
+            (str(r["date"]), str(r["symbol"]), int(r["rank"]))
+            for _, r in df.iterrows()
+        ]
+        cursor.executemany(
+            "INSERT OR REPLACE INTO universe_membership (date, symbol, rank) "
+            "VALUES (?, ?, ?)",
+            rows,
+        )
+        inserted = len(rows)
 
     raw_conn.commit()
     if should_close:

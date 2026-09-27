@@ -110,3 +110,51 @@ def test_ingest_purges_synthetic_universe_constituents(temp_db: Session):
         )
     ).one()
     assert total_count == 750
+
+
+def test_ingest_diagnostics_empty_symbols_and_index(temp_db: Session, tmp_path):
+    """Verify empty DataFrame for equity and index records descriptive errors and failed status."""
+    source = CSVSource(fixtures_dir=tmp_path)
+    res = ingest_market_data(
+        session=temp_db,
+        start="2020-01-01",
+        end="2020-01-02",
+        symbols=["NON_EXISTENT_SYMBOL_XYZ"],
+        source=source,
+    )
+    assert res["status"] == "failed"
+    assert res["rows_ingested"] == 0
+    assert any("No price data available for symbol 'NON_EXISTENT_SYMBOL_XYZ'" in e for e in res["errors"])
+    assert any("No price data available for benchmark index '^NSEI'" in e for e in res["errors"])
+
+
+def test_ingest_partial_status(temp_db: Session):
+    """Verify partial status when some symbols ingest successfully while others are empty."""
+    source = CSVSource()
+    res = ingest_market_data(
+        session=temp_db,
+        start="2020-01-01",
+        end="2020-01-05",
+        symbols=["RELIANCE", "NON_EXISTENT_TICKER_123"],
+        source=source,
+    )
+    assert res["status"] == "partial"
+    assert res["rows_ingested"] > 0
+    assert any("No price data available for symbol 'NON_EXISTENT_TICKER_123'" in e for e in res["errors"])
+
+
+def test_seed_universe_constituents_code_fallback(temp_db: Session, monkeypatch, tmp_path):
+    """Verify seed_universe_constituents generates 2,250 rows when parquet fixture does not exist."""
+    from app.data.ingest import seed_universe_constituents
+
+    # Point fixtures dir to an empty temporary path
+    monkeypatch.setenv("FIXTURES_DIR", str(tmp_path))
+
+    raw_conn = temp_db.connection()
+    count = seed_universe_constituents(raw_conn)
+    assert count == 2250
+
+    cursor = raw_conn.connection.cursor()
+    cursor.execute("SELECT count(*) FROM universe_membership")
+    assert cursor.fetchone()[0] == 2250
+

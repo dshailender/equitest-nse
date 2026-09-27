@@ -4,6 +4,7 @@ from typing import Any
 import pandas as pd
 from sqlmodel import Session, func, select
 
+from app.core.config import get_fixtures_dir
 from app.data.constituents import AUTHENTIC_NSE_CONSTITUENTS
 from app.db.models import UniverseMembership
 
@@ -140,8 +141,7 @@ def _get_parquet_metadata() -> dict[str, dict[str, str]]:
     if _PARQUET_METADATA_CACHE is not None:
         return _PARQUET_METADATA_CACHE
     cache: dict[str, dict[str, str]] = {}
-    base = Path(__file__).resolve().parent.parent.parent.parent
-    constituents_file = base / "data" / "fixtures" / "constituents.parquet"
+    constituents_file = get_fixtures_dir() / "constituents.parquet"
     if constituents_file.exists():
         try:
             df = pd.read_parquet(constituents_file)
@@ -344,9 +344,8 @@ def get_universe(
                 ]
                 return tickers, False, details
 
-    # 2. Check point-in-time parquet file in /data/fixtures/constituents.parquet
-    base = Path(__file__).resolve().parent.parent.parent.parent
-    constituents_file = base / "data" / "fixtures" / "constituents.parquet"
+    # 2. Check point-in-time parquet file in fixtures/constituents.parquet
+    constituents_file = get_fixtures_dir() / "constituents.parquet"
 
     if constituents_file.exists():
         try:
