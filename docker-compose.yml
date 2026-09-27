@@ -12,7 +12,7 @@ services:
       - "8000:8000"
     environment:
       - APP_ENV=development
-      - DATA_SOURCE=yfinance
+      - DATA_SOURCE=nse
       - DATABASE_URL=sqlite:////app/data/dev.db
       - LOG_LEVEL=INFO
       - MAX_BACKTEST_RUNS=10

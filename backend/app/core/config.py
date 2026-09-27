@@ -1,8 +1,9 @@
 import os
 from functools import lru_cache
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -11,7 +12,7 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "sqlite:///./dev.db"
     LOG_LEVEL: str = "INFO"
     APP_VERSION: str = "0.1.0"
-    DATA_SOURCE: str = "yfinance"
+    DATA_SOURCE: str = "nse"
     FIXTURES_DIR: str = "data/fixtures"
     REPO_ROOT: str | None = None
     BACKTEST_STORAGE_PATH: str = "data/backtests"
@@ -25,6 +26,32 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
         extra="ignore",
     )
+
+    def __init__(self, **values: Any):
+        super().__init__(**values)
+        object.__setattr__(self, "_data_source_explicit", "DATA_SOURCE" in values)
+
+    @model_validator(mode="before")
+    @classmethod
+    def set_data_source_testing_default(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            if "DATA_SOURCE" not in data and os.environ.get("DATA_SOURCE") is None:
+                app_env = data.get("APP_ENV", os.environ.get("APP_ENV", "development"))
+                if os.environ.get("PYTEST_CURRENT_TEST") or app_env == "testing":
+                    data["DATA_SOURCE"] = "CSV"
+        return data
+
+    def __getattribute__(self, name: str) -> Any:
+        val = super().__getattribute__(name)
+        if name == "DATA_SOURCE":
+            if getattr(self, "_data_source_explicit", False):
+                return val
+            env_val = os.environ.get("DATA_SOURCE")
+            if env_val is not None:
+                return env_val
+            if os.environ.get("PYTEST_CURRENT_TEST") or self.APP_ENV == "testing":
+                return "CSV"
+        return val
 
 
 @lru_cache

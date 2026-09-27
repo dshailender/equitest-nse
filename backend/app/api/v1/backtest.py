@@ -74,7 +74,8 @@ def _execute_backtest_task(run_id: str, payload: dict) -> None:
                 try:
                     nifty_df = pd.read_sql_query(
                         "SELECT date, open, high, low, close, adj_close, volume "
-                        "FROM index_prices WHERE symbol IN ('^NSEI', 'NIFTY', 'NIFTY50') "
+                        "FROM index_prices "
+                        "WHERE symbol IN ('^NSEI', 'NIFTY', 'NIFTY50') "
                         "ORDER BY date ASC",
                         raw_conn,
                     )
@@ -86,7 +87,11 @@ def _execute_backtest_task(run_id: str, payload: dict) -> None:
                     .where(IndexPrice.symbol.in_(("^NSEI", "NIFTY", "NIFTY50")))
                     .order_by(col(IndexPrice.date).asc())
                 )
-                idx_rows = session.exec(idx_stmt).all() if not isinstance(price_source, CSVSource) else []
+                idx_rows = (
+                    session.exec(idx_stmt).all()
+                    if not isinstance(price_source, CSVSource)
+                    else []
+                )
                 if idx_rows:
                     nifty_df = pd.DataFrame([r.model_dump() for r in idx_rows])
                 else:
@@ -125,22 +130,32 @@ def _execute_backtest_task(run_id: str, payload: dict) -> None:
                 if tiny_nifty_path.exists():
                     nifty_df = pd.read_parquet(tiny_nifty_path)
 
-            # Load equity prices (DB batch first if not CSVSource, fallback to price_source)
+            # Load equity prices (DB batch first if not CSVSource,
+            # fallback to price_source)
             prices: dict[str, pd.DataFrame] = {}
             missing_symbols = list(symbols_to_load)
-            if not isinstance(price_source, CSVSource) and raw_conn is not None and symbols_to_load:
+            if (
+                not isinstance(price_source, CSVSource)
+                and raw_conn is not None
+                and symbols_to_load
+            ):
                 try:
                     placeholders = ",".join("?" for _ in symbols_to_load)
                     batch_df = pd.read_sql_query(
-                        f"SELECT symbol, date, open, high, low, close, adj_close, volume "
-                        f"FROM prices WHERE symbol IN ({placeholders}) ORDER BY date ASC",
+                        "SELECT symbol, date, open, high, low, close, adj_close, "
+                        f"volume FROM prices WHERE symbol IN ({placeholders}) "
+                        "ORDER BY date ASC",
                         raw_conn,
                         params=symbols_to_load,
                     )
                     if not batch_df.empty:
                         for sym, grp in batch_df.groupby("symbol"):
-                            prices[str(sym)] = grp.drop(columns=["symbol"]).reset_index(drop=True)
-                        missing_symbols = [s for s in symbols_to_load if s not in prices]
+                            prices[str(sym)] = grp.drop(columns=["symbol"]).reset_index(
+                                drop=True
+                            )
+                        missing_symbols = [
+                            s for s in symbols_to_load if s not in prices
+                        ]
                 except Exception:
                     pass
 
@@ -162,9 +177,7 @@ def _execute_backtest_task(run_id: str, payload: dict) -> None:
                 if not df.empty:
                     prices[sym] = df
                 elif (get_fixtures_dir() / f"{sym}.parquet").exists():
-                    prices[sym] = pd.read_parquet(
-                        get_fixtures_dir() / f"{sym}.parquet"
-                    )
+                    prices[sym] = pd.read_parquet(get_fixtures_dir() / f"{sym}.parquet")
 
             # Prepare dynamic point-in-time universe provider (AUD-C-002)
             if symbols_requested:
