@@ -5,8 +5,8 @@ test.describe("Health Check E2E Flow", () => {
     await page.goto("/");
     await expect(page.locator("h1")).toContainText("Backtesting Framework");
 
-    // Click link to health page
-    await page.click('text="Open Health Diagnostic"');
+    // Click link to health page via navbar
+    await page.click('header nav >> text="API Health"');
     await page.waitForURL("**/api-health");
     await expect(page.locator("h1")).toContainText("API Health Diagnostic");
   });

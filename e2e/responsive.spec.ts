@@ -9,6 +9,7 @@ const pages = [
   { name: "backtest", path: "/backtest" },
   { name: "sweep", path: "/sweep" },
   { name: "reports", path: "/reports/test-run-123" },
+  { name: "reports-index", path: "/reports" },
   { name: "validation", path: "/validation" },
   { name: "docs", path: "/docs" },
   { name: "api-health", path: "/api-health" },

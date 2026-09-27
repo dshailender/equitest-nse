@@ -145,6 +145,37 @@
                 <td class="text-right font-mono font-bold">{{ "{:.1f}".format(metrics.avg_days_held) }} days</td>
                 <td>Average holding duration from session T+1 execution to trade exit</td>
             </tr>
+            <tr>
+                <td class="font-bold">Benchmark Return (NIFTY 50)</td>
+                <td class="text-right font-mono font-bold {{ 'profit-text' if metrics.benchmark_return >= 0 else 'loss-text' }}">
+                    {{ "{:+.2f}%".format(metrics.benchmark_return * 100) }}
+                </td>
+                <td>Buy-and-hold cumulative total return of NIFTY benchmark index over same horizon</td>
+            </tr>
+            <tr>
+                <td class="font-bold">Benchmark CAGR</td>
+                <td class="text-right font-mono font-bold {{ 'profit-text' if metrics.benchmark_cagr >= 0 else 'loss-text' }}">
+                    {{ "{:+.2f}%".format(metrics.benchmark_cagr * 100) }}
+                </td>
+                <td>Annualized geometric return rate of NIFTY benchmark index</td>
+            </tr>
+            <tr>
+                <td class="font-bold">Strategy Alpha (rf=0)</td>
+                <td class="text-right font-mono font-bold {{ 'profit-text' if metrics.alpha >= 0 else 'loss-text' }}">
+                    {{ "{:+.2f}%".format(metrics.alpha * 100) }}
+                </td>
+                <td>Annualized Jensen's alpha / excess risk-adjusted return relative to NIFTY</td>
+            </tr>
+            <tr>
+                <td class="font-bold">Strategy Beta</td>
+                <td class="text-right font-mono font-bold">{{ "{:.2f}".format(metrics.beta) }}</td>
+                <td>Systematic market sensitivity relative to NIFTY benchmark fluctuations</td>
+            </tr>
+            <tr>
+                <td class="font-bold">Information Ratio</td>
+                <td class="text-right font-mono font-bold">{{ "{:.2f}".format(metrics.information_ratio) }}</td>
+                <td>Annualized mean active return divided by tracking error against benchmark</td>
+            </tr>
         </tbody>
     </table>
 </div>

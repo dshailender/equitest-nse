@@ -6,25 +6,32 @@ services:
       context: ./backend
       dockerfile: Dockerfile
       args:
-        GIT_SHA: "${GIT_SHA:-45391fbd9b001161b500a4c5e92a22170daee4b9}"
+        GIT_SHA: "${GIT_SHA:-unknown}"
     container_name: equitest-backend-prod
     ports:
       - "8000:8000"
     environment:
       - APP_ENV=production
-      - DATA_SOURCE=CSV
+      - DATA_SOURCE=nse
       - DATABASE_URL=sqlite:////app/data/prod.db
       - LOG_LEVEL=INFO
+      - MAX_BACKTEST_RUNS=5
+      - YFINANCE_ENABLED=true
+      - CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+      - BACKTEST_STORAGE_PATH=/app/data/backtests
+      - FIXTURES_DIR=/app/data/fixtures
+      - REPO_ROOT=/app
     volumes:
-      - ./data/fixtures:/app/data/fixtures:ro
-      - backtest_data:/app/data/backtests
+      - db_data:/app/data
+      - backtests_data:/app/data/backtests
+      - reports_data:/app/data/reports
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 10s
       timeout: 5s
-      retries: 3
-      start_period: 5s
+      retries: 5
+      start_period: 30s
     networks:
       - equitest-network
 
@@ -32,6 +39,8 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: "http://localhost:8000"
     container_name: equitest-frontend-prod
     ports:
       - "3000:3000"
@@ -51,9 +60,17 @@ services:
       - equitest-network
 
 volumes:
-  backtest_data:
+  db_data:
+    name: equitest_prod_db
+    driver: local
+  backtests_data:
+    name: equitest_prod_backtests
+    driver: local
+  reports_data:
+    name: equitest_prod_reports
     driver: local
 
 networks:
   equitest-network:
+    name: equitest-prod-net
     driver: bridge

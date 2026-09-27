@@ -6,6 +6,8 @@ from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from app.core.config import get_repo_root
+
 logger = logging.getLogger(__name__)
 
 
@@ -42,10 +44,10 @@ def get_branding_settings() -> BrandingSettings:
     settings_dict = {}
 
     # Check candidates for branding.json
+    repo_root = get_repo_root()
     candidates = [
-        Path(__file__).resolve().parents[2] / "branding.json",  # backend/branding.json
-        Path(__file__).resolve().parents[3]
-        / "branding.json",  # repo root branding.json
+        repo_root / "branding.json",
+        repo_root / "backend" / "branding.json",
         Path("branding.json").resolve(),
     ]
 

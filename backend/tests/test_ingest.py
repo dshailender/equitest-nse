@@ -73,3 +73,150 @@ def test_corporate_action_split_adjustment():
     assert (
         0.95 <= adj_ratio <= 1.05
     ), f"Expected continuous adjusted close, got ratio {adj_ratio}"
+
+
+def test_ingest_purges_synthetic_universe_constituents(temp_db: Session):
+    """Verify market data ingestion purges legacy synthetic universe constituents."""
+    # Seed legacy synthetic records into temp_db
+    temp_db.add(
+        UniverseMembership(date="2020-01-01", symbol="MIDCAP_STOCK_101", rank=101)
+    )
+    temp_db.add(UniverseMembership(date="2020-01-01", symbol="TOP_1", rank=1))
+    temp_db.commit()
+
+    source = CSVSource()
+    res = ingest_market_data(
+        session=temp_db,
+        start="2020-01-01",
+        end="2020-01-02",
+        symbols=["RELIANCE"],
+        source=source,
+    )
+    assert res["status"] == "completed"
+
+    # Confirm synthetic constituents were purged and authentic ones populated
+    synthetic_count = temp_db.exec(
+        select(func.count(UniverseMembership.symbol)).where(
+            UniverseMembership.symbol.like("MIDCAP_STOCK_%")  # type: ignore
+            | UniverseMembership.symbol.like("TOP_%")  # type: ignore
+        )
+    ).one()
+    assert synthetic_count == 0
+
+    # Ensure authentic records exist
+    total_count = temp_db.exec(
+        select(func.count(UniverseMembership.symbol)).where(
+            UniverseMembership.date == "2020-01-01"
+        )
+    ).one()
+    assert total_count == 750
+
+
+def test_ingest_diagnostics_empty_symbols_and_index(temp_db: Session, tmp_path):
+    """Verify empty DataFrame records descriptive errors and failed status."""
+    source = CSVSource(fixtures_dir=tmp_path)
+    res = ingest_market_data(
+        session=temp_db,
+        start="2020-01-01",
+        end="2020-01-02",
+        symbols=["NON_EXISTENT_SYMBOL_XYZ"],
+        source=source,
+    )
+    assert res["status"] == "failed"
+    assert res["rows_ingested"] == 0
+    assert any(
+        "No price data available for symbol 'NON_EXISTENT_SYMBOL_XYZ'" in e
+        for e in res["errors"]
+    )
+    assert any(
+        "No price data available for benchmark index '^NSEI'" in e
+        for e in res["errors"]
+    )
+
+
+def test_ingest_partial_status(temp_db: Session):
+    """Verify partial status when some symbols ingest while others are empty."""
+    source = CSVSource()
+    res = ingest_market_data(
+        session=temp_db,
+        start="2020-01-01",
+        end="2020-01-05",
+        symbols=["RELIANCE", "NON_EXISTENT_TICKER_123"],
+        source=source,
+    )
+    assert res["status"] == "partial"
+    assert res["rows_ingested"] > 0
+    assert any(
+        "No price data available for symbol 'NON_EXISTENT_TICKER_123'" in e
+        for e in res["errors"]
+    )
+
+
+def test_seed_universe_constituents_code_fallback(
+    temp_db: Session, monkeypatch, tmp_path
+):
+    """Verify seed_universe_constituents generates 2,250 rows when fixture missing."""
+    from app.data.ingest import seed_universe_constituents
+
+    # Point fixtures dir to an empty temporary path
+    monkeypatch.setenv("FIXTURES_DIR", str(tmp_path))
+
+    raw_conn = temp_db.connection()
+    count = seed_universe_constituents(raw_conn)
+    assert count == 2250
+
+    cursor = raw_conn.connection.cursor()
+    cursor.execute("SELECT count(*) FROM universe_membership")
+    assert cursor.fetchone()[0] == 2250
+
+
+def test_ingest_scope_resolution(temp_db: Session):
+    """Verify scope parameter resolves to correct constituent symbol lists."""
+    import pandas as pd
+
+    from app.data.constituents import AUTHENTIC_NSE_CONSTITUENTS
+
+    class RecordingSource:
+        def __init__(self):
+            self.requested_symbols: list[str] = []
+
+        def get_equity_prices(self, symbol: str, start: str, end: str):
+            self.requested_symbols.append(symbol)
+            return pd.DataFrame()
+
+        def get_index_prices(self, symbol: str, start: str, end: str):
+            return pd.DataFrame()
+
+    # 1. Default (no symbols, no scope) -> smoke symbols
+    src1 = RecordingSource()
+    ingest_market_data(temp_db, "2020-01-01", "2020-01-02", source=src1)
+    assert src1.requested_symbols == ["RELIANCE", "HDFCBANK", "INFY", "TATAMOTORS"]
+
+    # 2. scope == "smoke" -> smoke symbols
+    src2 = RecordingSource()
+    ingest_market_data(temp_db, "2020-01-01", "2020-01-02", scope="smoke", source=src2)
+    assert src2.requested_symbols == ["RELIANCE", "HDFCBANK", "INFY", "TATAMOTORS"]
+
+    # 3. scope == "midcap" -> AUTHENTIC_NSE_CONSTITUENTS[:150]
+    src3 = RecordingSource()
+    ingest_market_data(temp_db, "2020-01-01", "2020-01-02", scope="midcap", source=src3)
+    assert src3.requested_symbols == AUTHENTIC_NSE_CONSTITUENTS[:150]
+    assert len(src3.requested_symbols) == 150
+
+    # 4. scope == "full" -> AUTHENTIC_NSE_CONSTITUENTS
+    src4 = RecordingSource()
+    ingest_market_data(temp_db, "2020-01-01", "2020-01-02", scope="full", source=src4)
+    assert src4.requested_symbols == AUTHENTIC_NSE_CONSTITUENTS
+    assert len(src4.requested_symbols) == 650
+
+    # 5. scope == "custom" with explicit symbols
+    src5 = RecordingSource()
+    ingest_market_data(
+        temp_db,
+        "2020-01-01",
+        "2020-01-02",
+        symbols=["TCS", "WIPRO"],
+        scope="custom",
+        source=src5,
+    )
+    assert src5.requested_symbols == ["TCS", "WIPRO"]

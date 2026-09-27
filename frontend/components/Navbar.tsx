@@ -10,7 +10,7 @@ const NAV_LINKS = [
   { href: "/risk", label: "Risk" },
   { href: "/backtest", label: "Backtest" },
   { href: "/sweep", label: "Sweep" },
-  { href: "/reports/test-run-123", label: "Reports" },
+  { href: "/reports", label: "Reports" },
   { href: "/validation", label: "Validation" },
   { href: "/docs", label: "Docs" },
   { href: "/api-health", label: "API Health" },

@@ -170,3 +170,33 @@ def test_metrics_decimal_serialization():
     assert isinstance(dec_dict["avg_loss"], Decimal)
     assert isinstance(dec_dict["sharpe_ratio"], Decimal)
     assert dec_dict["final_capital"] == Decimal("495000.00")
+    assert isinstance(dec_dict["benchmark_return"], Decimal)
+    assert isinstance(dec_dict["benchmark_cagr"], Decimal)
+    assert isinstance(dec_dict["alpha"], Decimal)
+    assert isinstance(dec_dict["beta"], Decimal)
+    assert isinstance(dec_dict["information_ratio"], Decimal)
+
+
+def test_metrics_benchmark_analytics_acceptance_criteria():
+    """Asserts benchmark return, CAGR, alpha, beta, and IR calculations (AUD-H-001)."""
+    dates = (
+        pd.date_range("2021-01-01", periods=100, freq="B").strftime("%Y-%m-%d").tolist()
+    )
+    bench_prices = np.linspace(10000, 11000, 100)
+    strat_equity = np.linspace(500000, 560000, 100)
+
+    benchmark_df = pd.DataFrame({"date": dates, "close": bench_prices})
+    equity_curve = pd.DataFrame({"date": dates, "equity": strat_equity})
+    trades = pd.DataFrame()
+
+    metrics = calculate_metrics(
+        trades=trades,
+        equity_curve=equity_curve,
+        initial_capital=500000.0,
+        benchmark_df=benchmark_df,
+    )
+
+    assert round(metrics.benchmark_return, 4) == 0.1000
+    assert metrics.benchmark_cagr > 0
+    assert metrics.beta > 0
+    assert metrics.information_ratio > 0

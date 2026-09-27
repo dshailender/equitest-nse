@@ -1401,6 +1401,94 @@
           }
         }
       }
+    },
+    "/api/v1/admin/retention/cleanup": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Enforce Backtest Retention Cleanup",
+        "description": "Manually or automatically triggers cascade purging of stale backtests and sweeps exceeding retention quotas.",
+        "operationId": "api_admin_retention_cleanup_api_v1_admin_retention_cleanup_post",
+        "parameters": [
+          {
+            "name": "max_runs",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional override for maximum standalone runs retained",
+              "title": "Max Runs"
+            },
+            "description": "Optional override for maximum standalone runs retained"
+          },
+          {
+            "name": "max_sweeps",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional override for maximum parameter sweeps retained",
+              "title": "Max Sweeps"
+            },
+            "description": "Optional override for maximum parameter sweeps retained"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/RetentionCleanupRequest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Optional request body to override retention limits",
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RetentionCleanupResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -2382,6 +2470,18 @@
             "type": "number",
             "title": "Drawdown Pct",
             "description": "Drawdown percentage from peak"
+          },
+          "benchmark_equity": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Benchmark Equity",
+            "description": "Benchmark normalized equity value in INR"
           }
         },
         "type": "object",
@@ -2718,6 +2818,24 @@
                 "HDFCBANK",
                 "INFY"
               ]
+            ]
+          },
+          "scope": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scope",
+            "description": "Optional ingestion scope ('smoke', 'midcap', 'full', 'custom').",
+            "examples": [
+              "smoke",
+              "midcap",
+              "full",
+              "custom"
             ]
           }
         },
@@ -3107,6 +3225,36 @@
             "type": "number",
             "title": "Avg Days Held",
             "description": "Average holding duration in days (1 decimal place)"
+          },
+          "benchmark_return": {
+            "type": "number",
+            "title": "Benchmark Return",
+            "description": "Benchmark (NIFTY 50) total return (4 decimal places)",
+            "default": 0.0
+          },
+          "benchmark_cagr": {
+            "type": "number",
+            "title": "Benchmark Cagr",
+            "description": "Benchmark Compound Annual Growth Rate (4 decimal places)",
+            "default": 0.0
+          },
+          "alpha": {
+            "type": "number",
+            "title": "Alpha",
+            "description": "Strategy Alpha relative to NIFTY benchmark (4 decimal places)",
+            "default": 0.0
+          },
+          "beta": {
+            "type": "number",
+            "title": "Beta",
+            "description": "Strategy Beta relative to NIFTY benchmark (4 decimal places)",
+            "default": 0.0
+          },
+          "information_ratio": {
+            "type": "number",
+            "title": "Information Ratio",
+            "description": "Information Ratio relative to benchmark (4 decimal places)",
+            "default": 0.0
           }
         },
         "type": "object",
@@ -3272,6 +3420,106 @@
           "metrics"
         ],
         "title": "ReportSummaryResponse"
+      },
+      "RetentionCleanupRequest": {
+        "properties": {
+          "max_runs": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Runs",
+            "description": "Override maximum number of standalone backtest runs retained"
+          },
+          "max_sweeps": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Sweeps",
+            "description": "Override maximum number of parameter sweep batches retained"
+          }
+        },
+        "type": "object",
+        "title": "RetentionCleanupRequest",
+        "description": "Optional payload to override retention thresholds during cleanup."
+      },
+      "RetentionCleanupResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Execution status ('success' or 'disabled')"
+          },
+          "max_runs_threshold": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Runs Threshold",
+            "description": "Applied threshold for standalone backtest runs"
+          },
+          "max_sweeps_threshold": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Sweeps Threshold",
+            "description": "Applied threshold for parameter sweeps"
+          },
+          "evicted_run_count": {
+            "type": "integer",
+            "title": "Evicted Run Count",
+            "description": "Number of standalone and sweep child runs evicted",
+            "default": 0
+          },
+          "evicted_sweep_count": {
+            "type": "integer",
+            "title": "Evicted Sweep Count",
+            "description": "Number of parameter sweeps evicted",
+            "default": 0
+          },
+          "evicted_runs": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Evicted Runs",
+            "description": "List of evicted BacktestRun IDs"
+          },
+          "evicted_sweeps": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Evicted Sweeps",
+            "description": "List of evicted BacktestSweep IDs"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "RetentionCleanupResponse",
+        "description": "Execution report returned by the admin retention cleanup endpoint."
       },
       "RiskConfigResponse": {
         "properties": {

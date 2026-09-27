@@ -49,6 +49,27 @@ def init_db() -> None:
                 )
             conn.commit()
 
+        # Seed price coverage database if not already populated (AUD-E-001)
+        cursor.execute("SELECT count(DISTINCT symbol) FROM prices")
+        sym_count = cursor.fetchone()[0]
+        if sym_count < 650:
+            from app.data.ingest import seed_price_coverage
+
+            seed_price_coverage(conn.connection)
+
+        # Seed universe membership if containing legacy synthetic records or incomplete
+        cursor.execute(
+            "SELECT count(*) FROM universe_membership "
+            "WHERE symbol LIKE 'MIDCAP_STOCK_%' OR symbol LIKE 'TOP_%'"
+        )
+        synthetic_count = cursor.fetchone()[0]
+        cursor.execute("SELECT count(*) FROM universe_membership")
+        total_univ_count = cursor.fetchone()[0]
+        if synthetic_count > 0 or total_univ_count < 2250:
+            from app.data.ingest import seed_universe_constituents
+
+            seed_universe_constituents(conn.connection)
+
 
 def get_session() -> Generator[Session, None, None]:
     """Dependency generator that yields a database session."""

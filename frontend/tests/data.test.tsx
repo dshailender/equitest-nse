@@ -117,5 +117,184 @@ describe("DataStatusPage Component", () => {
     expect(screen.getByTestId("universe-prev")).toBeInTheDocument();
     expect(screen.getByTestId("universe-next")).toBeInTheDocument();
   });
+
+  it("renders ingestion scope options and toggles custom ticker input", async () => {
+    render(
+      <Providers>
+        <DataStatusPage />
+      </Providers>
+    );
+
+    const scopeSelect = screen.getByTestId("ingest-scope");
+    expect(scopeSelect).toBeInTheDocument();
+    expect(scopeSelect).toHaveValue("smoke");
+
+    // Custom input should not be visible initially
+    expect(screen.queryByTestId("custom-symbols-input")).not.toBeInTheDocument();
+
+    // Change scope to custom
+    fireEvent.change(scopeSelect, { target: { value: "custom" } });
+    expect(screen.getByTestId("custom-symbols-input")).toBeInTheDocument();
+
+    // Change scope to midcap
+    fireEvent.change(scopeSelect, { target: { value: "midcap" } });
+    expect(screen.queryByTestId("custom-symbols-input")).not.toBeInTheDocument();
+  });
+
+  it("triggers ingestion with selected scope and displays completed success feedback", async () => {
+    let capturedPayload: unknown = null;
+    const { server } = await import("./setup");
+    const { http, HttpResponse } = await import("msw");
+
+    server.use(
+      http.post("*/api/v1/data/ingest", async ({ request }) => {
+        capturedPayload = await request.json();
+        return HttpResponse.json({
+          job_id: "job-completed-1234",
+          status: "completed",
+          symbols_ingested: 4,
+          rows_ingested: 488,
+          errors: [],
+        });
+      })
+    );
+
+    render(
+      <Providers>
+        <DataStatusPage />
+      </Providers>
+    );
+
+    const ingestBtn = screen.getByTestId("ingest-button");
+    fireEvent.click(ingestBtn);
+
+    await waitFor(() => {
+      const banner = screen.getByTestId("ingest-status-banner");
+      expect(banner).toBeInTheDocument();
+      expect(banner).toHaveTextContent(/Ingested 488 rows across 4 symbols/i);
+      expect(banner).toHaveTextContent(/job-comp/i);
+    });
+
+    expect(capturedPayload).toMatchObject({
+      scope: "smoke",
+      start: "2020-01-01",
+      end: "2023-12-31",
+    });
+  });
+
+  it("triggers ingestion with custom scope and sends custom symbols", async () => {
+    let capturedPayload: unknown = null;
+    const { server } = await import("./setup");
+    const { http, HttpResponse } = await import("msw");
+
+    server.use(
+      http.post("*/api/v1/data/ingest", async ({ request }) => {
+        capturedPayload = await request.json();
+        return HttpResponse.json({
+          job_id: "job-custom-5678",
+          status: "completed",
+          symbols_ingested: 2,
+          rows_ingested: 250,
+          errors: [],
+        });
+      })
+    );
+
+    render(
+      <Providers>
+        <DataStatusPage />
+      </Providers>
+    );
+
+    // Switch to custom scope
+    const scopeSelect = screen.getByTestId("ingest-scope");
+    fireEvent.change(scopeSelect, { target: { value: "custom" } });
+
+    // Enter custom symbols
+    const customInput = screen.getByTestId("custom-symbols-input");
+    fireEvent.change(customInput, { target: { value: "POLYCAB, DIXON" } });
+
+    // Trigger ingestion
+    const ingestBtn = screen.getByTestId("ingest-button");
+    fireEvent.click(ingestBtn);
+
+    await waitFor(() => {
+      const banner = screen.getByTestId("ingest-status-banner");
+      expect(banner).toBeInTheDocument();
+      expect(banner).toHaveTextContent(/Ingested 250 rows across 2 symbols/i);
+    });
+
+    expect(capturedPayload).toMatchObject({
+      scope: "custom",
+      symbols: ["POLYCAB", "DIXON"],
+    });
+  });
+
+  it("displays warning banner when ingestion status is partial with error details", async () => {
+    const { server } = await import("./setup");
+    const { http, HttpResponse } = await import("msw");
+
+    server.use(
+      http.post("*/api/v1/data/ingest", () => {
+        return HttpResponse.json({
+          job_id: "job-partial-7890",
+          status: "partial",
+          symbols_ingested: 1,
+          rows_ingested: 120,
+          errors: ["No price data available for symbol 'ABC'"],
+        });
+      })
+    );
+
+    render(
+      <Providers>
+        <DataStatusPage />
+      </Providers>
+    );
+
+    const ingestBtn = screen.getByTestId("ingest-button");
+    fireEvent.click(ingestBtn);
+
+    await waitFor(() => {
+      const banner = screen.getByTestId("ingest-status-banner");
+      expect(banner).toBeInTheDocument();
+      expect(banner).toHaveTextContent(/Partially ingested 120 rows across 1 symbols/i);
+      expect(banner).toHaveTextContent("No price data available for symbol 'ABC'");
+    });
+  });
+
+  it("displays error banner when ingestion fails", async () => {
+    const { server } = await import("./setup");
+    const { http, HttpResponse } = await import("msw");
+
+    server.use(
+      http.post("*/api/v1/data/ingest", () => {
+        return HttpResponse.json({
+          job_id: "job-failed-0000",
+          status: "failed",
+          symbols_ingested: 0,
+          rows_ingested: 0,
+          errors: ["Network connection refused by upstream provider"],
+        });
+      })
+    );
+
+    render(
+      <Providers>
+        <DataStatusPage />
+      </Providers>
+    );
+
+    const ingestBtn = screen.getByTestId("ingest-button");
+    fireEvent.click(ingestBtn);
+
+    await waitFor(() => {
+      const banner = screen.getByTestId("ingest-status-banner");
+      expect(banner).toBeInTheDocument();
+      expect(banner).toHaveTextContent(/Ingestion failed/i);
+      expect(banner).toHaveTextContent("Network connection refused by upstream provider");
+    });
+  });
 });
+
 

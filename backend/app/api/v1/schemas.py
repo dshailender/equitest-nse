@@ -19,6 +19,11 @@ class IngestRequest(BaseModel):
         description="Optional list of ticker symbols. Defaults to active universe.",
         examples=[["RELIANCE", "HDFCBANK", "INFY"]],
     )
+    scope: str | None = Field(
+        default=None,
+        description="Optional ingestion scope ('smoke', 'midcap', 'full', 'custom').",
+        examples=["smoke", "midcap", "full", "custom"],
+    )
 
 
 class IngestResponse(BaseModel):
@@ -470,6 +475,23 @@ class BacktestRunRequest(BaseModel):
         examples=[["ALPHA", "BETA", "GAMMA"]],
     )
 
+    @model_validator(mode="before")
+    @classmethod
+    def normalize_fields(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            if "start_date" in data and "start" not in data:
+                data["start"] = data["start_date"]
+            if "end_date" in data and "end" not in data:
+                data["end"] = data["end_date"]
+            if "initial_capital" in data or "max_positions" in data:
+                cfg = dict(data.get("config") or {})
+                if "initial_capital" in data and "initial_capital" not in cfg:
+                    cfg["initial_capital"] = data["initial_capital"]
+                if "max_positions" in data and "max_positions" not in cfg:
+                    cfg["max_positions"] = data["max_positions"]
+                data["config"] = cfg
+        return data
+
 
 class BacktestRunCreateResponse(BaseModel):
     run_id: str = Field(..., description="Unique backtest run identifier")
@@ -609,6 +631,9 @@ class EquityPoint(BaseModel):
     daily_return: float = Field(..., description="Day-over-day return fraction")
     drawdown: float = Field(..., description="Drawdown from equity peak in INR")
     drawdown_pct: float = Field(..., description="Drawdown percentage from peak")
+    benchmark_equity: float | None = Field(
+        default=None, description="Benchmark normalized equity value in INR"
+    )
 
 
 class CompareMetricItem(BaseModel):
@@ -792,4 +817,43 @@ class PdfJobCreateResponse(BaseModel):
     message: str = Field(
         default="PDF generation job accepted and processing in background.",
         description="Informational status message",
+    )
+
+
+class RetentionCleanupRequest(BaseModel):
+    """Optional payload to override retention thresholds during cleanup."""
+
+    max_runs: int | None = Field(
+        default=None,
+        description="Override maximum number of standalone backtest runs retained",
+        ge=0,
+    )
+    max_sweeps: int | None = Field(
+        default=None,
+        description="Override maximum number of parameter sweep batches retained",
+        ge=0,
+    )
+
+
+class RetentionCleanupResponse(BaseModel):
+    """Execution report returned by the admin retention cleanup endpoint."""
+
+    status: str = Field(..., description="Execution status ('success' or 'disabled')")
+    max_runs_threshold: int | None = Field(
+        default=None, description="Applied threshold for standalone backtest runs"
+    )
+    max_sweeps_threshold: int | None = Field(
+        default=None, description="Applied threshold for parameter sweeps"
+    )
+    evicted_run_count: int = Field(
+        default=0, description="Number of standalone and sweep child runs evicted"
+    )
+    evicted_sweep_count: int = Field(
+        default=0, description="Number of parameter sweeps evicted"
+    )
+    evicted_runs: list[str] = Field(
+        default_factory=list, description="List of evicted BacktestRun IDs"
+    )
+    evicted_sweeps: list[str] = Field(
+        default_factory=list, description="List of evicted BacktestSweep IDs"
     )

@@ -44,12 +44,26 @@ describe("Reports & Analytics Dashboard (/reports/[runId])", () => {
     expect(screen.getByTestId("metric-avg-days-held")).toHaveTextContent(
       "68.0d"
     );
+
+    // Benchmark Relative Metrics (AUD-H-001)
+    expect(screen.getByTestId("metric-benchmark-return")).toHaveTextContent(
+      "15.24%"
+    );
+    expect(screen.getByTestId("metric-benchmark-cagr")).toHaveTextContent(
+      "7.82%"
+    );
+    expect(screen.getByTestId("metric-alpha")).toHaveTextContent("-4.51%");
+    expect(screen.getByTestId("metric-beta")).toHaveTextContent("0.85");
+    expect(screen.getByTestId("metric-information-ratio")).toHaveTextContent(
+      "-0.62"
+    );
   });
 
   it("renders charts and monthly returns heatmap table", async () => {
     render(<ReportDetailPage params={{ runId: "test-run-123" }} />);
 
     await waitFor(() => {
+      expect(screen.getByTestId("chart-equity-curve")).toBeInTheDocument();
       expect(screen.getByTestId("chart-drawdown")).toBeInTheDocument();
     });
 

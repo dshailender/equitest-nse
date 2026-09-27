@@ -18,6 +18,21 @@ async def lifespan(app: FastAPI):
     setup_logging(settings.LOG_LEVEL)
     # Initialize DB (creates SQLite tables if defined)
     init_db()
+    # Enforce backtest retention policy at startup
+    try:
+        from sqlmodel import Session
+
+        from app.db.session import engine
+        from app.engine.retention import enforce_backtest_retention
+
+        with Session(engine) as session:
+            enforce_backtest_retention(session)
+    except Exception as exc:
+        import logging
+
+        logging.getLogger(__name__).warning(
+            "Startup retention enforcement failed: %s", exc
+        )
     yield
 
 

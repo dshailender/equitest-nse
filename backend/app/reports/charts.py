@@ -95,7 +95,7 @@ def render_equity_curve(
 
         # Plot equity curve and gradient under-fill
         ax.plot(
-            dates, equity, color=PRIMARY_BLUE, linewidth=2.0, label="Portfolio Equity"
+            dates, equity, color=PRIMARY_BLUE, linewidth=2.0, label="Strategy Portfolio"
         )
         ax.fill_between(dates, equity, y2=equity.min(), color=ACCENT_BLUE, alpha=0.15)
 
@@ -103,6 +103,75 @@ def render_equity_curve(
         end_cap = float(equity[-1])
         start_date = dates.iloc[0]
         end_date = dates.iloc[-1]
+
+        # Check for benchmark series or attempt to resolve (AUD-H-001)
+        bench_dates = None
+        bench_equity = None
+
+        if "benchmark_equity" in df.columns and not df["benchmark_equity"].isna().all():
+            bench_dates = dates
+            bench_equity = df["benchmark_equity"].astype(float).values
+        elif (
+            "benchmark" in df.columns or "benchmark_close" in df.columns
+        ) and not df.empty:
+            b_col = "benchmark" if "benchmark" in df.columns else "benchmark_close"
+            b_vals = df[b_col].astype(float).values
+            if len(b_vals) > 0 and b_vals[0] > 0:
+                bench_dates = dates
+                bench_equity = start_cap * (b_vals / b_vals[0])
+        else:
+            try:
+                from app.reports.metrics import resolve_benchmark_prices
+
+                start_str = str(df["date"].iloc[0])[:10]
+                end_str = str(df["date"].iloc[-1])[:10]
+                b_df = resolve_benchmark_prices(start_str, end_str)
+                if b_df is not None and not b_df.empty and "date" in b_df.columns:
+                    b_sub = b_df.copy()
+                    b_sub["date_str"] = b_sub["date"].astype(str).str[:10]
+                    close_col = (
+                        "close"
+                        if "close" in b_sub.columns
+                        else ("adj_close" if "adj_close" in b_sub.columns else None)
+                    )
+                    if close_col:
+                        df_temp = df[["date"]].copy()
+                        df_temp["date_str"] = df_temp["date"].dt.strftime("%Y-%m-%d")
+                        merged = pd.merge(
+                            df_temp,
+                            b_sub[["date_str", close_col]],
+                            on="date_str",
+                            how="inner",
+                        )
+                        if len(merged) >= 2:
+                            b_prices = merged[close_col].astype(float).values
+                            if b_prices[0] > 0:
+                                bench_dates = pd.to_datetime(merged["date_str"])
+                                bench_equity = start_cap * (b_prices / b_prices[0])
+            except Exception:
+                pass
+
+        # Plot overlaid benchmark curve if available
+        if (
+            bench_dates is not None
+            and bench_equity is not None
+            and len(bench_equity) > 0
+        ):
+            ax.plot(
+                bench_dates,
+                bench_equity,
+                color="#d97706",
+                linewidth=1.75,
+                linestyle="--",
+                label="Benchmark (NIFTY 50)",
+            )
+            ax.legend(
+                loc="upper left",
+                frameon=True,
+                facecolor="#ffffff",
+                edgecolor=GRID_COLOR,
+                fontsize=9,
+            )
 
         # Annotate Start & End Capital
         ax.plot(start_date, start_cap, marker="o", markersize=5, color=PRIMARY_BLUE)

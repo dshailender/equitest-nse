@@ -91,6 +91,11 @@ def test_api_report_summary_endpoint(executed_backtest_run_id):
     assert metrics["cagr"] == -0.0183
     assert metrics["max_drawdown_pct"] == 0.0383
     assert metrics["avg_days_held"] == 68.0
+    assert "benchmark_return" in metrics
+    assert "benchmark_cagr" in metrics
+    assert "alpha" in metrics
+    assert "beta" in metrics
+    assert "information_ratio" in metrics
 
 
 def test_api_report_monthly_endpoint(executed_backtest_run_id):

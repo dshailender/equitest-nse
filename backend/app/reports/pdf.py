@@ -24,6 +24,7 @@ from sqlmodel import Session
 from weasyprint import HTML
 
 from app.core.branding import get_branding_settings
+from app.core.config import get_repo_root, get_reports_dir
 from app.db.session import engine
 from app.reports.charts import (
     render_drawdown,
@@ -36,7 +37,7 @@ from app.validation.audit import load_run_audit
 
 logger = logging.getLogger(__name__)
 
-REPO_ROOT = Path(__file__).resolve().parents[3]
+REPO_ROOT = get_repo_root()
 TEMPLATES_DIR = Path(__file__).resolve().parent / "templates"
 
 
@@ -181,7 +182,7 @@ def generate_pdf(
         if output_dir:
             dest_dir = Path(output_dir)
         else:
-            dest_dir = REPO_ROOT / "data" / "reports"
+            dest_dir = get_reports_dir()
         dest_dir.mkdir(parents=True, exist_ok=True)
         pdf_path = dest_dir / f"backtest_{clean_run_id}.pdf"
 

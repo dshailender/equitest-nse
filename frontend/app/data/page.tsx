@@ -54,7 +54,13 @@ export default function DataStatusPage() {
   // Ingest state
   const [startDate, setStartDate] = React.useState("2020-01-01");
   const [endDate, setEndDate] = React.useState("2023-12-31");
-  const [ingestStatusMessage, setIngestStatusMessage] = React.useState<string | null>(null);
+  const [ingestScope, setIngestScope] = React.useState<"smoke" | "midcap" | "full" | "custom">("smoke");
+  const [customSymbols, setCustomSymbols] = React.useState("");
+  const [ingestFeedback, setIngestFeedback] = React.useState<{
+    type: "success" | "warning" | "error";
+    message: string;
+    details?: string[];
+  } | null>(null);
 
   // Universe state
   const [universeDate, setUniverseDate] = React.useState("2022-01-01");
@@ -86,19 +92,65 @@ export default function DataStatusPage() {
 
   // Ingestion Mutation
   const ingestMutation = useMutation({
-    mutationFn: () => triggerIngest(startDate, endDate),
+    mutationFn: (variables?: { start?: string; end?: string; symbols?: string[]; scope?: string }) => {
+      const s = variables?.start ?? startDate;
+      const e = variables?.end ?? endDate;
+      const sc = variables?.scope ?? ingestScope;
+      let syms = variables?.symbols;
+      if (syms === undefined && sc === "custom") {
+        syms = customSymbols
+          .split(",")
+          .map((sym) => sym.trim().toUpperCase())
+          .filter(Boolean);
+      }
+      return triggerIngest(s, e, syms, sc);
+    },
     onSuccess: (data) => {
-      setIngestStatusMessage(
-        `Ingested ${data.rows_ingested} rows across ${data.symbols_ingested} symbols (Job ID: ${data.job_id.slice(0, 8)}).`
-      );
+      if (data.status === "failed") {
+        setIngestFeedback({
+          type: "error",
+          message: `Ingestion failed (Job ID: ${data.job_id.slice(0, 8)}): 0 rows ingested across ${data.symbols_ingested} symbols.`,
+          details: data.errors && data.errors.length > 0 ? data.errors : undefined,
+        });
+      } else if (data.status === "partial" || (data.errors && data.errors.length > 0)) {
+        setIngestFeedback({
+          type: "warning",
+          message: `Partially ingested ${data.rows_ingested} rows across ${data.symbols_ingested} symbols (Job ID: ${data.job_id.slice(0, 8)}).`,
+          details: data.errors && data.errors.length > 0 ? data.errors : undefined,
+        });
+      } else {
+        setIngestFeedback({
+          type: "success",
+          message: `Ingested ${data.rows_ingested} rows across ${data.symbols_ingested} symbols (Job ID: ${data.job_id.slice(0, 8)}).`,
+        });
+      }
       queryClient.invalidateQueries({ queryKey: ["coverage"] });
       queryClient.invalidateQueries({ queryKey: ["universe"] });
       queryClient.invalidateQueries({ queryKey: ["prices", selectedSymbol] });
     },
     onError: (err) => {
-      setIngestStatusMessage(`Ingest failed: ${err instanceof Error ? err.message : String(err)}`);
+      setIngestFeedback({
+        type: "error",
+        message: `Ingest failed: ${err instanceof Error ? err.message : String(err)}`,
+      });
     },
   });
+
+  const handleStartIngest = () => {
+    let targetSymbols: string[] | undefined = undefined;
+    if (ingestScope === "custom") {
+      targetSymbols = customSymbols
+        .split(",")
+        .map((s) => s.trim().toUpperCase())
+        .filter(Boolean);
+    }
+    ingestMutation.mutate({
+      start: startDate,
+      end: endDate,
+      symbols: targetSymbols,
+      scope: ingestScope,
+    });
+  };
 
   // Filter & paginate coverage items
   const allCoverage = React.useMemo(
@@ -223,11 +275,57 @@ export default function DataStatusPage() {
               />
             </div>
 
+            <div className="flex items-center space-x-2">
+              <label
+                htmlFor="ingest-scope"
+                className="text-xs font-semibold text-slate-600 dark:text-slate-400"
+              >
+                Scope:
+              </label>
+              <select
+                id="ingest-scope"
+                data-testid="ingest-scope"
+                aria-label="Ingestion Scope"
+                value={ingestScope}
+                onChange={(e) =>
+                  setIngestScope(
+                    e.target.value as "smoke" | "midcap" | "full" | "custom"
+                  )
+                }
+                className="px-2.5 py-1.5 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-semibold"
+              >
+                <option value="smoke">Smoke Test (4 Stocks + Benchmark)</option>
+                <option value="midcap">MidCap 150 (NSE Ranks 101–250)</option>
+                <option value="full">Full Universe (NSE Ranks 101–750)</option>
+                <option value="custom">Custom Symbols</option>
+              </select>
+            </div>
+
+            {ingestScope === "custom" && (
+              <div className="flex items-center space-x-2 flex-1 min-w-[220px]">
+                <label
+                  htmlFor="custom-symbols-input"
+                  className="text-xs font-semibold text-slate-600 dark:text-slate-400 shrink-0"
+                >
+                  Symbols:
+                </label>
+                <input
+                  id="custom-symbols-input"
+                  type="text"
+                  data-testid="custom-symbols-input"
+                  placeholder="e.g. RELIANCE, TCS, INFY"
+                  value={customSymbols}
+                  onChange={(e) => setCustomSymbols(e.target.value)}
+                  className="px-2.5 py-1.5 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-mono w-full"
+                />
+              </div>
+            )}
+
             <Button
               data-testid="ingest-button"
               size="sm"
               disabled={ingestMutation.isPending}
-              onClick={() => ingestMutation.mutate()}
+              onClick={handleStartIngest}
               className="ml-auto text-xs"
             >
               {ingestMutation.isPending ? (
@@ -242,21 +340,34 @@ export default function DataStatusPage() {
             </Button>
           </div>
 
-          {ingestStatusMessage && (
+          {ingestFeedback && (
             <div
               data-testid="ingest-status-banner"
-              className={`p-3 rounded-lg text-xs flex items-center space-x-2 ${
-                ingestMutation.isError
-                  ? "bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-400 border border-red-200"
-                  : "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200"
+              className={`p-3 rounded-lg text-xs space-y-1.5 ${
+                ingestFeedback.type === "error"
+                  ? "bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-400 border border-red-200 dark:border-red-900"
+                  : ingestFeedback.type === "warning"
+                  ? "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 border border-amber-200 dark:border-amber-900"
+                  : "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900"
               }`}
             >
-              {ingestMutation.isError ? (
-                <AlertTriangle className="w-4 h-4 shrink-0" />
-              ) : (
-                <CheckCircle2 className="w-4 h-4 shrink-0" />
+              <div className="flex items-center space-x-2">
+                {ingestFeedback.type === "error" ? (
+                  <AlertTriangle className="w-4 h-4 shrink-0 text-red-600 dark:text-red-400" />
+                ) : ingestFeedback.type === "warning" ? (
+                  <AlertTriangle className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                ) : (
+                  <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                )}
+                <span className="font-medium">{ingestFeedback.message}</span>
+              </div>
+              {ingestFeedback.details && ingestFeedback.details.length > 0 && (
+                <ul className="mt-1 pl-6 list-disc text-[11px] space-y-0.5 opacity-90">
+                  {ingestFeedback.details.map((detail, idx) => (
+                    <li key={idx}>{detail}</li>
+                  ))}
+                </ul>
               )}
-              <span>{ingestStatusMessage}</span>
             </div>
           )}
         </CardContent>

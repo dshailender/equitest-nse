@@ -28,16 +28,19 @@ from app.api.v1.schemas import (
     SweepStatusResponse,
     TradeItem,
 )
-from app.data.source import get_price_source
+from app.core.config import get_backtests_dir, get_fixtures_dir
+from app.data.source import CSVSource, get_price_source
 from app.data.universe import get_universe
-from app.db.models import BacktestRun, BacktestSweep
+from app.db.models import BacktestRun, BacktestSweep, IndexPrice, Price
 from app.db.session import engine, get_session
 from app.engine.backtest import Backtest
 from app.engine.result import BacktestResult
+from app.engine.retention import enforce_backtest_retention
 from app.strategy.config import StrategyConfig
 from app.validation.audit import load_run_audit, record_run_audit
 
 logger = logging.getLogger(__name__)
+
 
 router = APIRouter(prefix="/backtest", tags=["backtest"])
 
@@ -63,13 +66,45 @@ def _execute_backtest_task(run_id: str, payload: dict) -> None:
             else:
                 strat_config = StrategyConfig()
 
-            # Load NIFTY benchmark
+            # Load NIFTY benchmark (DB first if not CSVSource, fallback to price_source)
             price_source = get_price_source()
-            nifty_df = price_source.get_index_prices(
-                "^NSEI", start="2000-01-01", end="2099-12-31"
-            )
+            raw_conn = getattr(session.connection(), "connection", None)
+            nifty_df = pd.DataFrame()
+            if not isinstance(price_source, CSVSource) and raw_conn is not None:
+                try:
+                    nifty_df = pd.read_sql_query(
+                        "SELECT date, open, high, low, close, adj_close, volume "
+                        "FROM index_prices "
+                        "WHERE symbol IN ('^NSEI', 'NIFTY', 'NIFTY50') "
+                        "ORDER BY date ASC",
+                        raw_conn,
+                    )
+                except Exception:
+                    pass
+            if nifty_df.empty:
+                idx_stmt = (
+                    select(IndexPrice)
+                    .where(IndexPrice.symbol.in_(("^NSEI", "NIFTY", "NIFTY50")))
+                    .order_by(col(IndexPrice.date).asc())
+                )
+                idx_rows = (
+                    session.exec(idx_stmt).all()
+                    if not isinstance(price_source, CSVSource)
+                    else []
+                )
+                if idx_rows:
+                    nifty_df = pd.DataFrame([r.model_dump() for r in idx_rows])
+                else:
+                    nifty_df = price_source.get_index_prices(
+                        "^NSEI", start="2000-01-01", end="2099-12-31"
+                    )
 
-            repo_root = Path(__file__).resolve().parents[4]
+            if nifty_df.empty:
+                for cand in ["^NSEI.parquet", "NIFTY50.parquet"]:
+                    cand_path = get_fixtures_dir() / cand
+                    if cand_path.exists():
+                        nifty_df = pd.read_parquet(cand_path)
+                        break
 
             # Determine symbols list
             symbols_requested = req.symbols
@@ -88,24 +123,61 @@ def _execute_backtest_task(run_id: str, payload: dict) -> None:
             # If targeting tiny_universe symbols or benchmark empty, check fixture
             is_tiny = any(s in ("ALPHA", "BETA", "GAMMA") for s in symbols_to_load)
             if is_tiny:
+                price_source = get_price_source("CSV")
                 tiny_nifty_path = (
-                    repo_root
-                    / "data"
-                    / "fixtures"
-                    / "tiny_universe"
-                    / "NIFTY_TINY.parquet"
+                    get_fixtures_dir() / "tiny_universe" / "NIFTY_TINY.parquet"
                 )
                 if tiny_nifty_path.exists():
                     nifty_df = pd.read_parquet(tiny_nifty_path)
 
-            # Load equity prices
+            # Load equity prices (DB batch first if not CSVSource,
+            # fallback to price_source)
             prices: dict[str, pd.DataFrame] = {}
-            for sym in symbols_to_load:
+            missing_symbols = list(symbols_to_load)
+            if (
+                not isinstance(price_source, CSVSource)
+                and raw_conn is not None
+                and symbols_to_load
+            ):
+                try:
+                    placeholders = ",".join("?" for _ in symbols_to_load)
+                    batch_df = pd.read_sql_query(
+                        "SELECT symbol, date, open, high, low, close, adj_close, "
+                        f"volume FROM prices WHERE symbol IN ({placeholders}) "
+                        "ORDER BY date ASC",
+                        raw_conn,
+                        params=symbols_to_load,
+                    )
+                    if not batch_df.empty:
+                        for sym, grp in batch_df.groupby("symbol"):
+                            prices[str(sym)] = grp.drop(columns=["symbol"]).reset_index(
+                                drop=True
+                            )
+                        missing_symbols = [
+                            s for s in symbols_to_load if s not in prices
+                        ]
+                except Exception:
+                    pass
+
+            for sym in missing_symbols:
+                if not isinstance(price_source, CSVSource):
+                    sym_stmt = (
+                        select(Price)
+                        .where(Price.symbol == sym)
+                        .order_by(col(Price.date).asc())
+                    )
+                    p_rows = session.exec(sym_stmt).all()
+                    if p_rows:
+                        prices[sym] = pd.DataFrame([r.model_dump() for r in p_rows])
+                        continue
+
                 df = price_source.get_equity_prices(
                     sym, start="2000-01-01", end="2099-12-31"
                 )
                 if not df.empty:
                     prices[sym] = df
+                elif (get_fixtures_dir() / f"{sym}.parquet").exists():
+                    prices[sym] = pd.read_parquet(get_fixtures_dir() / f"{sym}.parquet")
 
             # Prepare dynamic point-in-time universe provider (AUD-C-002)
             if symbols_requested:
@@ -134,7 +206,9 @@ def _execute_backtest_task(run_id: str, payload: dict) -> None:
             result = backtest.run(start=req.start, end=req.end)
 
             # Persist result blob
-            blob_path = repo_root / "data" / "backtests" / f"{run_id}.json"
+            backtests_dir = get_backtests_dir()
+            backtests_dir.mkdir(parents=True, exist_ok=True)
+            blob_path = backtests_dir / f"{run_id}.json"
             result.save(blob_path)
 
             # Record audit provenance
@@ -164,6 +238,15 @@ def _execute_backtest_task(run_id: str, payload: dict) -> None:
             run_record.error_message = str(err)
             session.add(run_record)
             session.commit()
+
+    # Enforce backtest retention after run finalization
+    try:
+        with Session(engine) as retention_session:
+            enforce_backtest_retention(retention_session)
+    except Exception as ret_err:
+        logger.warning(
+            "Retention enforcement after backtest %s failed: %s", run_id, ret_err
+        )
 
 
 def _execute_sweep_task(sweep_id: str, child_tasks: list[tuple[str, dict]]) -> None:
@@ -214,6 +297,15 @@ def _execute_sweep_task(sweep_id: str, child_tasks: list[tuple[str, dict]]) -> N
         completed,
         failed,
     )
+
+    # Enforce backtest retention after sweep finalization
+    try:
+        with Session(engine) as retention_session:
+            enforce_backtest_retention(retention_session)
+    except Exception as ret_err:
+        logger.warning(
+            "Retention enforcement after sweep %s failed: %s", sweep_id, ret_err
+        )
 
 
 @router.post(
@@ -520,6 +612,11 @@ def api_compare_backtest_runs(
 
 
 @router.get(
+    "/runs",
+    response_model=list[BacktestStatusResponse],
+    include_in_schema=False,
+)
+@router.get(
     "",
     response_model=list[BacktestStatusResponse],
     summary="List Backtest Runs",
@@ -662,10 +759,48 @@ def api_get_backtest_equity(
 
     result = BacktestResult.load(run_record.result_blob_path)
     points: list[EquityPoint] = []
+
+    # Attempt to resolve benchmark equity curve (AUD-H-001)
+    bench_map: dict[str, float] = {}
+    if not result.equity_curve.empty and "date" in result.equity_curve.columns:
+        if "benchmark_equity" in result.equity_curve.columns:
+            for _, pt in result.equity_curve.iterrows():
+                if pd.notna(pt.get("benchmark_equity")):
+                    bench_map[str(pt["date"])[:10]] = float(pt["benchmark_equity"])
+        else:
+            try:
+                from app.reports.metrics import resolve_benchmark_prices
+
+                start_str = str(result.equity_curve["date"].iloc[0])[:10]
+                end_str = str(result.equity_curve["date"].iloc[-1])[:10]
+                b_df = resolve_benchmark_prices(start_str, end_str)
+                if b_df is not None and not b_df.empty and "date" in b_df.columns:
+                    close_col = (
+                        "close"
+                        if "close" in b_df.columns
+                        else ("adj_close" if "adj_close" in b_df.columns else None)
+                    )
+                    if close_col:
+                        b_sorted = b_df.sort_values("date").reset_index(drop=True)
+                        b0 = float(b_sorted[close_col].iloc[0])
+                        if b0 > 0:
+                            for _, b_row in b_sorted.iterrows():
+                                d_key = str(b_row["date"])[:10]
+                                bench_map[d_key] = round(
+                                    result.initial_capital
+                                    * (float(b_row[close_col]) / b0),
+                                    2,
+                                )
+            except Exception:
+                pass
+
     for _, pt in result.equity_curve.iterrows():
+        d_str = str(pt["date"])
+        d_key = d_str[:10]
+        bench_val = bench_map.get(d_key)
         points.append(
             EquityPoint(
-                date=str(pt["date"]),
+                date=d_str,
                 equity=round(float(pt["equity"]), 2),
                 cash=round(float(pt["cash"]), 2),
                 positions_value=round(float(pt["positions_value"]), 2),
@@ -673,6 +808,9 @@ def api_get_backtest_equity(
                 daily_return=round(float(pt["daily_return"]), 4),
                 drawdown=round(float(pt["drawdown"]), 2),
                 drawdown_pct=round(float(pt["drawdown_pct"]), 4),
+                benchmark_equity=(
+                    round(float(bench_val), 2) if bench_val is not None else None
+                ),
             )
         )
 

@@ -568,6 +568,7 @@ export const handlers = [
           daily_return: 0.0,
           drawdown: 0.0,
           drawdown_pct: 0.0,
+          benchmark_equity: 500000.0,
         },
         {
           date: "2021-05-25",
@@ -578,6 +579,7 @@ export const handlers = [
           daily_return: -0.0004,
           drawdown: 200.0,
           drawdown_pct: 0.0004,
+          benchmark_equity: 520000.0,
         },
         {
           date: "2022-04-29",
@@ -588,6 +590,7 @@ export const handlers = [
           daily_return: 0.0,
           drawdown: 19208.32,
           drawdown_pct: 0.0383,
+          benchmark_equity: 540000.0,
         },
       ],
     });
@@ -639,6 +642,11 @@ export const handlers = [
         profit_factor: 0.0,
         expectancy: -8646.40,
         avg_days_held: 68.0,
+        benchmark_return: 0.1524,
+        benchmark_cagr: 0.0782,
+        alpha: -0.0451,
+        beta: 0.8512,
+        information_ratio: -0.6214,
       },
     });
   }),

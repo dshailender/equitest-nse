@@ -253,6 +253,26 @@ def test_pdf_contains_all_prd_metrics(golden_backtest_run, tmp_path):
         assert metric in full_text, f"Metric '{metric}' not found in PDF extracted text"
 
 
+def test_pdf_contains_benchmark_analytics(golden_backtest_run, tmp_path):
+    """Asserts benchmark analytics metrics appear in PDF extracted text (AUD-H-001)."""
+    run_id, _ = golden_backtest_run
+    pdf_path = generate_pdf(run_id, output_dir=tmp_path)
+    reader = PdfReader(pdf_path)
+    full_text = "\n".join(page.extract_text() for page in reader.pages)
+
+    benchmark_metrics = [
+        "Benchmark Return",
+        "Benchmark CAGR",
+        "Strategy Alpha",
+        "Strategy Beta",
+        "Information Ratio",
+    ]
+    for metric in benchmark_metrics:
+        assert (
+            metric in full_text
+        ), f"Benchmark metric '{metric}' not found in PDF extracted text"
+
+
 def test_trade_log_pagination(golden_backtest_run, tmp_path):
     """Asserts repeating table header on multiple pages for a 200-trade run."""
     run_id, result = golden_backtest_run

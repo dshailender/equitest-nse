@@ -1,9 +1,9 @@
-from pathlib import Path
 from typing import Any
 
 import pandas as pd
-from sqlmodel import Session, select
+from sqlmodel import Session, func, select
 
+from app.core.config import get_fixtures_dir
 from app.data.constituents import AUTHENTIC_NSE_CONSTITUENTS
 from app.db.models import UniverseMembership
 
@@ -132,11 +132,38 @@ COMPANY_METADATA: dict[str, dict[str, str]] = {
 }
 
 
+_PARQUET_METADATA_CACHE: dict[str, dict[str, str]] | None = None
+
+
+def _get_parquet_metadata() -> dict[str, dict[str, str]]:
+    global _PARQUET_METADATA_CACHE
+    if _PARQUET_METADATA_CACHE is not None:
+        return _PARQUET_METADATA_CACHE
+    cache: dict[str, dict[str, str]] = {}
+    constituents_file = get_fixtures_dir() / "constituents.parquet"
+    if constituents_file.exists():
+        try:
+            df = pd.read_parquet(constituents_file)
+            if {"symbol", "name", "sector"}.issubset(df.columns):
+                for _, r in df.iterrows():
+                    s = str(r["symbol"]).strip().upper()
+                    if s not in cache and pd.notna(r["name"]) and pd.notna(r["sector"]):
+                        cache[s] = {"name": str(r["name"]), "sector": str(r["sector"])}
+        except Exception:
+            pass
+    _PARQUET_METADATA_CACHE = cache
+    return _PARQUET_METADATA_CACHE
+
+
 def get_symbol_metadata(symbol: str) -> dict[str, str]:
     """Resolves human-readable name and sector for an equity ticker."""
     clean_sym = symbol.strip().upper()
     if clean_sym in COMPANY_METADATA:
         return dict(COMPANY_METADATA[clean_sym])
+
+    pq_meta = _get_parquet_metadata()
+    if clean_sym in pq_meta:
+        return dict(pq_meta[clean_sym])
 
     # Check for synthetic / midcap stock patterns like MIDCAP_STOCK_101
     if clean_sym.startswith("MIDCAP_STOCK_"):
@@ -151,6 +178,12 @@ def get_symbol_metadata(symbol: str) -> dict[str, str]:
         base_sym, cycle = clean_sym.rsplit("_", 1)
         if base_sym in COMPANY_METADATA:
             base_meta = COMPANY_METADATA[base_sym]
+            return {
+                "name": f"{base_meta['name']} (Series {cycle})",
+                "sector": base_meta["sector"],
+            }
+        if base_sym in pq_meta:
+            base_meta = pq_meta[base_sym]
             return {
                 "name": f"{base_meta['name']} (Series {cycle})",
                 "sector": base_meta["sector"],
@@ -277,30 +310,41 @@ def get_universe(
     """
     # 1. Check database table if session provided
     if session is not None:
-        statement = (
-            select(UniverseMembership)
-            .where(UniverseMembership.date == date)
-            .where(UniverseMembership.rank >= start_rank)
-            .where(UniverseMembership.rank <= end_rank)
-            .order_by(UniverseMembership.rank)
+        # Check for point-in-time constituent date (exact or closest preceding date)
+        effective_date_stmt = select(func.max(UniverseMembership.date)).where(
+            UniverseMembership.date <= date
         )
-        results = session.exec(statement).all()
-        if results:
-            tickers = [r.symbol for r in results]
-            details = [
-                {
-                    "symbol": r.symbol,
-                    "name": get_symbol_metadata(r.symbol)["name"],
-                    "rank": r.rank,
-                    "sector": get_symbol_metadata(r.symbol)["sector"],
-                }
+        effective_db_date = session.exec(effective_date_stmt).one_or_none()
+        if effective_db_date is not None:
+            statement = (
+                select(UniverseMembership)
+                .where(UniverseMembership.date == effective_db_date)
+                .where(UniverseMembership.rank >= start_rank)
+                .where(UniverseMembership.rank <= end_rank)
+                .order_by(UniverseMembership.rank)
+            )
+            results = session.exec(statement).all()
+            valid_results = [
+                r
                 for r in results
+                if not r.symbol.startswith("MIDCAP_STOCK_")
+                and not r.symbol.startswith("TOP_")
             ]
-            return tickers, False, details
+            if valid_results:
+                tickers = [r.symbol for r in valid_results]
+                details = [
+                    {
+                        "symbol": r.symbol,
+                        "name": get_symbol_metadata(r.symbol)["name"],
+                        "rank": r.rank,
+                        "sector": get_symbol_metadata(r.symbol)["sector"],
+                    }
+                    for r in valid_results
+                ]
+                return tickers, False, details
 
-    # 2. Check point-in-time parquet file in /data/fixtures/constituents.parquet
-    base = Path(__file__).resolve().parent.parent.parent.parent
-    constituents_file = base / "data" / "fixtures" / "constituents.parquet"
+    # 2. Check point-in-time parquet file in fixtures/constituents.parquet
+    constituents_file = get_fixtures_dir() / "constituents.parquet"
 
     if constituents_file.exists():
         try:
