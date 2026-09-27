@@ -138,9 +138,7 @@ def resolve_benchmark_prices(start_date: str, end_date: str) -> pd.DataFrame | N
     try:
         from app.core.config import get_fixtures_dir
 
-        tiny_nifty = (
-            get_fixtures_dir() / "tiny_universe" / "NIFTY_TINY.parquet"
-        )
+        tiny_nifty = get_fixtures_dir() / "tiny_universe" / "NIFTY_TINY.parquet"
         if (
             tiny_nifty.exists()
             and start_date >= "2020-05-01"

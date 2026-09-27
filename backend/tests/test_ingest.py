@@ -113,7 +113,7 @@ def test_ingest_purges_synthetic_universe_constituents(temp_db: Session):
 
 
 def test_ingest_diagnostics_empty_symbols_and_index(temp_db: Session, tmp_path):
-    """Verify empty DataFrame for equity and index records descriptive errors and failed status."""
+    """Verify empty DataFrame records descriptive errors and failed status."""
     source = CSVSource(fixtures_dir=tmp_path)
     res = ingest_market_data(
         session=temp_db,
@@ -124,12 +124,18 @@ def test_ingest_diagnostics_empty_symbols_and_index(temp_db: Session, tmp_path):
     )
     assert res["status"] == "failed"
     assert res["rows_ingested"] == 0
-    assert any("No price data available for symbol 'NON_EXISTENT_SYMBOL_XYZ'" in e for e in res["errors"])
-    assert any("No price data available for benchmark index '^NSEI'" in e for e in res["errors"])
+    assert any(
+        "No price data available for symbol 'NON_EXISTENT_SYMBOL_XYZ'" in e
+        for e in res["errors"]
+    )
+    assert any(
+        "No price data available for benchmark index '^NSEI'" in e
+        for e in res["errors"]
+    )
 
 
 def test_ingest_partial_status(temp_db: Session):
-    """Verify partial status when some symbols ingest successfully while others are empty."""
+    """Verify partial status when some symbols ingest while others are empty."""
     source = CSVSource()
     res = ingest_market_data(
         session=temp_db,
@@ -140,11 +146,16 @@ def test_ingest_partial_status(temp_db: Session):
     )
     assert res["status"] == "partial"
     assert res["rows_ingested"] > 0
-    assert any("No price data available for symbol 'NON_EXISTENT_TICKER_123'" in e for e in res["errors"])
+    assert any(
+        "No price data available for symbol 'NON_EXISTENT_TICKER_123'" in e
+        for e in res["errors"]
+    )
 
 
-def test_seed_universe_constituents_code_fallback(temp_db: Session, monkeypatch, tmp_path):
-    """Verify seed_universe_constituents generates 2,250 rows when parquet fixture does not exist."""
+def test_seed_universe_constituents_code_fallback(
+    temp_db: Session, monkeypatch, tmp_path
+):
+    """Verify seed_universe_constituents generates 2,250 rows when fixture missing."""
     from app.data.ingest import seed_universe_constituents
 
     # Point fixtures dir to an empty temporary path
@@ -183,16 +194,12 @@ def test_ingest_scope_resolution(temp_db: Session):
 
     # 2. scope == "smoke" -> smoke symbols
     src2 = RecordingSource()
-    ingest_market_data(
-        temp_db, "2020-01-01", "2020-01-02", scope="smoke", source=src2
-    )
+    ingest_market_data(temp_db, "2020-01-01", "2020-01-02", scope="smoke", source=src2)
     assert src2.requested_symbols == ["RELIANCE", "HDFCBANK", "INFY", "TATAMOTORS"]
 
     # 3. scope == "midcap" -> AUTHENTIC_NSE_CONSTITUENTS[:150]
     src3 = RecordingSource()
-    ingest_market_data(
-        temp_db, "2020-01-01", "2020-01-02", scope="midcap", source=src3
-    )
+    ingest_market_data(temp_db, "2020-01-01", "2020-01-02", scope="midcap", source=src3)
     assert src3.requested_symbols == AUTHENTIC_NSE_CONSTITUENTS[:150]
     assert len(src3.requested_symbols) == 150
 
@@ -213,6 +220,3 @@ def test_ingest_scope_resolution(temp_db: Session):
         source=src5,
     )
     assert src5.requested_symbols == ["TCS", "WIPRO"]
-
-
-

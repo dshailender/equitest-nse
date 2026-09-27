@@ -149,7 +149,9 @@ def compute_data_snapshot_hash(symbols: list[str] | None = None) -> str:
                     while chunk := fh.read(65536):
                         hasher.update(chunk)
             except OSError as e:
-                logger.warning("Could not read fixture %s for hashing: %s", file_path, e)
+                logger.warning(
+                    "Could not read fixture %s for hashing: %s", file_path, e
+                )
         return hasher.hexdigest()
 
     # Fallback 1: Cache directory (/app/data/cache/yfinance or data/cache/yfinance)
@@ -185,13 +187,16 @@ def compute_data_snapshot_hash(symbols: list[str] | None = None) -> str:
                         while chunk := fh.read(65536):
                             c_hasher.update(chunk)
                 except OSError as e:
-                    logger.warning("Could not read cache file %s for hashing: %s", cf, e)
+                    logger.warning(
+                        "Could not read cache file %s for hashing: %s", cf, e
+                    )
         return c_hasher.hexdigest()
 
     # Fallback 2: Compute SHA-256 fingerprint deterministically from database price data
     try:
-        from app.db.session import engine
         from sqlalchemy import text
+
+        from app.db.session import engine
 
         with engine.connect() as conn:
             if symbols:
@@ -201,22 +206,23 @@ def compute_data_snapshot_hash(symbols: list[str] | None = None) -> str:
                 placeholders = ", ".join(f":s{i}" for i in range(len(clean_symbols)))
                 params = {f"s{i}": s for i, s in enumerate(clean_symbols)}
                 query = text(
-                    f"SELECT symbol, date, open, high, low, close, adj_close, volume "
-                    f"FROM prices WHERE symbol IN ({placeholders}) "
-                    f"ORDER BY symbol, date"
+                    "SELECT symbol, date, open, high, low, close, adj_close, "
+                    "volume FROM prices WHERE symbol IN ("
+                    + placeholders
+                    + ") ORDER BY symbol, date"
                 )
                 rows = conn.execute(query, params).fetchall()
                 idx_rows = conn.execute(
                     text(
-                        "SELECT symbol, date, open, high, low, close, adj_close, volume "
-                        "FROM index_prices ORDER BY symbol, date"
+                        "SELECT symbol, date, open, high, low, close, "
+                        "adj_close, volume FROM index_prices ORDER BY symbol, date"
                     )
                 ).fetchall()
                 all_rows = list(rows) + list(idx_rows)
             else:
                 query = text(
-                    "SELECT symbol, date, open, high, low, close, adj_close, volume "
-                    "FROM prices ORDER BY symbol, date"
+                    "SELECT symbol, date, open, high, low, close, adj_close, "
+                    "volume FROM prices ORDER BY symbol, date"
                 )
                 all_rows = list(conn.execute(query).fetchall())
 
@@ -287,4 +293,3 @@ def load_run_audit(run_id: str, session: Session) -> dict[str, Any]:
         symbols=None,
         created_at=run_record.created_at,
     )
-

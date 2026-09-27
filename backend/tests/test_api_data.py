@@ -97,4 +97,3 @@ async def test_api_ingest_with_scope(async_client: AsyncClient):
     assert data["status"] in ["completed", "partial"]
     assert "job_id" in data
     assert data["symbols_ingested"] >= 0
-

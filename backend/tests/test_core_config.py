@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 
 from app.core.config import (
@@ -7,7 +6,6 @@ from app.core.config import (
     get_fixtures_dir,
     get_repo_root,
     get_reports_dir,
-    get_settings,
 )
 
 

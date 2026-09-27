@@ -1,6 +1,7 @@
 """Unit and API integration tests for run audit and provenance tracking (REQ-8.2)."""
 
 import json
+from datetime import UTC
 from pathlib import Path
 
 import pytest
@@ -147,12 +148,12 @@ def test_simulation_execution_generates_audit():
         "config": {"corpus": 500000.0, "risk_pct": 0.02, "sl_pct": 0.07},
     }
 
-    from datetime import datetime, timezone
+    from datetime import datetime
 
     with Session(engine) as session:
         run_rec = BacktestRun(
             id=run_id,
-            created_at=datetime.now(timezone.utc).isoformat(),
+            created_at=datetime.now(UTC).isoformat(),
             status="pending",
             config_json=json.dumps(payload["config"]),
         )
@@ -175,7 +176,7 @@ def test_simulation_execution_generates_audit():
 
 
 def test_data_hash_cache_fallback(monkeypatch, tmp_path):
-    """Verify compute_data_snapshot_hash falls back to cache directory when fixtures missing."""
+    """Verify compute_data_snapshot_hash falls back to cache directory."""
     empty_fixtures = tmp_path / "empty_fixtures"
     empty_fixtures.mkdir()
     monkeypatch.setenv("FIXTURES_DIR", str(empty_fixtures))
@@ -194,7 +195,7 @@ def test_data_hash_cache_fallback(monkeypatch, tmp_path):
 
 
 def test_data_hash_db_fallback(monkeypatch, tmp_path):
-    """Verify compute_data_snapshot_hash falls back to database when fixtures and cache missing."""
+    """Verify compute_data_snapshot_hash falls back to database when missing."""
     import uuid
 
     sym = f"DB_HASH_{uuid.uuid4().hex[:6]}"
@@ -204,6 +205,7 @@ def test_data_hash_db_fallback(monkeypatch, tmp_path):
     monkeypatch.setenv("REPO_ROOT", str(tmp_path))  # empty cache
 
     from app.db.models import Price
+
     with Session(engine) as session:
         price_rec = Price(
             symbol=sym,
@@ -229,7 +231,7 @@ def test_data_hash_db_fallback(monkeypatch, tmp_path):
 
 
 def test_data_hash_deterministic_fallback(monkeypatch, tmp_path):
-    """Verify compute_data_snapshot_hash produces deterministic SHA-256 when no data exists."""
+    """Verify compute_data_snapshot_hash produces SHA-256 when no data exists."""
     empty_fixtures = tmp_path / "empty_fixtures"
     empty_fixtures.mkdir()
     monkeypatch.setenv("FIXTURES_DIR", str(empty_fixtures))
@@ -240,4 +242,3 @@ def test_data_hash_deterministic_fallback(monkeypatch, tmp_path):
     assert len(h1) == 64
     assert h1 == h2
     assert h1 != "no_fixtures_directory"
-

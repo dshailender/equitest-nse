@@ -99,4 +99,3 @@ def get_reports_dir() -> Path:
         p = Path(env_val)
         return p if p.is_absolute() else (get_repo_root() / p).resolve()
     return (get_repo_root() / "data" / "reports").resolve()
-

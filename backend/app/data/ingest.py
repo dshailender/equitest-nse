@@ -118,7 +118,11 @@ def ingest_market_data(
         try:
             df = price_source.get_equity_prices(sym, start, end)
             if df.empty:
-                msg = f"No price data available for symbol '{sym}' from source '{price_source.__class__.__name__}' (date range: {start} to {end})"
+                src_name = price_source.__class__.__name__
+                msg = (
+                    f"No price data available for symbol '{sym}' from source "
+                    f"'{src_name}' (date range: {start} to {end})"
+                )
                 logger.warning(msg)
                 errors.append(msg)
                 continue
@@ -161,7 +165,11 @@ def ingest_market_data(
     try:
         index_df = price_source.get_index_prices(index_symbol, start, end)
         if index_df.empty:
-            msg = f"No price data available for benchmark index '{index_symbol}' from source '{price_source.__class__.__name__}' (date range: {start} to {end})"
+            src_name = price_source.__class__.__name__
+            msg = (
+                f"No price data available for benchmark index '{index_symbol}' "
+                f"from source '{src_name}' (date range: {start} to {end})"
+            )
             logger.warning(msg)
             errors.append(msg)
         else:
@@ -197,7 +205,8 @@ def ingest_market_data(
     except Exception as exc:
         errors.append(f"Failed ingesting index {index_symbol}: {exc}")
 
-    # 3. Ingest Universe Membership if constituents fixture exists (or generate from code)
+    # 3. Ingest Universe Membership if constituents fixture exists
+    # (or generate from code)
     fixtures_dir = get_fixtures_dir()
     constituents_file = fixtures_dir / "constituents.parquet"
     try:
@@ -210,9 +219,7 @@ def ingest_market_data(
 
         cols = {"date", "symbol", "rank"}
         if cols.issubset(const_df.columns):
-            const_df["date"] = pd.to_datetime(const_df["date"]).dt.strftime(
-                "%Y-%m-%d"
-            )
+            const_df["date"] = pd.to_datetime(const_df["date"]).dt.strftime("%Y-%m-%d")
             mask = (const_df["date"] >= start) & (const_df["date"] <= end)
             filtered_const = const_df[mask]
 
@@ -439,8 +446,7 @@ def seed_universe_constituents(raw_conn: Any = None) -> int:
     if {"date", "symbol", "rank"}.issubset(df.columns):
         df["date"] = pd.to_datetime(df["date"]).dt.strftime("%Y-%m-%d")
         rows = [
-            (str(r["date"]), str(r["symbol"]), int(r["rank"]))
-            for _, r in df.iterrows()
+            (str(r["date"]), str(r["symbol"]), int(r["rank"])) for _, r in df.iterrows()
         ]
         cursor.executemany(
             "INSERT OR REPLACE INTO universe_membership (date, symbol, rank) "

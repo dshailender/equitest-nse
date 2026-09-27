@@ -26,7 +26,6 @@ class IngestRequest(BaseModel):
     )
 
 
-
 class IngestResponse(BaseModel):
     job_id: str = Field(..., description="Unique ingestion job execution ID")
     status: str = Field(
@@ -841,4 +840,3 @@ class RetentionCleanupResponse(BaseModel):
     evicted_sweeps: list[str] = Field(
         default_factory=list, description="List of evicted BacktestSweep IDs"
     )
-
