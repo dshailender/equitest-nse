@@ -1,28 +1,14 @@
 #!/usr/bin/env bash
-set -e
-
 # ====================================================================
-# EquiTest NSE - Local Development Runner
-# Starts both FastAPI Backend (:8000) and Next.js Frontend (:3000)
+# EquiTest NSE — Container-First Local Development Runner
+# Coordinates Dockerized execution (default) with native fallback.
 # ====================================================================
+set -euo pipefail
 
-# Resolve repository root directory
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$ROOT_DIR"
 
-# Ensure local bin, NVM Node, and ~/.local/bin are in PATH
-for nvm_path in "$HOME/.nvm/versions/node"/*/bin; do
-    if [ -d "$nvm_path" ]; then
-        export PATH="$nvm_path:$PATH"
-    fi
-done
-export PATH="$ROOT_DIR/bin:$HOME/.local/bin:$PATH"
-export NODE_PATH="$ROOT_DIR/frontend/node_modules"
-
-# Default data source for local testing (CSV loads offline fixtures; override with DATA_SOURCE=yfinance)
-export DATA_SOURCE="${DATA_SOURCE:-CSV}"
-
-# Colors for terminal output
+# Visual styles
 BOLD='\033[1m'
 CYAN='\033[0;36m'
 GREEN='\033[0;32m'
@@ -30,9 +16,261 @@ YELLOW='\033[0;33m'
 RED='\033[0;31m'
 NC='\033[0m'
 
-echo -e "${BOLD}${CYAN}==> Initializing EquiTest NSE Local Environment...${NC}"
+# Default Options
+MODE="container"
+FORCE_BUILD=0
+AUTO_BROWSER=1
+ATTACH_LOGS=0
+EXECUTE_DOWN=0
+PRE_CLEAN=0
 
-# 1. Check Python virtual environment
+# Parse Command-Line Flags
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --native)
+            MODE="native"
+            shift
+            ;;
+        --build)
+            FORCE_BUILD=1
+            shift
+            ;;
+        --no-browser)
+            AUTO_BROWSER=0
+            shift
+            ;;
+        --clean)
+            PRE_CLEAN=1
+            shift
+            ;;
+        --down)
+            EXECUTE_DOWN=1
+            shift
+            ;;
+        --logs)
+            ATTACH_LOGS=1
+            shift
+            ;;
+        -h|--help)
+            echo -e "${BOLD}EquiTest NSE Local Development Runner${NC}"
+            echo "Usage: ./run-local [OPTIONS]"
+            echo ""
+            echo "Options:"
+            echo "  --native        Force native host execution (uvicorn + next.js dev)"
+            echo "  --build         Rebuild Docker container images before launch"
+            echo "  --no-browser    Do not auto-open browser on startup"
+            echo "  --clean         Execute stale data retention purge prior to launch"
+            echo "  --down          Stop and remove running container stack"
+            echo "  --logs          Attach to live container logs after launching"
+            echo "  -h, --help      Show this help documentation"
+            exit 0
+            ;;
+        *)
+            echo -e "${RED}Unknown argument: $1${NC}"
+            echo "Run ./run-local --help for usage details."
+            exit 1
+            ;;
+    esac
+done
+
+# Handle --down command
+if [ "$EXECUTE_DOWN" -eq 1 ]; then
+    echo -e "${YELLOW}==> Stopping and tearing down EquiTest containers...${NC}"
+    if docker compose version >/dev/null 2>&1; then
+        docker compose down
+    elif command -v docker-compose >/dev/null 2>&1; then
+        docker-compose down
+    fi
+    echo -e "${GREEN}==> Container stack halted cleanly.${NC}"
+    exit 0
+fi
+
+# Detect Docker Availability
+check_docker_available() {
+    if ! command -v docker >/dev/null 2>&1; then
+        return 1
+    fi
+    if ! docker info >/dev/null 2>&1; then
+        return 1
+    fi
+    return 0
+}
+
+# Resolve Compose Command
+get_compose_cmd() {
+    if docker compose version >/dev/null 2>&1; then
+        echo "docker compose"
+    elif command -v docker-compose >/dev/null 2>&1; then
+        echo "docker-compose"
+    else
+        echo ""
+    fi
+}
+
+COMPOSE_CMD=$(get_compose_cmd)
+
+# Decide execution mode based on environment
+if [ "$MODE" = "container" ]; then
+    if ! check_docker_available || [ -z "$COMPOSE_CMD" ]; then
+        echo -e "${YELLOW}[NOTICE] Docker daemon or Docker Compose is unavailable on this host.${NC}"
+        echo -e "${YELLOW}==> Falling back to Native Host Development Mode...${NC}"
+        MODE="native"
+    fi
+fi
+
+# Pre-startup Cleanup if requested
+if [ "$PRE_CLEAN" -eq 1 ]; then
+    echo -e "${CYAN}==> Running artifact cleanup and retention enforcement...${NC}"
+    if [ -f "$ROOT_DIR/scripts/cleanup_orphaned_backtests.sh" ]; then
+        bash "$ROOT_DIR/scripts/cleanup_orphaned_backtests.sh" || true
+    fi
+fi
+
+# ====================================================================
+# MODE A: CONTAINER-FIRST WORKFLOW (DEFAULT)
+# ====================================================================
+if [ "$MODE" = "container" ]; then
+    echo -e "${BOLD}${CYAN}====================================================================${NC}"
+    echo -e "${BOLD}${CYAN}   EquiTest NSE — Containerized Development Runner (Docker)${NC}"
+    echo -e "${BOLD}${CYAN}====================================================================${NC}"
+
+    # Default container data source is live remote yfinance
+    export DATA_SOURCE="${DATA_SOURCE:-yfinance}"
+    export MAX_BACKTEST_RUNS="${MAX_BACKTEST_RUNS:-5}"
+    export DATABASE_URL="${DATABASE_URL:-sqlite:////app/data/equitest.db}"
+
+    # Verify ports are not occupied by host processes
+    check_port_conflict() {
+        local port=$1
+        local service=$2
+        if command -v lsof >/dev/null 2>&1; then
+            if lsof -i :"$port" -sTCP:LISTEN -t >/dev/null 2>&1; then
+                local pid
+                pid=$(lsof -i :"$port" -sTCP:LISTEN -t | head -n 1)
+                echo -e "${YELLOW}[WARNING] Host port $port ($service) is already bound by PID $pid.${NC}"
+            fi
+        fi
+    }
+    check_port_conflict 8000 "Backend"
+    check_port_conflict 3000 "Frontend"
+
+    # Trap Ctrl+C to halt containers gracefully
+    cleanup_containers() {
+        trap - SIGINT SIGTERM EXIT
+        echo ""
+        echo -e "${YELLOW}==> Halting EquiTest container services...${NC}"
+        $COMPOSE_CMD stop backend frontend >/dev/null 2>&1 || true
+        echo -e "${GREEN}==> Services stopped cleanly.${NC}"
+        exit 0
+    }
+    trap cleanup_containers SIGINT SIGTERM EXIT
+
+    # Build or start container stack
+    COMPOSE_ARGS="up -d"
+    if [ "$FORCE_BUILD" -eq 1 ]; then
+        COMPOSE_ARGS="up --build -d"
+    fi
+
+    echo -e "${CYAN}==> Launching container stack ($COMPOSE_CMD $COMPOSE_ARGS)...${NC}"
+    $COMPOSE_CMD $COMPOSE_ARGS
+
+    # Active Healthcheck Polling: Backend
+    echo -n -e "${CYAN}==> Awaiting Backend API readiness (http://localhost:8000/health)...${NC}"
+    BACKEND_READY=0
+    for i in {1..45}; do
+        if curl -s -f http://localhost:8000/health | grep -q '"status"' 2>/dev/null; then
+            BACKEND_READY=1
+            echo -e " ${GREEN}[OK]${NC}"
+            break
+        fi
+        echo -n "."
+        sleep 1
+    done
+
+    if [ "$BACKEND_READY" -ne 1 ]; then
+        echo -e " ${RED}[FAILED]${NC}"
+        echo -e "${RED}[ERROR] Backend failed to pass healthcheck within 45 seconds.${NC}"
+        echo -e "${YELLOW}==> Dumping recent backend container logs:${NC}"
+        $COMPOSE_CMD logs --tail=40 backend
+        exit 1
+    fi
+
+    # Active Readiness Polling: Frontend
+    echo -n -e "${CYAN}==> Awaiting Frontend readiness (http://localhost:3000)...${NC}"
+    FRONTEND_READY=0
+    for i in {1..45}; do
+        if curl -s -I http://localhost:3000 2>&1 | grep -qE "200 OK|304 Not Modified"; then
+            FRONTEND_READY=1
+            echo -e " ${GREEN}[OK]${NC}"
+            break
+        fi
+        echo -n "."
+        sleep 1
+    done
+
+    if [ "$FRONTEND_READY" -ne 1 ]; then
+        echo -e " ${YELLOW}[WARNING: Frontend still compiling, continuing...]${NC}"
+    fi
+
+    # Display Service Information
+    echo ""
+    echo -e "${BOLD}${GREEN}====================================================================${NC}"
+    echo -e "${BOLD}${GREEN}   EquiTest NSE — All Container Services Running & Healthy${NC}"
+    echo -e "${BOLD}${GREEN}====================================================================${NC}"
+    echo -e "   ${BOLD}Frontend Application:${NC}  http://localhost:3000"
+    echo -e "     - Market Data UI:     http://localhost:3000/data"
+    echo -e "     - Backtesting Studio: http://localhost:3000/backtest"
+    echo -e "     - Health Status:      http://localhost:3000/api-health"
+    echo ""
+    echo -e "   ${BOLD}Backend API Engine:${NC}    http://localhost:8000"
+    echo -e "     - Interactive Docs:   http://localhost:8000/docs"
+    echo -e "     - Health Endpoint:    http://localhost:8000/health"
+    echo ""
+    echo -e "   ${BOLD}Data Provider:${NC}         ${CYAN}$DATA_SOURCE${NC}"
+    echo -e "   ${BOLD}Retention Limit:${NC}       ${CYAN}Keep last $MAX_BACKTEST_RUNS runs${NC}"
+    echo -e "   ${BOLD}Press [Ctrl+C] to stop all services.${NC}"
+    echo -e "${BOLD}${GREEN}====================================================================${NC}"
+    echo ""
+
+    # Browser Auto-Launch
+    if [ "$AUTO_BROWSER" -eq 1 ] && [ "${CI:-false}" != "true" ]; then
+        if [ "$(uname -s)" = "Linux" ] && [ -n "${DISPLAY:-}" ]; then
+            xdg-open "http://localhost:3000" >/dev/null 2>&1 || true
+        elif [ "$(uname -s)" = "Darwin" ]; then
+            open "http://localhost:3000" >/dev/null 2>&1 || true
+        elif command -v wslview >/dev/null 2>&1; then
+            wslview "http://localhost:3000" >/dev/null 2>&1 || true
+        fi
+    fi
+
+    # Follow logs if requested, otherwise wait
+    if [ "$ATTACH_LOGS" -eq 1 ]; then
+        $COMPOSE_CMD logs -f
+    else
+        echo -e "${CYAN}Streaming container logs (press Ctrl+C to stop)...${NC}"
+        $COMPOSE_CMD logs -f --tail=0
+    fi
+    exit 0
+fi
+
+# ====================================================================
+# MODE B: NATIVE HOST FALLBACK WORKFLOW
+# ====================================================================
+echo -e "${BOLD}${YELLOW}====================================================================${NC}"
+echo -e "${BOLD}${YELLOW}   EquiTest NSE — Native Host Development Mode${NC}"
+echo -e "${BOLD}${YELLOW}====================================================================${NC}"
+
+# Ensure PATH has node/npm and python tools
+for nvm_path in "$HOME/.nvm/versions/node"/*/bin; do
+    if [ -d "$nvm_path" ]; then
+        export PATH="$nvm_path:$PATH"
+    fi
+done
+export PATH="$ROOT_DIR/bin:$HOME/.local/bin:$PATH"
+export NODE_PATH="$ROOT_DIR/frontend/node_modules"
+export DATA_SOURCE="${DATA_SOURCE:-CSV}"
+
+# 1. Setup virtual environment
 VENV="$ROOT_DIR/backend/.venv"
 if [ ! -d "$VENV" ] || [ ! -f "$VENV/bin/python" ]; then
     echo -e "${YELLOW}==> Python virtual environment not found. Setting up backend/.venv...${NC}"
@@ -41,81 +279,81 @@ if [ ! -d "$VENV" ] || [ ! -f "$VENV/bin/python" ]; then
     "$VENV/bin/pip" install -e "$ROOT_DIR/backend[dev]"
 fi
 
-# 2. Check frontend dependencies
+# 2. Setup node modules
 if [ ! -d "$ROOT_DIR/frontend/node_modules" ]; then
-    echo -e "${YELLOW}==> Frontend node_modules not found. Installing npm packages...${NC}"
+    echo -e "${YELLOW}==> Installing frontend dependencies...${NC}"
     (cd "$ROOT_DIR/frontend" && npm install)
     ln -sfn "$ROOT_DIR/frontend/node_modules" "$ROOT_DIR/node_modules"
 fi
 
-# 3. Synchronize OpenAPI schema and TypeScript types
+# 3. Synchronize OpenAPI contracts
 if [ ! -f "$ROOT_DIR/frontend/openapi.json" ] || [ ! -f "$ROOT_DIR/frontend/lib/schema.d.ts" ]; then
-    echo -e "${CYAN}==> Exporting OpenAPI schema and generating TypeScript types...${NC}"
+    echo -e "${CYAN}==> Synchronizing OpenAPI contract schemas...${NC}"
     "$VENV/bin/python" "$ROOT_DIR/backend/app/main.py" --export-openapi "$ROOT_DIR/frontend/openapi.json"
     (cd "$ROOT_DIR/frontend" && npx openapi-typescript ./openapi.json -o ./lib/schema.d.ts)
 fi
 
-# 4. Check for port conflicts
+# 4. Check port availability
 check_port() {
     local port=$1
     local name=$2
-    if lsof -i :"$port" -sTCP:LISTEN -t >/dev/null 2>&1; then
-        local pid
-        pid=$(lsof -i :"$port" -sTCP:LISTEN -t | head -n 1)
-        echo -e "${RED}[WARNING] Port $port ($name) is already in use by process PID $pid.${NC}"
-        echo -e "${RED}Please terminate the conflicting process or run: kill -9 $pid${NC}"
+    if command -v lsof >/dev/null 2>&1; then
+        if lsof -i :"$port" -sTCP:LISTEN -t >/dev/null 2>&1; then
+            local pid
+            pid=$(lsof -i :"$port" -sTCP:LISTEN -t | head -n 1)
+            echo -e "${RED}[WARNING] Port $port ($name) is in use by PID $pid.${NC}"
+            echo -e "${RED}Terminate conflicting process or run: kill -9 $pid${NC}"
+        fi
     fi
 }
 check_port 8000 "Backend"
 check_port 3000 "Frontend"
 
-# 5. Trap handler for graceful shutdown
-cleanup() {
+# 5. Trap cleanup on exit
+cleanup_native() {
     trap - SIGINT SIGTERM EXIT
     echo ""
-    echo -e "${YELLOW}==> Shutting down EquiTest services...${NC}"
-    if [ -n "$FRONTEND_PID" ]; then
+    echo -e "${YELLOW}==> Shutting down native EquiTest services...${NC}"
+    if [ -n "${FRONTEND_PID:-}" ]; then
         pkill -P "$FRONTEND_PID" 2>/dev/null || true
         kill "$FRONTEND_PID" 2>/dev/null || true
     fi
-    if [ -n "$BACKEND_PID" ]; then
+    if [ -n "${BACKEND_PID:-}" ]; then
         pkill -P "$BACKEND_PID" 2>/dev/null || true
         kill "$BACKEND_PID" 2>/dev/null || true
     fi
-    echo -e "${GREEN}==> All services stopped cleanly.${NC}"
+    echo -e "${GREEN}==> All native processes terminated.${NC}"
     exit 0
 }
-trap cleanup SIGINT SIGTERM EXIT
+trap cleanup_native SIGINT SIGTERM EXIT
 
-# 6. Start Backend (Uvicorn on :8000)
+# 6. Start Native Backend & Frontend
 echo -e "${CYAN}==> Starting FastAPI Backend on http://127.0.0.1:8000...${NC}"
 "$VENV/bin/uvicorn" app.main:app --app-dir "$ROOT_DIR/backend" --host 0.0.0.0 --port 8000 --reload &
 BACKEND_PID=$!
 
-# 7. Start Frontend (Next.js on :3000)
 echo -e "${CYAN}==> Starting Next.js Frontend on http://localhost:3000...${NC}"
 (cd "$ROOT_DIR/frontend" && npm run dev) &
 FRONTEND_PID=$!
 
-# 8. Print service overview banner
-sleep 1.5
+# Native Service Banner
+sleep 2
 echo ""
 echo -e "${BOLD}${GREEN}====================================================================${NC}"
-echo -e "${BOLD}${GREEN}   EquiTest NSE - Local Services Running${NC}"
+echo -e "${BOLD}${GREEN}   EquiTest NSE — Native Services Running${NC}"
 echo -e "${BOLD}${GREEN}====================================================================${NC}"
-echo -e "   ${BOLD}Frontend Application:${NC}  http://localhost:3000"
-echo -e "     - Data Status UI:     http://localhost:3000/data"
-echo -e "     - Health Status:      http://localhost:3000/api-health"
-echo ""
-echo -e "   ${BOLD}Backend API Engine:${NC}    http://localhost:8000"
-echo -e "     - Interactive Docs:   http://localhost:8000/docs"
-echo -e "     - Health Endpoint:    http://localhost:8000/health"
-echo ""
-echo -e "   ${BOLD}Active Data Source:${NC}    ${CYAN}$DATA_SOURCE${NC} (fixtures/parquet)"
-echo -e "   (To use live Yahoo Finance: ${YELLOW}DATA_SOURCE=yfinance ./run-local${NC})"
+echo -e "   ${BOLD}Frontend:${NC}    http://localhost:3000"
+echo -e "   ${BOLD}Backend API:${NC} http://localhost:8000"
+echo -e "   ${BOLD}Data Source:${NC} $DATA_SOURCE"
 echo -e "   ${BOLD}Press [Ctrl+C] to stop all services.${NC}"
 echo -e "${BOLD}${GREEN}====================================================================${NC}"
-echo ""
 
-# Wait for background processes
+if [ "$AUTO_BROWSER" -eq 1 ] && [ "${CI:-false}" != "true" ]; then
+    if [ "$(uname -s)" = "Linux" ] && [ -n "${DISPLAY:-}" ]; then
+        xdg-open "http://localhost:3000" >/dev/null 2>&1 || true
+    elif [ "$(uname -s)" = "Darwin" ]; then
+        open "http://localhost:3000" >/dev/null 2>&1 || true
+    fi
+fi
+
 wait
