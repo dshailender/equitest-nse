@@ -5,15 +5,31 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: equitest-backend
+      args:
+        GIT_SHA: "${GIT_SHA:-dev}"
+    container_name: equitest-backend-dev
     ports:
       - "8000:8000"
     environment:
       - APP_ENV=development
-      - DATABASE_URL=sqlite:///./dev.db
+      - DATA_SOURCE=yfinance
+      - DATABASE_URL=sqlite:////app/data/dev.db
       - LOG_LEVEL=INFO
+      - MAX_BACKTEST_RUNS=10
+      - YFINANCE_ENABLED=true
+      - CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+      - BACKTEST_STORAGE_PATH=/app/data/backtests
+      - FIXTURES_DIR=/app/data/fixtures
+      - REPO_ROOT=/app
     volumes:
+      # Code live-mount for hot-reloading
       - ./backend/app:/app/app:ro
+      # Named volume for SQLite DB and metadata persistence
+      - equitest_db:/app/data
+      # Isolated named volume for backtest run provenance
+      - equitest_backtests:/app/data/backtests
+      # Isolated named volume for generated reports
+      - equitest_reports:/app/data/reports
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
@@ -21,35 +37,42 @@ services:
       timeout: 5s
       retries: 3
       start_period: 5s
+    networks:
+      - equitest-network
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: equitest-frontend
+      args:
+        NEXT_PUBLIC_API_URL: "http://localhost:8000"
+    container_name: equitest-frontend-dev
     ports:
       - "3000:3000"
     environment:
-      - NEXT_PUBLIC_API_URL=http://backend:8000
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
     depends_on:
       backend:
         condition: service_healthy
     restart: unless-stopped
-
-  postgres:
-    image: postgres:16-alpine
-    container_name: equitest-postgres
-    ports:
-      - "5432:5432"
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=equitest
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    restart: unless-stopped
-    profiles:
-      - with-db
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - equitest-network
 
 volumes:
-  postgres_data:
+  equitest_db:
+    name: equitest_dev_db
+  equitest_backtests:
+    name: equitest_dev_backtests
+  equitest_reports:
+    name: equitest_dev_reports
+
+networks:
+  equitest-network:
+    name: equitest-dev-net
+    driver: bridge

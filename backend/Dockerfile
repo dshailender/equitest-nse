@@ -24,11 +24,16 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PATH="/opt/venv/bin:$PATH" \
     APP_ENV=production \
-    DATA_SOURCE=CSV
+    DATA_SOURCE=yfinance \
+    REPO_ROOT=/app \
+    FIXTURES_DIR=/app/data/fixtures \
+    BACKTEST_STORAGE_PATH=/app/data/backtests \
+    DATABASE_URL=sqlite:////app/data/dev.db
 
-ARG GIT_SHA="45391fbd9b001161b500a4c5e92a22170daee4b9"
+ARG GIT_SHA="unknown"
 ENV GIT_SHA=${GIT_SHA}
 
+# Install WeasyPrint and healthcheck system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     libpango-1.0-0 \
@@ -42,18 +47,22 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY --from=builder /opt/venv /opt/venv
 
-# Smoke test PDF generation in container build
+# Verify PDF compilation pipeline at build time
 RUN python -c "from weasyprint import HTML; pdf = HTML(string='<h1>Smoke Test</h1>').write_pdf(); assert pdf.startswith(b'%PDF'), 'PDF generation smoke test failed'"
 
-# Create unprivileged application user
+# Create non-root application user and group (UID/GID 1001)
 RUN groupadd -g 1001 appgroup && \
     useradd -u 1001 -g appgroup -s /bin/bash -m appuser
 
+# Copy application source
 COPY app/ ./app/
 COPY pyproject.toml .
 
-# Create data directories with non-root ownership
-RUN mkdir -p /app/data/backtests /app/data/fixtures && \
+# Create all persistence and cache mountpoints with non-root ownership
+RUN mkdir -p /app/data/backtests \
+             /app/data/reports \
+             /app/data/cache \
+             /app/data/fixtures && \
     chown -R appuser:appgroup /app
 
 USER appuser
