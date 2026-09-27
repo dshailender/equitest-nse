@@ -586,6 +586,11 @@ def api_compare_backtest_runs(
 
 
 @router.get(
+    "/runs",
+    response_model=list[BacktestStatusResponse],
+    include_in_schema=False,
+)
+@router.get(
     "",
     response_model=list[BacktestStatusResponse],
     summary="List Backtest Runs",

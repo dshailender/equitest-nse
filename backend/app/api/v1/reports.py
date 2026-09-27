@@ -280,6 +280,25 @@ def api_export_report(
         )
 
 
+@router.get(
+    "/{run_id}/pdf",
+    summary="Direct PDF Tear-Sheet Download",
+    description="Convenience route downloading the WeasyPrint PDF report.",
+    include_in_schema=False,
+)
+def api_get_pdf_direct(
+    run_id: str,
+    session: Annotated[Session, Depends(get_session)],
+    background_tasks: BackgroundTasks,
+) -> Response:
+    return api_export_report(
+        run_id=run_id,
+        session=session,
+        background_tasks=background_tasks,
+        format="pdf",
+    )
+
+
 @router.post(
     "/{run_id}/export/pdf/async",
     response_model=PdfJobCreateResponse,
