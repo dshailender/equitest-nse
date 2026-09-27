@@ -60,6 +60,9 @@ playwright/.cache/
 *.db-shm
 *.db-wal
 data/backtests/*.json
+data/reports/*.pdf
+data/reports/*.png
+data/cache/
 
 # OS / Editor
 .DS_Store
