@@ -475,6 +475,23 @@ class BacktestRunRequest(BaseModel):
         examples=[["ALPHA", "BETA", "GAMMA"]],
     )
 
+    @model_validator(mode="before")
+    @classmethod
+    def normalize_fields(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            if "start_date" in data and "start" not in data:
+                data["start"] = data["start_date"]
+            if "end_date" in data and "end" not in data:
+                data["end"] = data["end_date"]
+            if "initial_capital" in data or "max_positions" in data:
+                cfg = dict(data.get("config") or {})
+                if "initial_capital" in data and "initial_capital" not in cfg:
+                    cfg["initial_capital"] = data["initial_capital"]
+                if "max_positions" in data and "max_positions" not in cfg:
+                    cfg["max_positions"] = data["max_positions"]
+                data["config"] = cfg
+        return data
+
 
 class BacktestRunCreateResponse(BaseModel):
     run_id: str = Field(..., description="Unique backtest run identifier")

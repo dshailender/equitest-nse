@@ -68,18 +68,31 @@ def _execute_backtest_task(run_id: str, payload: dict) -> None:
 
             # Load NIFTY benchmark (DB first, fallback to price_source)
             price_source = get_price_source()
-            idx_stmt = (
-                select(IndexPrice)
-                .where(IndexPrice.symbol.in_(("^NSEI", "NIFTY", "NIFTY50")))
-                .order_by(col(IndexPrice.date).asc())
-            )
-            idx_rows = session.exec(idx_stmt).all()
-            if idx_rows:
-                nifty_df = pd.DataFrame([r.model_dump() for r in idx_rows])
-            else:
-                nifty_df = price_source.get_index_prices(
-                    "^NSEI", start="2000-01-01", end="2099-12-31"
+            raw_conn = getattr(session.connection(), "connection", None)
+            nifty_df = pd.DataFrame()
+            if raw_conn is not None:
+                try:
+                    nifty_df = pd.read_sql_query(
+                        "SELECT date, open, high, low, close, adj_close, volume "
+                        "FROM index_prices WHERE symbol IN ('^NSEI', 'NIFTY', 'NIFTY50') "
+                        "ORDER BY date ASC",
+                        raw_conn,
+                    )
+                except Exception:
+                    pass
+            if nifty_df.empty:
+                idx_stmt = (
+                    select(IndexPrice)
+                    .where(IndexPrice.symbol.in_(("^NSEI", "NIFTY", "NIFTY50")))
+                    .order_by(col(IndexPrice.date).asc())
                 )
+                idx_rows = session.exec(idx_stmt).all()
+                if idx_rows:
+                    nifty_df = pd.DataFrame([r.model_dump() for r in idx_rows])
+                else:
+                    nifty_df = price_source.get_index_prices(
+                        "^NSEI", start="2000-01-01", end="2099-12-31"
+                    )
 
             # Determine symbols list
             symbols_requested = req.symbols
@@ -105,9 +118,26 @@ def _execute_backtest_task(run_id: str, payload: dict) -> None:
                 if tiny_nifty_path.exists():
                     nifty_df = pd.read_parquet(tiny_nifty_path)
 
-            # Load equity prices (DB first, fallback to price_source)
+            # Load equity prices (DB batch first, fallback to price_source)
             prices: dict[str, pd.DataFrame] = {}
-            for sym in symbols_to_load:
+            missing_symbols = list(symbols_to_load)
+            if raw_conn is not None and symbols_to_load:
+                try:
+                    placeholders = ",".join("?" for _ in symbols_to_load)
+                    batch_df = pd.read_sql_query(
+                        f"SELECT symbol, date, open, high, low, close, adj_close, volume "
+                        f"FROM prices WHERE symbol IN ({placeholders}) ORDER BY date ASC",
+                        raw_conn,
+                        params=symbols_to_load,
+                    )
+                    if not batch_df.empty:
+                        for sym, grp in batch_df.groupby("symbol"):
+                            prices[str(sym)] = grp.drop(columns=["symbol"]).reset_index(drop=True)
+                        missing_symbols = [s for s in symbols_to_load if s not in prices]
+                except Exception:
+                    pass
+
+            for sym in missing_symbols:
                 sym_stmt = (
                     select(Price)
                     .where(Price.symbol == sym)
