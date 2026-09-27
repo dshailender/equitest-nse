@@ -179,3 +179,24 @@ def test_backtest_result_warnings_serialization(tmp_path, tiny_universe_data):
     assert loaded.warnings == result.warnings
     assert loaded.cagr == result.cagr
     assert loaded.summary()["warnings"] == result.warnings
+
+
+def test_backtest_honours_nifty_regime_ema200_filter(tiny_universe_data):
+    """Backtest engine honours REQ-3.1: zero new trades if NIFTY is below 200 EMA."""
+    prices, nifty = tiny_universe_data
+
+    # Artificially depress NIFTY close below 200 EMA across the entire series
+    nifty_bear = nifty.copy()
+    nifty_bear["close"] = 1.0
+    if "adj_close" in nifty_bear.columns:
+        nifty_bear["adj_close"] = 1.0
+
+    engine = Backtest(config=StrategyConfig(), prices=prices, nifty=nifty_bear)
+    result = engine.run()
+
+    # Zero trades and zero open positions must be executed
+    assert len(result.trades) == 0
+    assert result.total_trades == 0
+    assert len(result.open_positions) == 0
+    # Final capital must remain untouched
+    assert result.final_capital == 500000.0
