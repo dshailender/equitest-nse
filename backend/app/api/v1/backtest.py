@@ -31,7 +31,7 @@ from app.api.v1.schemas import (
 from app.core.config import get_backtests_dir, get_fixtures_dir
 from app.data.source import get_price_source
 from app.data.universe import get_universe
-from app.db.models import BacktestRun, BacktestSweep
+from app.db.models import BacktestRun, BacktestSweep, IndexPrice, Price
 from app.db.session import engine, get_session
 from app.engine.backtest import Backtest
 from app.engine.result import BacktestResult
@@ -66,11 +66,20 @@ def _execute_backtest_task(run_id: str, payload: dict) -> None:
             else:
                 strat_config = StrategyConfig()
 
-            # Load NIFTY benchmark
+            # Load NIFTY benchmark (DB first, fallback to price_source)
             price_source = get_price_source()
-            nifty_df = price_source.get_index_prices(
-                "^NSEI", start="2000-01-01", end="2099-12-31"
+            idx_stmt = (
+                select(IndexPrice)
+                .where(IndexPrice.symbol.in_(("^NSEI", "NIFTY", "NIFTY50")))
+                .order_by(col(IndexPrice.date).asc())
             )
+            idx_rows = session.exec(idx_stmt).all()
+            if idx_rows:
+                nifty_df = pd.DataFrame([r.model_dump() for r in idx_rows])
+            else:
+                nifty_df = price_source.get_index_prices(
+                    "^NSEI", start="2000-01-01", end="2099-12-31"
+                )
 
             # Determine symbols list
             symbols_requested = req.symbols
@@ -96,14 +105,23 @@ def _execute_backtest_task(run_id: str, payload: dict) -> None:
                 if tiny_nifty_path.exists():
                     nifty_df = pd.read_parquet(tiny_nifty_path)
 
-            # Load equity prices
+            # Load equity prices (DB first, fallback to price_source)
             prices: dict[str, pd.DataFrame] = {}
             for sym in symbols_to_load:
-                df = price_source.get_equity_prices(
-                    sym, start="2000-01-01", end="2099-12-31"
+                sym_stmt = (
+                    select(Price)
+                    .where(Price.symbol == sym)
+                    .order_by(col(Price.date).asc())
                 )
-                if not df.empty:
-                    prices[sym] = df
+                p_rows = session.exec(sym_stmt).all()
+                if p_rows:
+                    prices[sym] = pd.DataFrame([r.model_dump() for r in p_rows])
+                else:
+                    df = price_source.get_equity_prices(
+                        sym, start="2000-01-01", end="2099-12-31"
+                    )
+                    if not df.empty:
+                        prices[sym] = df
 
             # Prepare dynamic point-in-time universe provider (AUD-C-002)
             if symbols_requested:
