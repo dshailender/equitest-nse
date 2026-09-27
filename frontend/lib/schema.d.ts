@@ -604,6 +604,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/retention/cleanup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Enforce Backtest Retention Cleanup
+         * @description Manually or automatically triggers cascade purging of stale backtests and sweeps exceeding retention quotas.
+         */
+        post: operations["api_admin_retention_cleanup_api_v1_admin_retention_cleanup_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1644,19 +1664,19 @@ export interface components {
             avg_days_held: number;
             /**
              * Benchmark Return
-             * @description Benchmark (NIFTY 50) total percentage return (4 decimal places)
+             * @description Benchmark (NIFTY 50) total return (4 decimal places)
              * @default 0
              */
             benchmark_return: number;
             /**
              * Benchmark Cagr
-             * @description Benchmark (NIFTY 50) Compound Annual Growth Rate (4 decimal places)
+             * @description Benchmark Compound Annual Growth Rate (4 decimal places)
              * @default 0
              */
             benchmark_cagr: number;
             /**
              * Alpha
-             * @description Annualized Strategy Alpha relative to NIFTY benchmark (4 decimal places)
+             * @description Strategy Alpha relative to NIFTY benchmark (4 decimal places)
              * @default 0
              */
             alpha: number;
@@ -1668,7 +1688,7 @@ export interface components {
             beta: number;
             /**
              * Information Ratio
-             * @description Annualized Information Ratio relative to NIFTY benchmark (4 decimal places)
+             * @description Information Ratio relative to benchmark (4 decimal places)
              * @default 0
              */
             information_ratio: number;
@@ -1768,6 +1788,65 @@ export interface components {
             };
             /** @description Calculated core and advanced KPIs */
             metrics: components["schemas"]["PerformanceMetrics"];
+        };
+        /**
+         * RetentionCleanupRequest
+         * @description Optional payload to override retention thresholds during cleanup.
+         */
+        RetentionCleanupRequest: {
+            /**
+             * Max Runs
+             * @description Override maximum number of standalone backtest runs retained
+             */
+            max_runs?: number | null;
+            /**
+             * Max Sweeps
+             * @description Override maximum number of parameter sweep batches retained
+             */
+            max_sweeps?: number | null;
+        };
+        /**
+         * RetentionCleanupResponse
+         * @description Execution report returned by the admin retention cleanup endpoint.
+         */
+        RetentionCleanupResponse: {
+            /**
+             * Status
+             * @description Execution status ('success' or 'disabled')
+             */
+            status: string;
+            /**
+             * Max Runs Threshold
+             * @description Applied threshold for standalone backtest runs
+             */
+            max_runs_threshold?: number | null;
+            /**
+             * Max Sweeps Threshold
+             * @description Applied threshold for parameter sweeps
+             */
+            max_sweeps_threshold?: number | null;
+            /**
+             * Evicted Run Count
+             * @description Number of standalone and sweep child runs evicted
+             * @default 0
+             */
+            evicted_run_count: number;
+            /**
+             * Evicted Sweep Count
+             * @description Number of parameter sweeps evicted
+             * @default 0
+             */
+            evicted_sweep_count: number;
+            /**
+             * Evicted Runs
+             * @description List of evicted BacktestRun IDs
+             */
+            evicted_runs?: string[];
+            /**
+             * Evicted Sweeps
+             * @description List of evicted BacktestSweep IDs
+             */
+            evicted_sweeps?: string[];
         };
         /** RiskConfigResponse */
         RiskConfigResponse: {
@@ -3182,6 +3261,44 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CrossCheckResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    api_admin_retention_cleanup_api_v1_admin_retention_cleanup_post: {
+        parameters: {
+            query?: {
+                /** @description Optional override for maximum standalone runs retained */
+                max_runs?: number | null;
+                /** @description Optional override for maximum parameter sweeps retained */
+                max_sweeps?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["RetentionCleanupRequest"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RetentionCleanupResponse"];
                 };
             };
             /** @description Validation Error */

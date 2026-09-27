@@ -27,6 +27,7 @@ async def api_v1_health() -> HealthResponse:
     return HealthResponse(status="ok", version=settings.APP_VERSION)
 
 
+from app.api.v1.admin import router as admin_router  # noqa: E402
 from app.api.v1.backtest import router as backtest_router  # noqa: E402
 from app.api.v1.data import router as data_router  # noqa: E402
 from app.api.v1.indicators import router as indicators_router  # noqa: E402
@@ -42,3 +43,4 @@ api_router.include_router(risk_router)
 api_router.include_router(backtest_router)
 api_router.include_router(reports_router)
 api_router.include_router(validation_router)
+api_router.include_router(admin_router)

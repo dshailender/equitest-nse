@@ -147,10 +147,12 @@ def test_simulation_execution_generates_audit():
         "config": {"corpus": 500000.0, "risk_pct": 0.02, "sl_pct": 0.07},
     }
 
+    from datetime import datetime, timezone
+
     with Session(engine) as session:
         run_rec = BacktestRun(
             id=run_id,
-            created_at="2026-09-24T12:00:00Z",
+            created_at=datetime.now(timezone.utc).isoformat(),
             status="pending",
             config_json=json.dumps(payload["config"]),
         )

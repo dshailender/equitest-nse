@@ -35,10 +35,12 @@ from app.db.models import BacktestRun, BacktestSweep
 from app.db.session import engine, get_session
 from app.engine.backtest import Backtest
 from app.engine.result import BacktestResult
+from app.engine.retention import enforce_backtest_retention
 from app.strategy.config import StrategyConfig
 from app.validation.audit import load_run_audit, record_run_audit
 
 logger = logging.getLogger(__name__)
+
 
 router = APIRouter(prefix="/backtest", tags=["backtest"])
 
@@ -87,10 +89,9 @@ def _execute_backtest_task(run_id: str, payload: dict) -> None:
             # If targeting tiny_universe symbols or benchmark empty, check fixture
             is_tiny = any(s in ("ALPHA", "BETA", "GAMMA") for s in symbols_to_load)
             if is_tiny:
+                price_source = get_price_source("CSV")
                 tiny_nifty_path = (
-                    get_fixtures_dir()
-                    / "tiny_universe"
-                    / "NIFTY_TINY.parquet"
+                    get_fixtures_dir() / "tiny_universe" / "NIFTY_TINY.parquet"
                 )
                 if tiny_nifty_path.exists():
                     nifty_df = pd.read_parquet(tiny_nifty_path)
@@ -164,6 +165,15 @@ def _execute_backtest_task(run_id: str, payload: dict) -> None:
             session.add(run_record)
             session.commit()
 
+    # Enforce backtest retention after run finalization
+    try:
+        with Session(engine) as retention_session:
+            enforce_backtest_retention(retention_session)
+    except Exception as ret_err:
+        logger.warning(
+            "Retention enforcement after backtest %s failed: %s", run_id, ret_err
+        )
+
 
 def _execute_sweep_task(sweep_id: str, child_tasks: list[tuple[str, dict]]) -> None:
     """Background task executing all permutations in a parameter sweep."""
@@ -213,6 +223,15 @@ def _execute_sweep_task(sweep_id: str, child_tasks: list[tuple[str, dict]]) -> N
         completed,
         failed,
     )
+
+    # Enforce backtest retention after sweep finalization
+    try:
+        with Session(engine) as retention_session:
+            enforce_backtest_retention(retention_session)
+    except Exception as ret_err:
+        logger.warning(
+            "Retention enforcement after sweep %s failed: %s", sweep_id, ret_err
+        )
 
 
 @router.post(

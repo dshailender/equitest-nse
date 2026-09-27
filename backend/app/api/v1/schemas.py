@@ -796,3 +796,43 @@ class PdfJobCreateResponse(BaseModel):
         default="PDF generation job accepted and processing in background.",
         description="Informational status message",
     )
+
+
+class RetentionCleanupRequest(BaseModel):
+    """Optional payload to override retention thresholds during cleanup."""
+
+    max_runs: int | None = Field(
+        default=None,
+        description="Override maximum number of standalone backtest runs retained",
+        ge=0,
+    )
+    max_sweeps: int | None = Field(
+        default=None,
+        description="Override maximum number of parameter sweep batches retained",
+        ge=0,
+    )
+
+
+class RetentionCleanupResponse(BaseModel):
+    """Execution report returned by the admin retention cleanup endpoint."""
+
+    status: str = Field(..., description="Execution status ('success' or 'disabled')")
+    max_runs_threshold: int | None = Field(
+        default=None, description="Applied threshold for standalone backtest runs"
+    )
+    max_sweeps_threshold: int | None = Field(
+        default=None, description="Applied threshold for parameter sweeps"
+    )
+    evicted_run_count: int = Field(
+        default=0, description="Number of standalone and sweep child runs evicted"
+    )
+    evicted_sweep_count: int = Field(
+        default=0, description="Number of parameter sweeps evicted"
+    )
+    evicted_runs: list[str] = Field(
+        default_factory=list, description="List of evicted BacktestRun IDs"
+    )
+    evicted_sweeps: list[str] = Field(
+        default_factory=list, description="List of evicted BacktestSweep IDs"
+    )
+
